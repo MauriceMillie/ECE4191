@@ -170,7 +170,19 @@ def load_actual_csv(path: Path):
 # ============================================================
 # 3. Toy QP  (minimize grid^2)
 # ============================================================
+def generate_eta_profiles(days, steps_per_day):
+    """Generates the daily time-of-use tariff and copies it
+       across the entire multi-day horizon."""
+       
+    eta_day = np.zeros(steps_per_day)
+    eta_day[np.r_[0:14, 44:48]] = 0.03   # Off-peak rate ($/kWh)
+    eta_day[np.r_[14:28, 40:44]] = 0.06  # Shoulder rate ($/kWh)
+    eta_day[28:40]               = 0.30  # Peak rate ($/kWh)
 
+    eta_profiles = np.tile(eta_day, days)
+    return eta_profiles
+    
+    
 def solve_toy_qp(p_load, p_pv, batt_power_kw, capacity_kwh, soc0_kwh,
                  p_upper_kw, p_lower_kw, solver):
     """Single-node load-levelling QP for one day.
@@ -182,7 +194,8 @@ def solve_toy_qp(p_load, p_pv, batt_power_kw, capacity_kwh, soc0_kwh,
     n    = len(p_load)
     batt = cp.Variable(n)
     grid = cp.Variable(n)
-
+    w = 1 
+    eta_day = generate_eta_profiles(5, 48)
     soc_after = soc0_kwh - cp.cumsum(batt * DELTA_HOURS)
 
     constraints = [
@@ -195,8 +208,9 @@ def solve_toy_qp(p_load, p_pv, batt_power_kw, capacity_kwh, soc0_kwh,
         grid <= p_upper_kw,                  # A1 (wide by default)
         grid >= p_lower_kw,                  # A1
     ]
-
-    prob = cp.Problem(cp.Minimize(cp.sum_squares(grid)), constraints)
+    
+    #cp.Minimize(cp.sum(-delta * cp.multiply(eta_day, x1) + w * cp.multiply(eta_day, cp.square(x2))))
+    prob = cp.Problem(cp.Minimize(cp.sum((-1/2)* cp.multiply(eta_day, batt) + w * cp.multiply(eta_day, cp.square(grid)))), constraints)
     prob.solve(solver=getattr(cp, solver), verbose=False)
 
     if batt.value is None:
@@ -211,6 +225,7 @@ def _action(v: float) -> str:
     return "Discharge" if v > 0.5 else ("Charge" if v < -0.5 else "Idle")
 
 
+    
 # ============================================================
 # 4. Modbus connection + write helpers
 # ============================================================
