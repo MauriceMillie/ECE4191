@@ -1,0 +1,89 @@
+LTspice 24.0.9 for Windows
+Circuit: * G:\My Drive\Fifth Year\sem2\ECE3161\labs\lab2\mainlab\howlandCurrentPumpBoostedSourceCurrent.asc
+Start Time: Fri Aug 28 14:50:01 2026
+Warning: Multiple definitions of model "2scr375p" Type: BJT
+Warning: Multiple definitions of model "bc857b" Type: BJT
+Warning: Multiple definitions of model "bc847c" Type: BJT
+Warning: Multiple definitions of model "bc847b" Type: BJT
+Tl974:c_cc3: both pins shorted together -- ignoring.
+solver = Normal
+Maximum thread count: 16
+tnom = 27
+temp = 27
+method = modified trap
+Direct Newton iteration failed to find .op point.  (Use ".option noopiter" to skip.)
+Starting Gmin stepping
+Gmin = 10
+Gmin = 1.07374
+vernier = 0.5
+vernier = 0.25
+vernier = 0.125
+vernier = 0.0625
+Gmin = 0.995033
+vernier = 0.03125
+vernier = 0.015625
+vernier = 0.0078125
+vernier = 0.00390625
+Gmin = 1.00566
+vernier = 0.00195312
+vernier = 0.000976562
+vernier = 0.00130208
+vernier = 0.000651042
+Gmin = 1.00509
+vernier = 0.000488281
+vernier = 0.000651041
+vernier = 0.000488281
+Gmin = 0
+Gmin stepping failed
+
+Starting source stepping with srcstepmethod=0
+Source Step = 3.0303%
+Source Step = 33.3333%
+Source Step = 63.6364%
+Source Step = 93.9394%
+Source Step = 96.9815%
+Source Step = 97.0111%
+Source Step = 97.0407%
+Source Step = 97.0703%
+Source Step = 97.0999%
+Source Step = 97.1295%
+Source Step = 97.1591%
+Source Step = 97.1887%
+Source Step = 97.2183%
+Source Step = 97.2479%
+Source Step = 97.2775%
+Source Step = 97.3071%
+Source Step = 97.3366%
+vernier = 0.00146484
+Source Step = 97.3692%
+Source Step = 97.4136%
+Source Step = 97.458%
+Source Step = 97.5024%
+Source Step = 97.5468%
+vernier = 0.00219727
+Source Step = 97.5934%
+Source Step = 97.6599%
+Source Step = 97.7265%
+Source Step = 97.7931%
+Source Step = 97.8597%
+Source Step = 97.9263%
+vernier = 0.0032959
+Source Step = 98.0262%
+Source Step = 98.126%
+Source Step = 98.2259%
+Source Step = 98.3258%
+Source Step = 98.4257%
+vernier = 0.00494385
+Source Step = 98.5705%
+Source Step = 98.7203%
+Source Step = 98.8701%
+Source Step = 99.0199%
+Source Step = 99.1697%
+vernier = 0.00741577
+Source Step = 99.3795%
+Source Step = 99.6042%
+Source Step = 99.8289%
+Source stepping succeeded in finding the operating point.
+
+Total elapsed time: 2.220 seconds.
+

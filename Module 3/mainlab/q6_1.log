@@ -1,0 +1,12 @@
+LTspice 24.0.9 for Windows
+Circuit: * G:\My Drive\Fifth Year\sem2\ECE3161\labs\lab2\mainlab\q6_1.asc
+Start Time: Thu Aug 27 20:24:18 2026
+U1:c_cc3: both pins shorted together -- ignoring.
+solver = Normal
+Maximum thread count: 16
+tnom = 27
+temp = 27
+method = modified trap
+Direct Newton iteration for .op point succeeded.
+Total elapsed time: 0.160 seconds.
+

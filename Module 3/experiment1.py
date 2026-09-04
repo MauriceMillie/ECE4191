@@ -34,23 +34,76 @@ except ImportError:
 
 
 # ============================================================
-# 1. Settings  (Node 646 only)
+# 1. Settings  (All Nodes)
 # ============================================================
 
 N_STEPS      = 48
 DELTA_HOURS  = 0.5
 STEP_SECONDS = 2.0        # wall-clock seconds per 30-min data step
 
-# --- Node 646 -----------------------------------------------------------------
-NODE_LABEL          = ("646", "B")
-NODE_REGISTER_START = 2000          # holding 2000..2003
-NODE_REGISTER_ORDER = "normal"      # [Pref, Qref, PV, Batt]
+NODE_MAP = {
+    "646_B": {"start": 2000, "order": "normal"},
+    "645_B": {"start": 2004, "order": "normal"},
+    "611_C": {"start": 2008, "order": "normal"},
+    "652_A": {"start": 2012, "order": "normal"},
+
+    "671_A": {"start": 2016, "order": "normal"},
+    "671_B": {"start": 2020, "order": "normal"},
+    "671_C": {"start": 2024, "order": "normal"},
+
+    "692_C": {"start": 2028, "order": "reversed"},
+    "692_B": {"start": 2032, "order": "reversed"},
+    "692_A": {"start": 2036, "order": "reversed"},
+
+    "675_C": {"start": 2040, "order": "reversed"},
+    "675_B": {"start": 2044, "order": "reversed"},
+    "675_A": {"start": 2048, "order": "reversed"},
+
+    "634_C": {"start": 2052, "order": "reversed"},
+    "634_B": {"start": 2056, "order": "reversed"},
+    "634_A": {"start": 2060, "order": "reversed"},
+}
+
+
+PHASE_MAP = {
+    "A": "A",
+    "B": "B",
+    "C": "C",
+    "Ph1": "A",
+    "Ph2": "B",
+    "Ph3": "C",
+}
+
 QREF_646_KVAR       = 132           # fixed Qref for Node 646 (kVAr, direct value)
 
-N_CUSTOMERS_646     = 102
-BATTERY_CAPACITY_KWH = 10.0 * N_CUSTOMERS_646   # 1020 kWh
-BATTERY_POWER_KW     = 5.0  * N_CUSTOMERS_646   # 510 kW  (derived; --batt-power)
-INITIAL_SOC_KWH      = 0.5  * BATTERY_CAPACITY_KWH   # 510 kWh (50%)
+N_CUSTOMERS = {
+    "646_B": 102,
+    "645_B": 63,
+    "611_C": 68,
+    "652_A": 46,
+
+    "671_A": 159,
+    "671_B": 155,
+    "671_C": 159,
+
+    "692_A": 0,
+    "692_B": 0,
+    "692_C": 66,
+
+    "675_A": 191,
+    "675_B": 36,
+    "675_C": 119,
+
+    "634_A": 69,
+    "634_B": 45,
+    "634_C": 52,
+}
+
+TOTAL_CUSTOMERS = sum(N_CUSTOMERS.values())   # 1330
+
+BATTERY_CAPACITY_KWH = 10.0 * TOTAL_CUSTOMERS   # 13300 kWh
+BATTERY_POWER_KW     = 5.0  * TOTAL_CUSTOMERS   # 6650 kW
+INITIAL_SOC_KWH      = 0.5  * BATTERY_CAPACITY_KWH  # 6650 kWh
 
 # Optional feeder bounds on grid power. Wide by default so the pure toy QP is
 # just load-levelling; tighten with --p-upper / --p-lower if you want them to bind.
@@ -124,48 +177,66 @@ def load_forecast_csv(path: Path):
     n_days = len(pv) // N_STEPS
     return pv.reshape(n_days, N_STEPS), load.reshape(n_days, N_STEPS), n_days
 
-def load_actual_csv(path: Path):
-    """Read the 2-row wide toy CSV and return per-day PV / load arrays.
 
-    Returns
-    -------
-    pv_days   : np.ndarray (n_days, 48) kW
-    load_days : np.ndarray (n_days, 48) kW
-    n_days    : int
-    """
-    raw = pd.read_csv(path, header=None, index_col=0)
-    raw.index = [str(i).strip() for i in raw.index]
-    
-    dates = []
-    print(len(raw))
-    pv_row = [0 for i in range(48*(len(raw)-1)//32)]
-    load_row = [0 for i in range(48*(len(raw)-1)//32)]
-    for row in raw.itertuples():
-        key = row[0]
-        if key != "Date":
-            if key not in dates:
-                dates.append(key)
-            
-            day_index = dates.index(key)
-            for i in range(0, 48, 1):
-                if row[4] == "GC_Load_kW":
-                    load_row[day_index*48+i] += float(row[5+i])
-                else:
-                    pv_row[day_index*48+i] += float(row[5+i])
-    
-    pv   = pd.to_numeric(pv_row,          errors="coerce")
-    load = pd.to_numeric(load_row, errors="coerce")
-    pv   = pv[~np.isnan(pv)]
-    load = load[~np.isnan(load)]
 
-    if len(pv) != len(load):
-        raise ValueError(f"PV ({len(pv)}) and load ({len(load)}) lengths differ.")
-    if len(pv) % N_STEPS != 0:
-        raise ValueError(f"Expected a multiple of {N_STEPS} steps, got {len(pv)}.")
+def load_actual_feeder_csv(path: Path):
+    df = pd.read_csv(path)
 
-    n_days = len(pv) // N_STEPS
-    return pv.reshape(n_days, N_STEPS), load.reshape(n_days, N_STEPS), n_days
+    time_cols = list(df.columns[5:53])
 
+    dates = list(dict.fromkeys(df["Date"].astype(str)))
+    n_days = len(dates)
+    total_steps = n_days * N_STEPS
+
+    node_data = {
+        node: {
+            "load_kw": np.zeros(total_steps),
+            "pv_kw": np.zeros(total_steps),
+        }
+        for node in NODE_MAP
+    }
+
+    for day_i, date in enumerate(dates):
+        day_rows = df[df["Date"].astype(str) == date]
+
+        for _, row in day_rows.iterrows():
+            phase_raw = str(row["Phase"]).strip()
+
+            if phase_raw not in PHASE_MAP:
+                raise ValueError(f"Unknown phase label: {phase_raw}")
+
+            node_key = f"{int(row['Node'])}_{PHASE_MAP[phase_raw]}"
+
+            if node_key not in node_data:
+                continue
+
+            values = pd.to_numeric(
+                row[time_cols],
+                errors="raise"
+            ).to_numpy(dtype=float)
+
+            start = day_i * N_STEPS
+            end = start + N_STEPS
+
+            if row["Profile"] == "GC_Load_kW":
+                node_data[node_key]["load_kw"][start:end] = values
+
+            elif row["Profile"] == "PV_Generation_kW":
+                node_data[node_key]["pv_kw"][start:end] = values
+
+            else:
+                raise ValueError(
+                    f"Unexpected Profile value: {row['Profile']}"
+                )
+
+    total_load = np.zeros(total_steps)
+    total_pv = np.zeros(total_steps)
+
+    for node in node_data:
+        total_load += node_data[node]["load_kw"]
+        total_pv += node_data[node]["pv_kw"]
+
+    return node_data, total_load, total_pv, dates
 
 # ============================================================
 # 3. Toy QP  (minimize grid^2)
@@ -182,49 +253,73 @@ def generate_eta_profiles(days, steps_per_day):
     eta_profiles = np.tile(eta_day, days)
     return eta_profiles
     
-    
-def solve_toy_qp(p_load, p_pv, batt_power_kw, capacity_kwh, soc0_kwh,
-                 p_upper_kw, p_lower_kw, solver):
-    """Single-node load-levelling QP for one day.
+def solve_daily_qp(
+    p_load,
+    p_pv,
+    eta,
+    weight,
+    batt_power_kw,
+    capacity_kwh,
+    soc0_kwh,
+    solver
+):
+    n = len(p_load)
 
-    Objective : minimize ||grid||^2      (pure quadratic, "x^2 only")
-    Equality  : grid = load - pv - batt ,  sum(batt) = 0        (A2 x = b2)
-    Inequality: battery power, SoC bounds, optional feeder bounds (A1 x <= b1)
-    """
-    n    = len(p_load)
     batt = cp.Variable(n)
     grid = cp.Variable(n)
-    w = 1 
-    eta_day = generate_eta_profiles(5, 48)
-    soc_after = soc0_kwh - cp.cumsum(batt * DELTA_HOURS)
+    soc = cp.Variable(n + 1)
+
+    objective = cp.Minimize(
+        cp.sum(
+            -DELTA_HOURS * cp.multiply(eta, batt)
+            + weight * cp.multiply(eta, cp.square(grid))
+        )
+    )
 
     constraints = [
-        grid == p_load - p_pv - batt,        # A2: grid definition
-        cp.sum(batt) == 0,                   # A2: daily net-zero (terminal SoC)
-        batt <=  batt_power_kw,              # A1
-        batt >= -batt_power_kw,              # A1
-        soc_after >= 0.0,                    # A1
-        soc_after <= capacity_kwh,           # A1
-        grid <= p_upper_kw,                  # A1 (wide by default)
-        grid >= p_lower_kw,                  # A1
+        grid == p_load - p_pv - batt,
+
+        batt >= -batt_power_kw,
+        batt <=  batt_power_kw,
+
+        soc[0] == soc0_kwh,
+        soc[1:] == soc[:-1] - DELTA_HOURS * batt,
+
+        soc >= 0.0,
+        soc <= capacity_kwh,
+
+        # Daily terminal condition
+        soc[-1] == soc0_kwh,
     ]
-    
-    #cp.Minimize(cp.sum(-delta * cp.multiply(eta_day, x1) + w * cp.multiply(eta_day, cp.square(x2))))
-    prob = cp.Problem(cp.Minimize(cp.sum((-1/2)* cp.multiply(eta_day, batt) + w * cp.multiply(eta_day, cp.square(grid)))), constraints)
-    prob.solve(solver=getattr(cp, solver), verbose=False)
+
+    problem = cp.Problem(objective, constraints)
+    problem.solve(
+        solver=getattr(cp, solver),
+        verbose=False
+    )
 
     if batt.value is None:
-        raise RuntimeError(f"QP failed: {prob.status}")
+        raise RuntimeError(f"QP failed: {problem.status}")
 
-    batt_kw = np.asarray(batt.value, float).flatten()
-    grid_kw = np.asarray(grid.value, float).flatten()
-    return batt_kw, grid_kw, str(prob.status), float(prob.value)
-
+    return (
+        np.asarray(batt.value).flatten(),
+        np.asarray(grid.value).flatten(),
+        np.asarray(soc.value).flatten(),
+        str(problem.status),
+        float(problem.value),
+    )
 
 def _action(v: float) -> str:
     return "Discharge" if v > 0.5 else ("Charge" if v < -0.5 else "Idle")
 
+def make_tariff():
+    eta = np.zeros(N_STEPS)
 
+    eta[np.r_[0:14, 44:48]] = 0.03
+    eta[np.r_[14:28, 40:44]] = 0.06
+    eta[28:40] = 0.30
+
+    return eta
     
 # ============================================================
 # 4. Modbus connection + write helpers
@@ -285,38 +380,74 @@ def signed_to_register(value: float) -> int:
     return value & 0xFFFF
 
 
-def build_node_payload(pref_kw: float, qref_kvar: float,
-                       pv_kw: float, batt_kw: float) -> list:
-    """4-register payload for Node 646 in NODE_REGISTER_ORDER."""
-    regs = [pref_kw, qref_kvar, pv_kw, batt_kw]        # normal: [Pref, Qref, PV, Batt]
-    if NODE_REGISTER_ORDER == "reversed":
-        regs = list(reversed(regs))
-    return [signed_to_register(v) for v in regs]
+def build_feeder_payload(node_data, step_index, pbat_nodes):
+    payload = [0] * HOLDING_COUNT
+
+    for node, config in NODE_MAP.items():
+
+        p_load = node_data[node]["load_kw"][step_index]
+        p_pv   = node_data[node]["pv_kw"][step_index]
+        q_load = QREF_MAP[node]
+        p_bat  = pbat_nodes[node]
+
+        values = [
+            p_load,
+            q_load,
+            p_pv,
+            p_bat,
+        ]
+
+        if config["order"] == "reversed":
+            values.reverse()
+
+        offset = config["start"] - HOLDING_START
+
+        payload[offset:offset + 4] = [
+            signed_to_register(v)
+            for v in values
+        ]
+
+    return payload
 
 
-def modbus_write_node(conn: ModbusConnection, payload: list,
-                      dry_run: bool, verbose: bool = False) -> None:
-    """Write the 4 Node-646 registers, with one reconnect-and-retry on failure."""
+def modbus_write_feeder(
+    conn,
+    payload,
+    dry_run,
+    verbose=False
+):
+    if len(payload) != 64:
+        raise ValueError(
+            f"Expected 64 Modbus registers, got {len(payload)}"
+        )
+
     if dry_run:
         if verbose:
-            print(f"    [DRY-RUN] holding[{NODE_REGISTER_START}:"
-                  f"{NODE_REGISTER_START+4}] = {payload}")
+            print(f"[DRY-RUN] holding[2000:2064] = {payload}")
         return
-    try:
-        result = conn.client.write_registers(address=NODE_REGISTER_START, values=payload)
-        if result is None or result.isError():
-            raise IOError("write_registers returned an error result")
-        return
-    except Exception as e:
-        print(f"  WARNING: Modbus write failed ({e}).")
-    try:
-        conn.reconnect()
-        result = conn.client.write_registers(address=NODE_REGISTER_START, values=payload)
-        if result is None or result.isError():
-            print("  ERROR: Modbus write failed again after reconnection.")
-    except Exception as e:
-        print(f"  ERROR: Reconnection failed ({e}). Step write dropped.")
 
+    try:
+        result = conn.client.write_registers(
+            address=HOLDING_START,
+            values=payload
+        )
+
+        if result is None or result.isError():
+            raise IOError("write_registers returned error")
+
+    except Exception as e:
+        print(f"WARNING: Modbus write failed: {e}")
+        conn.reconnect()
+
+        result = conn.client.write_registers(
+            address=HOLDING_START,
+            values=payload
+        )
+
+        if result is None or result.isError():
+            raise IOError(
+                "Modbus write failed after reconnect"
+            )
 
 def clear_all_registers(conn: ModbusConnection, dry_run: bool) -> None:
     payload = [0] * HOLDING_COUNT
@@ -419,6 +550,11 @@ def print_step(step, load, pv, batt, grid, soc_pred, soc_meas):
           f"{batt:10.2f} {_action(batt):>10} {grid:10.2f} "
           f"{soc_pred:10.2f} {meas}")
 
+def disaggregate_battery(pbat_aggregate_kw: float):
+    return {
+        node: pbat_aggregate_kw * N_CUSTOMERS[node] / TOTAL_CUSTOMERS
+        for node in N_CUSTOMERS
+    }
 
 # ============================================================
 # 7. Main
@@ -428,7 +564,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="ECE4191 Module 3 -- Node-646 toy QP over Modbus TCP (Raspberry Pi)"
     )
-    parser.add_argument("--input",        default="Code_and_data/forecast_N646_students.csv",
+    parser.add_argument("--input",        default="Code_and_data/central_agg_forecast_data_students.csv",
                         help="Forecast CSV (drives the QP / battery scheduling).")
     parser.add_argument("--actual",       default="Code_and_data/agg_jan2013_students.csv",
                         help="Actual CSV (load/PV fed to Node 646; sets the optimised grid).")
