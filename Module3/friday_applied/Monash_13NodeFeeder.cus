@@ -22,25 +22,25 @@ Vnom2_ph_to_gnd = Vnom2_ph_to_ph/np.sqrt(3)
 Vnom_ph_to_gnd = Vnom_ph_to_ph/np.sqrt(3)
 
 
-# import os
-# import subprocess
+import os
+import subprocess
 
-# SETTINGS_DIR = r"C:\Users\jrbwb\OneDrive\University\Year4\ECE4191\Module1\Module1_Working"
-# SCRIPT_PATH = os.path.join(SETTINGS_DIR, "pv_load_windows_typhoon_students.py")
-# CSV_PATH = os.path.join(SETTINGS_DIR, "agg_jan2013_students.csv")
+SETTINGS_DIR = r"C:\Users\leroy\OneDrive\Documents\MyDrive\My Drive\4191\Monash IEEE Feeder Model"
+SCRIPT_PATH = os.path.join(SETTINGS_DIR, "pv_load_windows_typhoon_students.py")
+CSV_PATH = os.path.join(SETTINGS_DIR, "agg_jan2013_students.csv")
 
-# TYPHOON_PYTHON = r"C:\Program Files\Typhoon HIL Control Center 2026.1 sp1\bin\typhoon-python.cmd"
+TYPHOON_PYTHON = r"C:\Program Files\Typhoon HIL Control Center 2026.1 sp1\bin\typhoon-python.cmd"
 
-# subprocess.Popen(
-#     [
-#         TYPHOON_PYTHON,
-#         SCRIPT_PATH,
-#         "--input",
-#         CSV_PATH,
-#         "--no-prompt"
-#     ],
-#     cwd=SETTINGS_DIR
-# )
+subprocess.Popen(
+    [
+        TYPHOON_PYTHON,
+        SCRIPT_PATH,
+        "--input",
+        CSV_PATH,
+        "--no-prompt"
+    ],
+    cwd=SETTINGS_DIR
+)
 ]]></initialization_code>
     <components>
         <component_data>
@@ -87,8 +87,8 @@ Vnom_ph_to_gnd = Vnom_ph_to_ph/np.sqrt(3)
                 <image><![CDATA[13 Node Custom UI Background.png]]></image>
                 <image_scaling><![CDATA[Keep aspect ratio]]></image_scaling>
                 <widget_settings>
-                    <x>296</x>
-                    <y>48</y>
+                    <x>280</x>
+                    <y>40</y>
                     <width>1160</width>
                     <height>824</height>
                     <background_color><![CDATA[#f0f0f0]]></background_color>
@@ -9824,8 +9824,8 @@ li.checked::marker { content: "\2612"; }
 </style></head><body style=" font-family:'Tahoma'; font-size:8pt; font-weight:400; font-style:normal;">
 <p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:10pt;">Use &quot;Breaker Control&quot; tag in schematic [Coil_Out] and set it to this switch should you wish to toggle via Modbus</span></p></body></html>]]></text>
                 <widget_settings>
-                    <x>904</x>
-                    <y>608</y>
+                    <x>896</x>
+                    <y>616</y>
                     <width>360</width>
                     <height>40</height>
                     <background_color><![CDATA[#e7f0b0]]></background_color>
@@ -10248,8 +10248,8 @@ referenceCurves = [refCurve1, refCurve2]]]></reference_curve_code>
                 </advance_widget_settings>
             </component_data>
         <component_data>
-                <id>8531aaa5908a11f19d1ee8c8293a977d</id>
-                <name><![CDATA[Trace graph]]></name>
+                <id>ae2cfe73909011f199f71091d1532e87</id>
+                <name><![CDATA[RMS Voltage 1]]></name>
                 <type>TraceDisplay</type>
                 <description><![CDATA[]]></description>
                 <data_type>Signals</data_type>
@@ -10278,20 +10278,20 @@ data = {
     }
 displayValue = data
 ]]></code>
-                <analog_signals><![CDATA[['Node 611.V3_rms', 'Node 632.V1_rms', 'Node 632.V2_rms', 'Node 632.V3_rms', 'Node 633.V1_rms', 'Node 633.V2_rms', 'Node 633.V3_rms', 'Node 645.V2_rms', 'Node 645.V3_rms']]]></analog_signals>
+                <analog_signals><![CDATA[['Node 611.V3_rms', 'Node 632.V2_rms', 'Node 632.V1_rms', 'Node 632.V3_rms', 'Node 633.V1_rms', 'Node 633.V2_rms', 'Node 633.V3_rms', 'Node 645.V2_rms', 'Node 645.V3_rms']]]></analog_signals>
                 <digital_signals><![CDATA[[]]]></digital_signals>
                 <streaming_analog_signals><![CDATA[[]]]></streaming_analog_signals>
                 <streaming_digital_signals><![CDATA[[]]]></streaming_digital_signals>
-                <analog_signals_scaling_factors><![CDATA[{'Node 611.V3_rms': 1.0, 'Node 632.V1_rms': 1.0, 'Node 632.V2_rms': 1.0, 'Node 632.V3_rms': 1.0, 'Node 633.V1_rms': 1.0, 'Node 633.V2_rms': 1.0, 'Node 633.V3_rms': 1.0, 'Node 645.V2_rms': 1.0, 'Node 645.V3_rms': 1.0}]]></analog_signals_scaling_factors>
+                <analog_signals_scaling_factors><![CDATA[{'Node 611.V3_rms': 1.0, 'Node 632.V2_rms': 1.0, 'Node 632.V1_rms': 1.0, 'Node 632.V3_rms': 1.0, 'Node 633.V1_rms': 1.0, 'Node 633.V2_rms': 1.0, 'Node 633.V3_rms': 1.0, 'Node 645.V2_rms': 1.0, 'Node 645.V3_rms': 1.0}]]></analog_signals_scaling_factors>
                 <streaming_analog_signals_scaling_factors><![CDATA[{}]]></streaming_analog_signals_scaling_factors>
                 <update_rate>250</update_rate>
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>24</x>
-                    <y>1224</y>
-                    <width>1200</width>
-                    <height>696</height>
+                    <x>208</x>
+                    <y>1272</y>
+                    <width>568</width>
+                    <height>368</height>
                     <appearance><![CDATA[Flat]]></appearance>
                     <hierarchy_position><![CDATA[1]]></hierarchy_position>
                     <is_background><![CDATA[False]]></is_background>
@@ -10299,75 +10299,45 @@ displayValue = data
                     <use_label>False</use_label>
                 </widget_settings>
                 <advance_widget_settings>
-                    <x_title><![CDATA[Time (s)]]></x_title>
-                    <y_title><![CDATA[Voltage (V)]]></y_title>
+                    <x_title><![CDATA[x axes]]></x_title>
+                    <y_title><![CDATA[y axes]]></y_title>
                     <y_range_min>-100.0</y_range_min>
                     <y_range_max>100.0</y_range_max>
                     <time_window>600</time_window>
                     <auto_scale_enabled>True</auto_scale_enabled>
                     <legend_enabled>True</legend_enabled>
-                    <x_axis_title_enabled>True</x_axis_title_enabled>
-                    <y_axis_title_enabled>True</y_axis_title_enabled>
+                    <x_axis_title_enabled>False</x_axis_title_enabled>
+                    <y_axis_title_enabled>False</y_axis_title_enabled>
                     <use_reference_curve>True</use_reference_curve>
-                    <reference_curve_code><![CDATA[# NOTE: Global namespace variables are available
-# Selected time window is available through variable 'timeWindow'
-# Selected update rate is available through variable 'updateRate'
-
-# reference curve data point
-
-UpperBound = 2522.0
-LowerBound = 2282.0
-
-# specify curve options ('data' part is mandatory)
-refCurveData1 = {
-    # reference curve data point
-    "data": UpperBound,
-
-    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
+                    <reference_curve_code><![CDATA[# reference curve data points 
+# 2401 +- 5%
+upperBound = 2522.0
+lowerBound = 2282.0
+# Define the first curve (Pref)
+refCurve1 = {
+    "data": upperBound,
     "line_style": "dashed",
-
-    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
     "line_color": 'blue',
-
-    # curve line width: float number
     "line_width": 2.0,
-    
-    # reference curve title
-    "title": "Upper Bound",
-
-    # show a title in the legend
+    "title": "UpperBound",
     "show_in_legend": True
 }
-
-refCurveData2 = {
-    # reference curve data point
-    "data": LowerBound,
-
-    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
-    "line_style": "dashed",
-
-    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
-    "line_color": 'blue',
-
-    # curve line width: float number
+# Define the second curve (Qref)
+refCurve2 = {
+    "data": lowerBound,
+    "line_style": "dotted",
+    "line_color": 'red',
     "line_width": 2.0,
-    
-    # reference curve title
-    "title": "Lower Bound",
-
-    # show a title in the legend
+    "title": "LowerBound",
     "show_in_legend": True
 }
-
-# list of reference curves data: [ref1, ref2,...refN]
-referenceCurves = [refCurveData1, refCurveData2]
-
-]]></reference_curve_code>
+# Add both to the list of reference curves
+referenceCurves = [refCurve1, refCurve2]]]></reference_curve_code>
                 </advance_widget_settings>
             </component_data>
         <component_data>
-                <id>8d858062908a11f192efe8c8293a977d</id>
-                <name><![CDATA[Trace graph1]]></name>
+                <id>b269346b909011f1ac0e1091d1532e87</id>
+                <name><![CDATA[RMS Voltage 2]]></name>
                 <type>TraceDisplay</type>
                 <description><![CDATA[]]></description>
                 <data_type>Signals</data_type>
@@ -10406,10 +10376,10 @@ displayValue = data
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>1256</x>
-                    <y>1264</y>
-                    <width>1088</width>
-                    <height>648</height>
+                    <x>784</x>
+                    <y>1272</y>
+                    <width>608</width>
+                    <height>368</height>
                     <appearance><![CDATA[Flat]]></appearance>
                     <hierarchy_position><![CDATA[1]]></hierarchy_position>
                     <is_background><![CDATA[False]]></is_background>
@@ -10417,75 +10387,46 @@ displayValue = data
                     <use_label>False</use_label>
                 </widget_settings>
                 <advance_widget_settings>
-                    <x_title><![CDATA[Time (s)]]></x_title>
-                    <y_title><![CDATA[Voltage (V)]]></y_title>
+                    <x_title><![CDATA[x axes]]></x_title>
+                    <y_title><![CDATA[y axes]]></y_title>
                     <y_range_min>-100.0</y_range_min>
                     <y_range_max>100.0</y_range_max>
                     <time_window>600</time_window>
                     <auto_scale_enabled>True</auto_scale_enabled>
                     <legend_enabled>True</legend_enabled>
-                    <x_axis_title_enabled>True</x_axis_title_enabled>
-                    <y_axis_title_enabled>True</y_axis_title_enabled>
+                    <x_axis_title_enabled>False</x_axis_title_enabled>
+                    <y_axis_title_enabled>False</y_axis_title_enabled>
                     <use_reference_curve>True</use_reference_curve>
-                    <reference_curve_code><![CDATA[# NOTE: Global namespace variables are available
-# Selected time window is available through variable 'timeWindow'
-# Selected update rate is available through variable 'updateRate'
-
-# reference curve data point
-
-UpperBound = 2522.0
-LowerBound = 2282.0
-
-# specify curve options ('data' part is mandatory)
-refCurveData1 = {
-    # reference curve data point
-    "data": UpperBound,
-
-    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
+                    <reference_curve_code><![CDATA[# reference curve data points 
+# 2401 +- 5%
+upperBound = 2522.0
+lowerBound = 2282.0
+# Define the first curve (Pref)
+refCurve1 = {
+    "data": upperBound,
     "line_style": "dashed",
-
-    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
     "line_color": 'blue',
-
-    # curve line width: float number
     "line_width": 2.0,
-    
-    # reference curve title
-    "title": "Upper Bound",
-
-    # show a title in the legend
+    "title": "UpperBound",
     "show_in_legend": True
 }
-
-refCurveData2 = {
-    # reference curve data point
-    "data": LowerBound,
-
-    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
-    "line_style": "dashed",
-
-    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
-    "line_color": 'blue',
-
-    # curve line width: float number
+# Define the second curve (Qref)
+refCurve2 = {
+    "data": lowerBound,
+    "line_style": "dotted",
+    "line_color": 'red',
     "line_width": 2.0,
-    
-    # reference curve title
-    "title": "Lower Bound",
-
-    # show a title in the legend
+    "title": "LowerBound",
     "show_in_legend": True
 }
-
-# list of reference curves data: [ref1, ref2,...refN]
-referenceCurves = [refCurveData1, refCurveData2]
-
+# Add both to the list of reference curves
+referenceCurves = [refCurve1, refCurve2]
 ]]></reference_curve_code>
                 </advance_widget_settings>
             </component_data>
         <component_data>
-                <id>974fa8b4908a11f1a556e8c8293a977d</id>
-                <name><![CDATA[Trace graph2]]></name>
+                <id>b9f9f755909011f1bb0c1091d1532e87</id>
+                <name><![CDATA[RMS Voltage 3]]></name>
                 <type>TraceDisplay</type>
                 <description><![CDATA[]]></description>
                 <data_type>Signals</data_type>
@@ -10524,10 +10465,10 @@ displayValue = data
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>56</x>
-                    <y>1944</y>
-                    <width>1168</width>
-                    <height>784</height>
+                    <x>208</x>
+                    <y>1632</y>
+                    <width>568</width>
+                    <height>336</height>
                     <appearance><![CDATA[Flat]]></appearance>
                     <hierarchy_position><![CDATA[1]]></hierarchy_position>
                     <is_background><![CDATA[False]]></is_background>
@@ -10535,75 +10476,45 @@ displayValue = data
                     <use_label>False</use_label>
                 </widget_settings>
                 <advance_widget_settings>
-                    <x_title><![CDATA[Time (s)]]></x_title>
-                    <y_title><![CDATA[Voltage (V)]]></y_title>
+                    <x_title><![CDATA[x axes]]></x_title>
+                    <y_title><![CDATA[y axes]]></y_title>
                     <y_range_min>-100.0</y_range_min>
                     <y_range_max>100.0</y_range_max>
                     <time_window>600</time_window>
                     <auto_scale_enabled>True</auto_scale_enabled>
                     <legend_enabled>True</legend_enabled>
-                    <x_axis_title_enabled>True</x_axis_title_enabled>
-                    <y_axis_title_enabled>True</y_axis_title_enabled>
+                    <x_axis_title_enabled>False</x_axis_title_enabled>
+                    <y_axis_title_enabled>False</y_axis_title_enabled>
                     <use_reference_curve>True</use_reference_curve>
-                    <reference_curve_code><![CDATA[# NOTE: Global namespace variables are available
-# Selected time window is available through variable 'timeWindow'
-# Selected update rate is available through variable 'updateRate'
-
-# reference curve data point
-
-UpperBound = 2522.0
-LowerBound = 2282.0
-
-# specify curve options ('data' part is mandatory)
-refCurveData1 = {
-    # reference curve data point
-    "data": UpperBound,
-
-    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
+                    <reference_curve_code><![CDATA[# reference curve data points 
+# 2401 +- 5%
+upperBound = 2522.0
+lowerBound = 2282.0
+# Define the first curve (Pref)
+refCurve1 = {
+    "data": upperBound,
     "line_style": "dashed",
-
-    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
     "line_color": 'blue',
-
-    # curve line width: float number
     "line_width": 2.0,
-    
-    # reference curve title
-    "title": "Upper Bound",
-
-    # show a title in the legend
+    "title": "UpperBound",
     "show_in_legend": True
 }
-
-refCurveData2 = {
-    # reference curve data point
-    "data": LowerBound,
-
-    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
-    "line_style": "dashed",
-
-    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
-    "line_color": 'blue',
-
-    # curve line width: float number
+# Define the second curve (Qref)
+refCurve2 = {
+    "data": lowerBound,
+    "line_style": "dotted",
+    "line_color": 'red',
     "line_width": 2.0,
-    
-    # reference curve title
-    "title": "Lower Bound",
-
-    # show a title in the legend
+    "title": "LowerBound",
     "show_in_legend": True
 }
-
-# list of reference curves data: [ref1, ref2,...refN]
-referenceCurves = [refCurveData1, refCurveData2]
-
-]]></reference_curve_code>
+# Add both to the list of reference curves
+referenceCurves = [refCurve1, refCurve2]]]></reference_curve_code>
                 </advance_widget_settings>
             </component_data>
         <component_data>
-                <id>ac897c6f908a11f1a855e8c8293a977d</id>
-                <name><![CDATA[Trace graph3]]></name>
+                <id>c85fb7c9909011f1aaad1091d1532e87</id>
+                <name><![CDATA[RMS Voltage Node 634]]></name>
                 <type>TraceDisplay</type>
                 <description><![CDATA[]]></description>
                 <data_type>Signals</data_type>
@@ -10642,10 +10553,10 @@ displayValue = data
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>1280</x>
-                    <y>1952</y>
-                    <width>1064</width>
-                    <height>744</height>
+                    <x>784</x>
+                    <y>1632</y>
+                    <width>608</width>
+                    <height>336</height>
                     <appearance><![CDATA[Flat]]></appearance>
                     <hierarchy_position><![CDATA[1]]></hierarchy_position>
                     <is_background><![CDATA[False]]></is_background>
@@ -10653,75 +10564,45 @@ displayValue = data
                     <use_label>False</use_label>
                 </widget_settings>
                 <advance_widget_settings>
-                    <x_title><![CDATA[Time (s)]]></x_title>
-                    <y_title><![CDATA[Voltage (V)]]></y_title>
+                    <x_title><![CDATA[x axes]]></x_title>
+                    <y_title><![CDATA[y axes]]></y_title>
                     <y_range_min>-100.0</y_range_min>
                     <y_range_max>100.0</y_range_max>
                     <time_window>600</time_window>
                     <auto_scale_enabled>True</auto_scale_enabled>
                     <legend_enabled>True</legend_enabled>
-                    <x_axis_title_enabled>True</x_axis_title_enabled>
-                    <y_axis_title_enabled>True</y_axis_title_enabled>
+                    <x_axis_title_enabled>False</x_axis_title_enabled>
+                    <y_axis_title_enabled>False</y_axis_title_enabled>
                     <use_reference_curve>True</use_reference_curve>
-                    <reference_curve_code><![CDATA[# NOTE: Global namespace variables are available
-# Selected time window is available through variable 'timeWindow'
-# Selected update rate is available through variable 'updateRate'
-
-# reference curve data point
-
-UpperBound = 290.85
-LowerBound = 263.15
-
-# specify curve options ('data' part is mandatory)
-refCurveData1 = {
-    # reference curve data point
-    "data": UpperBound,
-
-    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
+                    <reference_curve_code><![CDATA[# reference curve data points 
+# 2401 +- 5%
+upperBound = 263.0
+lowerBound = 291.0
+# Define the first curve (Pref)
+refCurve1 = {
+    "data": upperBound,
     "line_style": "dashed",
-
-    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
     "line_color": 'blue',
-
-    # curve line width: float number
     "line_width": 2.0,
-    
-    # reference curve title
-    "title": "Upper Bound",
-
-    # show a title in the legend
+    "title": "UpperBound",
     "show_in_legend": True
 }
-
-refCurveData2 = {
-    # reference curve data point
-    "data": LowerBound,
-
-    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
-    "line_style": "dashed",
-
-    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
-    "line_color": 'blue',
-
-    # curve line width: float number
+# Define the second curve (Qref)
+refCurve2 = {
+    "data": lowerBound,
+    "line_style": "dotted",
+    "line_color": 'red',
     "line_width": 2.0,
-    
-    # reference curve title
-    "title": "Lower Bound",
-
-    # show a title in the legend
+    "title": "LowerBound",
     "show_in_legend": True
 }
-
-# list of reference curves data: [ref1, ref2,...refN]
-referenceCurves = [refCurveData1, refCurveData2]
-
-]]></reference_curve_code>
+# Add both to the list of reference curves
+referenceCurves = [refCurve1, refCurve2]]]></reference_curve_code>
                 </advance_widget_settings>
             </component_data>
         <component_data>
-                <id>f6113bda908c11f1b3e4e8c8293a977d</id>
-                <name><![CDATA[Trace graph4]]></name>
+                <id>d094fddd909211f1841c1091d1532e87</id>
+                <name><![CDATA[Active Power 1]]></name>
                 <type>TraceDisplay</type>
                 <description><![CDATA[]]></description>
                 <data_type>Signals</data_type>
@@ -10750,20 +10631,20 @@ data = {
     }
 displayValue = data
 ]]></code>
-                <analog_signals><![CDATA[['Time Varying Load 611.Single phase time-varying load1.P_measured', 'Time Varying Load 634.Single phase time-varying load with the Master PulseA.P_measured', 'Time Varying Load 634.Single phase time-varying load with the Master PulseB.P_measured', 'Time Varying Load 634.Single phase time-varying load with the Master PulseC.P_measured', 'Time Varying Load 645.Single phase time-varying load645.P_measured', 'Time Varying Load 646.Single phase time-varying load646.P_measured', 'Time Varying Load 652.Single phase time-varying load652.P_measured']]]></analog_signals>
+                <analog_signals><![CDATA[['Time Varying Load 611.Single phase time-varying load1.P_measured', 'Time Varying Load 634.Single phase time-varying load with the Master PulseA.P_measured', 'Time Varying Load 634.Single phase time-varying load with the Master PulseB.P_measured', 'Time Varying Load 634.Single phase time-varying load with the Master PulseC.P_measured', 'Time Varying Load 645.Single phase time-varying load645.P_measured', 'Time Varying Load 646.Single phase time-varying load646.P_measured', 'Time Varying Load 652.Single phase time-varying load652.P_measured', 'Time Varying Load 692.Single phase time-varying loadC.P_measured']]]></analog_signals>
                 <digital_signals><![CDATA[[]]]></digital_signals>
                 <streaming_analog_signals><![CDATA[[]]]></streaming_analog_signals>
                 <streaming_digital_signals><![CDATA[[]]]></streaming_digital_signals>
-                <analog_signals_scaling_factors><![CDATA[{'Time Varying Load 611.Single phase time-varying load1.P_measured': 1.0, 'Time Varying Load 634.Single phase time-varying load with the Master PulseA.P_measured': 1.0, 'Time Varying Load 634.Single phase time-varying load with the Master PulseB.P_measured': 1.0, 'Time Varying Load 634.Single phase time-varying load with the Master PulseC.P_measured': 1.0, 'Time Varying Load 645.Single phase time-varying load645.P_measured': 1.0, 'Time Varying Load 646.Single phase time-varying load646.P_measured': 1.0, 'Time Varying Load 652.Single phase time-varying load652.P_measured': 1.0}]]></analog_signals_scaling_factors>
+                <analog_signals_scaling_factors><![CDATA[{'Time Varying Load 611.Single phase time-varying load1.P_measured': 1.0, 'Time Varying Load 634.Single phase time-varying load with the Master PulseA.P_measured': 1.0, 'Time Varying Load 634.Single phase time-varying load with the Master PulseB.P_measured': 1.0, 'Time Varying Load 634.Single phase time-varying load with the Master PulseC.P_measured': 1.0, 'Time Varying Load 645.Single phase time-varying load645.P_measured': 1.0, 'Time Varying Load 646.Single phase time-varying load646.P_measured': 1.0, 'Time Varying Load 652.Single phase time-varying load652.P_measured': 1.0, 'Time Varying Load 692.Single phase time-varying loadC.P_measured': 1.0}]]></analog_signals_scaling_factors>
                 <streaming_analog_signals_scaling_factors><![CDATA[{}]]></streaming_analog_signals_scaling_factors>
                 <update_rate>250</update_rate>
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>8</x>
-                    <y>2936</y>
-                    <width>1256</width>
-                    <height>800</height>
+                    <x>1480</x>
+                    <y>1272</y>
+                    <width>552</width>
+                    <height>368</height>
                     <appearance><![CDATA[Flat]]></appearance>
                     <hierarchy_position><![CDATA[1]]></hierarchy_position>
                     <is_background><![CDATA[False]]></is_background>
@@ -10771,15 +10652,15 @@ displayValue = data
                     <use_label>False</use_label>
                 </widget_settings>
                 <advance_widget_settings>
-                    <x_title><![CDATA[Time (s)]]></x_title>
-                    <y_title><![CDATA[Power (W)]]></y_title>
+                    <x_title><![CDATA[x axes]]></x_title>
+                    <y_title><![CDATA[y axes]]></y_title>
                     <y_range_min>-100.0</y_range_min>
                     <y_range_max>100.0</y_range_max>
                     <time_window>600</time_window>
                     <auto_scale_enabled>True</auto_scale_enabled>
                     <legend_enabled>True</legend_enabled>
-                    <x_axis_title_enabled>True</x_axis_title_enabled>
-                    <y_axis_title_enabled>True</y_axis_title_enabled>
+                    <x_axis_title_enabled>False</x_axis_title_enabled>
+                    <y_axis_title_enabled>False</y_axis_title_enabled>
                     <use_reference_curve>False</use_reference_curve>
                     <reference_curve_code><![CDATA[# NOTE: Global namespace variables are available
 # Selected time window is available through variable 'timeWindow'
@@ -10816,8 +10697,8 @@ referenceCurves = [refCurveData1]
                 </advance_widget_settings>
             </component_data>
         <component_data>
-                <id>fb2543ce908c11f1b4f7e8c8293a977d</id>
-                <name><![CDATA[Trace graph5]]></name>
+                <id>d12b9ebb909211f1ba101091d1532e87</id>
+                <name><![CDATA[Active Power 2]]></name>
                 <type>TraceDisplay</type>
                 <description><![CDATA[]]></description>
                 <data_type>Signals</data_type>
@@ -10846,20 +10727,20 @@ data = {
     }
 displayValue = data
 ]]></code>
-                <analog_signals><![CDATA[['Time Varying Load 671.Single phase time-varying loadA1.P_measured', 'Time Varying Load 671.Single phase time-varying loadA2.P_measured', 'Time Varying Load 671.Single phase time-varying loadA.P_measured', 'Time Varying Load 675.Single phase time-varying loadA.P_measured', 'Time Varying Load 675.Single phase time-varying loadB.P_measured', 'Time Varying Load 675.Single phase time-varying loadC.P_measured', 'Time Varying Load 692.Single phase time-varying loadC.P_measured']]]></analog_signals>
+                <analog_signals><![CDATA[['Time Varying Load 671.Single phase time-varying loadA.P_measured', 'Time Varying Load 675.Single phase time-varying loadB.P_measured', 'Time Varying Load 671.Single phase time-varying loadA1.P_measured', 'Time Varying Load 671.Single phase time-varying loadA2.P_measured', 'Time Varying Load 675.Single phase time-varying loadA.P_measured', 'Time Varying Load 675.Single phase time-varying loadC.P_measured']]]></analog_signals>
                 <digital_signals><![CDATA[[]]]></digital_signals>
                 <streaming_analog_signals><![CDATA[[]]]></streaming_analog_signals>
                 <streaming_digital_signals><![CDATA[[]]]></streaming_digital_signals>
-                <analog_signals_scaling_factors><![CDATA[{'Time Varying Load 671.Single phase time-varying loadA1.P_measured': 1.0, 'Time Varying Load 671.Single phase time-varying loadA2.P_measured': 1.0, 'Time Varying Load 671.Single phase time-varying loadA.P_measured': 1.0, 'Time Varying Load 675.Single phase time-varying loadA.P_measured': 1.0, 'Time Varying Load 675.Single phase time-varying loadB.P_measured': 1.0, 'Time Varying Load 675.Single phase time-varying loadC.P_measured': 1.0, 'Time Varying Load 692.Single phase time-varying loadC.P_measured': 1.0}]]></analog_signals_scaling_factors>
+                <analog_signals_scaling_factors><![CDATA[{'Time Varying Load 671.Single phase time-varying loadA.P_measured': 1.0, 'Time Varying Load 675.Single phase time-varying loadB.P_measured': 1.0, 'Time Varying Load 671.Single phase time-varying loadA1.P_measured': 1.0, 'Time Varying Load 671.Single phase time-varying loadA2.P_measured': 1.0, 'Time Varying Load 675.Single phase time-varying loadA.P_measured': 1.0, 'Time Varying Load 675.Single phase time-varying loadC.P_measured': 1.0}]]></analog_signals_scaling_factors>
                 <streaming_analog_signals_scaling_factors><![CDATA[{}]]></streaming_analog_signals_scaling_factors>
                 <update_rate>250</update_rate>
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>1280</x>
-                    <y>2912</y>
-                    <width>1264</width>
-                    <height>832</height>
+                    <x>2040</x>
+                    <y>1272</y>
+                    <width>536</width>
+                    <height>368</height>
                     <appearance><![CDATA[Flat]]></appearance>
                     <hierarchy_position><![CDATA[1]]></hierarchy_position>
                     <is_background><![CDATA[False]]></is_background>
@@ -10867,15 +10748,15 @@ displayValue = data
                     <use_label>False</use_label>
                 </widget_settings>
                 <advance_widget_settings>
-                    <x_title><![CDATA[Time (s)]]></x_title>
-                    <y_title><![CDATA[Power (W)]]></y_title>
+                    <x_title><![CDATA[x axes]]></x_title>
+                    <y_title><![CDATA[y axes]]></y_title>
                     <y_range_min>-100.0</y_range_min>
                     <y_range_max>100.0</y_range_max>
                     <time_window>600</time_window>
                     <auto_scale_enabled>True</auto_scale_enabled>
                     <legend_enabled>True</legend_enabled>
-                    <x_axis_title_enabled>True</x_axis_title_enabled>
-                    <y_axis_title_enabled>True</y_axis_title_enabled>
+                    <x_axis_title_enabled>False</x_axis_title_enabled>
+                    <y_axis_title_enabled>False</y_axis_title_enabled>
                     <use_reference_curve>False</use_reference_curve>
                     <reference_curve_code><![CDATA[# NOTE: Global namespace variables are available
 # Selected time window is available through variable 'timeWindow'
