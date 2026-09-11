@@ -4301,6 +4301,53 @@ model "Monash_13NodeFeeder" {
                 size = 32, 32
             ]
 
+            component "core/Power Meter" "Power Meter1" {
+            }
+            [
+                position = 7384, 8300
+                rotation = down
+            ]
+
+            component "core/Probe" Probe1 {
+                override_signal_name = "True"
+                signal_name = "P"
+                signal_type = "active power"
+            }
+            [
+                position = 7296, 8356
+                rotation = down
+            ]
+
+            component "core/CPU Transition" "CPU Transition4" {
+                execution_rate = "ex_rate"
+            }
+            [
+                position = 7520, 8372
+                rotation = down
+                hide_name = True
+                size = 32, 32
+            ]
+
+            component "core/CPU Transition" "CPU Transition5" {
+                execution_rate = "ex_rate"
+            }
+            [
+                position = 7576, 8336
+                rotation = down
+                hide_name = True
+                size = 32, 32
+            ]
+
+            component "core/CPU Transition" "CPU Transition6" {
+                execution_rate = "ex_rate"
+            }
+            [
+                position = 7620, 8308
+                rotation = down
+                hide_name = True
+                size = 32, 32
+            ]
+
             port B1 {
                 label = "B1"
                 position = left:2
@@ -4668,6 +4715,36 @@ model "Monash_13NodeFeeder" {
                 position = 7872, 7660
             ]
 
+            junction Junction26 sp
+            [
+                position = 7568, 7984
+            ]
+
+            junction Junction27 sp
+            [
+                position = 7568, 8088
+            ]
+
+            junction Junction28 sp
+            [
+                position = 7568, 8192
+            ]
+
+            junction Junction32 sp
+            [
+                position = 7700, 8360
+            ]
+
+            junction Junction33 sp
+            [
+                position = 7860, 8360
+            ]
+
+            junction Junction34 sp
+            [
+                position = 8020, 8360
+            ]
+
             comment Comment1 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">RMS Calculation</span></p></body></html> ENDCOMMENT 
             [
                 position = 7416, 7416
@@ -4688,11 +4765,9 @@ model "Monash_13NodeFeeder" {
             connect I1.n_node Junction8 as Connection102
             connect I1_from1 RMS6.in as Connection196
             connect I1_from2 ph_diff5.signal1 as Connection221
-            connect I1_goto I1.out as Connection178
             connect I1_phase.in ph_diff5.phase_diff as Connection217
             connect I1_rms.in RMS6.out as Connection191
             connect I2.p_node B1 as Connection167
-            connect I2.out I2_goto as Connection179
             connect I2.n_node Junction9 as Connection105
             connect I2_from1 RMS5.in as Connection197
             connect I2_from2 ph_diff6.signal1 as Connection222
@@ -4700,7 +4775,6 @@ model "Monash_13NodeFeeder" {
             connect I2_rms.in RMS5.out as Connection192
             connect I3_from1 RMS4.in as Connection198
             connect I3_from2 ph_diff4.signal1 as Connection223
-            connect I3_goto I3.out as Connection180
             connect I3_phase.in ph_diff4.phase_diff as Connection213
             connect I3_rms.in RMS4.out as Connection190
             connect Junction18 I3.n_node as Connection146
@@ -4721,7 +4795,6 @@ model "Monash_13NodeFeeder" {
             connect V1_REF_from4 ph_diff6.signal2 as Connection211
             connect V1_REF_from5 ph_diff4.signal2 as Connection212
             connect V1_from1 RMS1.in as Connection193
-            connect V1_goto V1.out as Connection183
             connect V1_phase.in ph_diff1.phase_diff as Connection200
             connect V1_rms.in RMS1.out as Connection154
             connect V2.n_node Junction5 as Connection95
@@ -4730,7 +4803,6 @@ model "Monash_13NodeFeeder" {
                 breakpoints = 7832, 8304
             ]
             connect V2_from1 RMS2.in as Connection194
-            connect V2_goto V2.out as Connection182
             connect V2_phase.in ph_diff2.phase_diff as Connection203
             connect V2_rms.in RMS2.out as Connection155
             connect V3.p_node Junction18 as Connection174
@@ -4742,7 +4814,6 @@ model "Monash_13NodeFeeder" {
                 breakpoints = 7968, 8408
             ]
             connect V3_from1 RMS3.in as Connection195
-            connect V3_goto V3.out as Connection181
             connect V3_phase.in ph_diff3.phase_diff as Connection207
             connect V3_rms.in RMS3.out as Connection156
             connect gnd.node Junction22 as Connection177
@@ -4764,6 +4835,31 @@ model "Monash_13NodeFeeder" {
             connect "CPU Transition2.Out" ph_diff2.signal2 as Connection282
             connect V1_REF_from2 "CPU Transition3.In" as Connection283
             connect "CPU Transition3.Out" ph_diff3.signal2 as Connection284
+            connect I1.out Junction26 as Connection289
+            connect Junction26 I1_goto as Connection290
+            [
+                breakpoints = 7568, 7984
+            ]
+            connect "Power Meter1.ia" Junction26 as Connection291
+            connect I2.out Junction27 as Connection292
+            connect Junction27 I2_goto as Connection293
+            connect "Power Meter1.ib" Junction27 as Connection294
+            connect I3_goto Junction28 as Connection295
+            connect Junction28 I3.out as Connection296
+            connect "Power Meter1.ic" Junction28 as Connection297
+            connect Probe1.in "Power Meter1.Pdc" as Connection307
+            connect "CPU Transition4.Out" "Power Meter1.va" as Connection312
+            connect V1.out Junction32 as Connection313
+            connect Junction32 V1_goto as Connection314
+            connect "CPU Transition4.In" Junction32 as Connection315
+            connect "CPU Transition5.Out" "Power Meter1.vb" as Connection316
+            connect V2_goto Junction33 as Connection317
+            connect Junction33 V2.out as Connection318
+            connect "CPU Transition5.In" Junction33 as Connection319
+            connect "Power Meter1.vc" "CPU Transition6.Out" as Connection321
+            connect V3_goto Junction34 as Connection322
+            connect Junction34 V3.out as Connection323
+            connect "CPU Transition6.In" Junction34 as Connection324
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -13774,6 +13870,16 @@ model "Monash_13NodeFeeder" {
             angle = "Degrees"
             lpf_checkbox = "True"
             f3db = "500.0"
+            execution_rate = "inherit"
+        }
+
+        "core/Power Meter" {
+            filter_order = "first order"
+            filter_cutoff_Hz = "30"
+            initial_filter_input = "0"
+            initial_filter_output = "0"
+            enable_inst_ports = "True"
+            enable_zero_ports = "False"
             execution_rate = "inherit"
         }
 
