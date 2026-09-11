@@ -59,16 +59,37 @@ NODE_MAP = {
     "634_A": {"start": 2060, "order": "reversed"},
 }
 
-PHASE_MAP = {
-    "A": "A", "B": "B", "C": "C",
-    "Ph1": "A", "Ph2": "B", "Ph3": "C",
-}
 
 # Real-time reactive power (kVAr) per node. Only Node 646 is specified by the manual;
 # all other nodes default to 0 kVAr -- update this if you have per-node Qref data.
-QREF_646_KVAR = 132
-QREF_MAP = {node: 0.0 for node in NODE_MAP}
-QREF_MAP["646_B"] = QREF_646_KVAR
+QREF_MAP = {
+    "646_B": 132,
+    "645_B": 125,
+    "611_C": 80,
+    "652_A": 86,
+
+    "671_A": 220,
+    "671_B": 220,
+    "671_C": 220,
+
+    "692_C": 151,
+    "692_B": 0,
+    "692_A": 0,
+
+    "675_C": 212,
+    "675_B": 60,
+    "675_A": 190,
+
+    "634_C": 90,
+    "634_B": 90,
+    "634_A": 110,
+}
+
+PHASE_MAP = {
+    "A": "A", "B": "B", "C": "C",
+    "Ph1": "A", "Ph2": "B", "Ph3": "C",
+    "1": "A", "2": "B", "3": "C",
+}
 
 N_CUSTOMERS = {
     "646_B": 102, "645_B": 63, "611_C": 68, "652_A": 46,
@@ -83,7 +104,7 @@ BATTERY_CAPACITY_KWH = 10.0 * TOTAL_CUSTOMERS   # 13300 kWh (aggregate feeder ba
 BATTERY_POWER_KW     = 5.0  * TOTAL_CUSTOMERS   # 6650 kW
 INITIAL_SOC_KWH      = 0.5  * BATTERY_CAPACITY_KWH
 
-DEFAULT_WEIGHT = 0.01   # QP objective weight `w` (arbitrage vs. peak-shaving trade-off)
+DEFAULT_WEIGHT = 1   # QP objective weight `w` (arbitrage vs. peak-shaving trade-off)
 
 # --- Modbus -------------------------------------------------------------------
 DEFAULT_HIL_IP   = "192.168.1.210"

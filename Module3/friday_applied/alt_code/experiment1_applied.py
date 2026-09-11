@@ -67,7 +67,7 @@ DELTA_HOURS = 0.5
 STEP_SECONDS = 2.0
 
 # Provisional/reference value. Override with --weight if your team chose another w.
-DEFAULT_WEIGHT = 1e-3
+DEFAULT_WEIGHT = 1
 
 # Aggregate feeder battery: 10 kWh/customer and 5 kW/customer.
 BATTERY_KWH_PER_CUSTOMER = 10.0
@@ -148,7 +148,29 @@ BATTERY_POWER_KW = BATTERY_KW_PER_CUSTOMER * TOTAL_CUSTOMERS
 INITIAL_SOC_KWH = 0.5 * BATTERY_CAPACITY_KWH
 
 # Module 1 feeder playback used Qref = 0 for the time-varying loads.
-QREF_MAP = {node: 0.0 for node in NODE_MAP}
+#QREF_MAP = {node: 0.0 for node in NODE_MAP}
+QREF_MAP = {
+    "646_B": 132,
+    "645_B": 125,
+    "611_C": 80,
+    "652_A": 86,
+
+    "671_A": 220,
+    "671_B": 220,
+    "671_C": 220,
+
+    "692_C": 151,
+    "692_B": 0,
+    "692_A": 0,
+
+    "675_C": 212,
+    "675_B": 60,
+    "675_A": 190,
+
+    "634_C": 90,
+    "634_B": 90,
+    "634_A": 110,
+}
 
 PHASE_MAP = {
     "A": "A", "B": "B", "C": "C",
@@ -419,7 +441,8 @@ def solve_daily_qp(
     n = len(p_load)
     batt = cp.Variable(n, name="Pbat")
     grid = cp.Variable(n, name="Pgrid")
-    soc = cp.Variable(n + 1, name="SoC")
+    # soc = cp.Variable(n + 1, name="SoC")
+    soc = soc0_kwh - cp.cumsum(batt * DELTA_HOURS)
 
     objective = cp.Minimize(
         cp.sum(
@@ -429,21 +452,31 @@ def solve_daily_qp(
     )
 
     constraints = [
-        grid == p_load - p_pv - batt,
-        grid <=3000, 
-        grid >=-1500,
-        batt >= -batt_power_kw,
-        batt <= batt_power_kw,
-        soc[0] == soc0_kwh,
-        soc[1:] == soc[:-1] - DELTA_HOURS * batt,
-        soc >= 0.0,
-        soc <= capacity_kwh,
-        soc[-1] == soc0_kwh,
+        # grid == p_load - p_pv - batt,
+        # grid <=3000, 
+        # grid >=-1500,
+        # batt >= -batt_power_kw,
+        # batt <= batt_power_kw,
+        # soc[0] == soc0_kwh,
+        # soc[1:] == soc[:-1] - DELTA_HOURS * batt,
+        # soc >= 0.0,
+        # soc <= capacity_kwh,
+        # soc[-1] == soc0_kwh,
+        
+        grid == p_load - p_pv - batt,        # A2: grid definition
+        cp.sum(batt) == 0,                   # A2: daily net-zero (terminal SoC)
+        batt <=  batt_power_kw,              # A1
+        batt >= -batt_power_kw,              # A1
+        soc >= 0.0,                    # A1
+        soc <= capacity_kwh,           # A1
+        grid <= 3000,                  # A1 (wide by default)
+        grid >= -1500,                  # A1
     ]
 
     problem = cp.Problem(objective, constraints)
 
     installed = set(cp.installed_solvers())
+    
     if solver not in installed:
         raise RuntimeError(
             f"Requested solver {solver!r} is not installed. "
@@ -1123,7 +1156,7 @@ def main() -> None:
                     baseline_actual = load_actual - pv_actual
                     grid_actual = baseline_actual - pbat_aggregate
                     soc_predicted_pct = (
-                        100.0 * float(soc_day[k + 1]) / args.capacity
+                        100.0 * float(soc_day[k]) / args.capacity
                     )
 
                     # Time columns are interval-ending labels. The last

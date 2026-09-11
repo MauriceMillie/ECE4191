@@ -118,7 +118,7 @@ NODE646_CAPACITY_KWH  = 1020.0
 NODE646_BATT_POWER_KW = 510.0
 NODE646_INITIAL_SOC_KWH = 510.0   # 50%
 
-DEFAULT_WEIGHT = 0.01
+DEFAULT_WEIGHT = 1
 
 # --- Modbus -------------------------------------------------------------------
 DEFAULT_HIL_IP   = "192.168.1.210"
