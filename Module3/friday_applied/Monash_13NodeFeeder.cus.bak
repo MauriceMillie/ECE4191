@@ -10289,7 +10289,7 @@ displayValue = data
                 <background_color>white</background_color>
                 <widget_settings>
                     <x>208</x>
-                    <y>1272</y>
+                    <y>1280</y>
                     <width>568</width>
                     <height>368</height>
                     <appearance><![CDATA[Flat]]></appearance>
@@ -10553,7 +10553,7 @@ displayValue = data
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>784</x>
+                    <x>776</x>
                     <y>1632</y>
                     <width>608</width>
                     <height>336</height>
@@ -10738,7 +10738,7 @@ displayValue = data
                 <background_color>white</background_color>
                 <widget_settings>
                     <x>2080</x>
-                    <y>1256</y>
+                    <y>1264</y>
                     <width>536</width>
                     <height>368</height>
                     <appearance><![CDATA[Flat]]></appearance>
@@ -10929,8 +10929,8 @@ displayValue = data
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>1792</x>
-                    <y>904</y>
+                    <x>1784</x>
+                    <y>896</y>
                     <width>576</width>
                     <height>304</height>
                     <appearance><![CDATA[Flat]]></appearance>
