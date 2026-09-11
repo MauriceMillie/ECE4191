@@ -88,6 +88,7 @@ RECONNECT_RETRIES = 5
 RECONNECT_DELAY_S = 2.0
 INITIAL_SETTLE_SECONDS = 12
 
+
 TIME_COL_RE = re.compile(r"^\d{1,2}:\d{2}$")
 
 # Holding-register layout from the Module 3 register map.
@@ -429,6 +430,8 @@ def solve_daily_qp(
 
     constraints = [
         grid == p_load - p_pv - batt,
+        grid <=3000, 
+        grid >=-1500,
         batt >= -batt_power_kw,
         batt <= batt_power_kw,
         soc[0] == soc0_kwh,

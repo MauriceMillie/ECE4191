@@ -6,6 +6,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+import re
 
 import numpy as np
 import pandas as pd
@@ -32,6 +33,8 @@ except ImportError:
 N_STEPS      = 48
 DELTA_HOURS  = 0.5
 STEP_SECONDS = 2.0        # wall-clock seconds per 30-min data step
+
+TIME_COL_RE = re.compile(r"^\d{1,2}:\d{2}$")
 
 NODE_MAP = {
     "646_B": {"start": 2000, "order": "normal"},
@@ -104,6 +107,31 @@ DEFAULT_PLAYBACK_DAYS = 4   # Experiment 2 uses a 4-day playback period
 # 2. CSV loaders
 # ============================================================
 
+def parse_date(value: str) -> pd.Timestamp:
+    """Parse supplied date labels such as 7-Jan-13."""
+    text = str(value).strip()
+    try:
+        return pd.to_datetime(text, format="%d-%b-%y")
+    except ValueError:
+        return pd.to_datetime(text)
+
+
+def sorted_date_labels(df: pd.DataFrame) -> list[str]:
+    temp = pd.DataFrame({
+        "Date": df["Date"].astype(str).str.strip(),
+    })
+    temp["_parsed"] = temp["Date"].map(parse_date)
+    return (
+        temp.drop_duplicates()
+        .sort_values("_parsed")["Date"]
+        .tolist()
+    )
+
+
+def next_day_label(date_label: str) -> str:
+    ts = parse_date(date_label) + pd.Timedelta(days=1)
+    return f"{ts.day}-{ts.strftime('%b-%y')}"
+
 def _pick_row(frame: pd.DataFrame, needle: str):
     for key in frame.index:
         if needle in str(key).lower():
@@ -111,38 +139,71 @@ def _pick_row(frame: pd.DataFrame, needle: str):
     return None
 
 
+def find_time_columns(df: pd.DataFrame) -> list[str]:
+    cols = [str(c) for c in df.columns if TIME_COL_RE.match(str(c).strip())]
+    if len(cols) != N_STEPS:
+        raise ValueError(
+            f"Expected {N_STEPS} half-hour time columns, found {len(cols)}: {cols}"
+        )
+    return cols
+
 def load_forecast_csv(path: Path):
-    """Read the 2-row wide feeder-total forecast CSV and return per-day PV / load
-    arrays (kW), shape (n_days, 48)."""
-    raw = pd.read_csv(path, header=None, index_col=0)
-    raw.index = [str(i).strip() for i in raw.index]
+    """
+    Read central_agg_forecast_data_students.csv.
 
-    pv_key = _pick_row(raw, "pv")
-    ld_key = _pick_row(raw, "load")
+    Expected format:
+      Date | N_Customers | Profile | ... | 48 half-hour columns
 
-    if ld_key is None:
-        raise ValueError("Could not find a 'P_load' row in the forecast CSV.")
+    Returns
+    -------
+    pv_days, load_days : ndarray (n_days, 48), kW
+    dates              : chronological date labels
+    time_cols          : 48 interval-ending labels
+    """
+    df = pd.read_csv(path)
 
-    if pv_key is None:
-        others = [k for k in raw.index if k != ld_key]
-        if not others:
-            raise ValueError("Could not find a PV row in the forecast CSV.")
-        pv_row = raw.loc[others[0]]
-    else:
-        pv_row = raw.loc[pv_key]
+    required = {"Date", "N_Customers", "Profile"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Forecast CSV missing columns: {sorted(missing)}")
 
-    pv   = pd.to_numeric(pv_row,          errors="coerce").to_numpy(float)
-    load = pd.to_numeric(raw.loc[ld_key], errors="coerce").to_numpy(float)
-    pv   = pv[~np.isnan(pv)]
-    load = load[~np.isnan(load)]
+    time_cols = find_time_columns(df)
+    dates = sorted_date_labels(df)
 
-    if len(pv) != len(load):
-        raise ValueError(f"PV ({len(pv)}) and load ({len(load)}) lengths differ.")
-    if len(pv) % N_STEPS != 0:
-        raise ValueError(f"Expected a multiple of {N_STEPS} steps, got {len(pv)}.")
+    load_days = []
+    pv_days = []
 
-    n_days = len(pv) // N_STEPS
-    return pv.reshape(n_days, N_STEPS), load.reshape(n_days, N_STEPS), n_days
+    for date in dates:
+        day = df[df["Date"].astype(str).str.strip() == date]
+
+        load_rows = day[day["Profile"].astype(str).str.strip() == "GC_Load_kW"]
+        pv_rows = day[day["Profile"].astype(str).str.strip() == "PV_Generation_kW"]
+
+        if len(load_rows) != 1 or len(pv_rows) != 1:
+            raise ValueError(
+                f"{date}: expected one GC_Load_kW row and one PV_Generation_kW row; "
+                f"found {len(load_rows)} load and {len(pv_rows)} PV rows."
+            )
+
+        customers = pd.to_numeric(
+            pd.concat([load_rows["N_Customers"], pv_rows["N_Customers"]]),
+            errors="coerce",
+        ).dropna()
+
+        if not customers.empty and not np.allclose(customers.to_numpy(float), TOTAL_CUSTOMERS):
+            raise ValueError(
+                f"{date}: central forecast N_Customers is not {TOTAL_CUSTOMERS}: "
+                f"{customers.tolist()}"
+            )
+
+        load_days.append(
+            pd.to_numeric(load_rows.iloc[0][time_cols], errors="raise").to_numpy(float)
+        )
+        pv_days.append(
+            pd.to_numeric(pv_rows.iloc[0][time_cols], errors="raise").to_numpy(float)
+        )
+
+    return np.asarray(pv_days), np.asarray(load_days), dates, time_cols
 
 
 def load_actual_feeder_csv(path: Path):
@@ -512,7 +573,7 @@ def main():
         raise FileNotFoundError(f"Actual CSV not found: {act_path}")
 
     print(f"\nLoading forecast CSV : {fc_path.name}")
-    pv_days, load_days, n_days_fc = load_forecast_csv(fc_path)
+    pv_days, load_days, n_days_fc, forecast_time_cols = load_forecast_csv(fc_path)
     pv_fc_flat   = pv_days.flatten()
     load_fc_flat = load_days.flatten()
 
