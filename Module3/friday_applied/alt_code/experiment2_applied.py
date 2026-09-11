@@ -314,7 +314,7 @@ def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh,
         soc[1:] == soc[:-1] - DELTA_HOURS * batt,
         soc >= 0.0,
         soc <= capacity_kwh,
-        soc[-1] == soc0_kwh,   # terminal SoC(t+n|t) = SoC(t|t), Eq. (12)
+        #soc[-1] == soc0_kwh,   # terminal SoC(t+n|t) = SoC(t|t), Eq. (12)
     ]
 
     problem = cp.Problem(objective, constraints)
