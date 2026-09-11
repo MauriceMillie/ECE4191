@@ -107,9 +107,32 @@ PHASE_MAP = {
 
 CIL_NODE = "646_B"
 
-QREF_646_KVAR = 132
-QREF_MAP = {node: 0.0 for node in NODE_MAP}
-QREF_MAP[CIL_NODE] = QREF_646_KVAR
+# QREF_646_KVAR = 132
+# QREF_MAP = {node: 0.0 for node in NODE_MAP}
+# QREF_MAP[CIL_NODE] = QREF_646_KVAR
+
+QREF_MAP = {
+    "646_B": 132,
+    "645_B": 125,
+    "611_C": 80,
+    "652_A": 86,
+
+    "671_A": 220,
+    "671_B": 220,
+    "671_C": 220,
+
+    "692_C": 151,
+    "692_B": 0,
+    "692_A": 0,
+
+    "675_C": 212,
+    "675_B": 60,
+    "675_A": 190,
+
+    "634_C": 90,
+    "634_B": 90,
+    "634_A": 110,
+}
 
 # Node-646-specific battery parameters (from Section 7's guided toy walkthrough).
 # NOTE: these are independent of the aggregate 1330-customer feeder battery used
@@ -278,6 +301,9 @@ def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh,
         soc >= 0.0,
         soc <= capacity_kwh,
         soc[-1] == soc0_kwh,   # terminal SoC(t+n|t) = SoC(t|t), Eq. (12)
+        grid <=3000, 
+        grid >=-1500,
+
     ]
 
     problem = cp.Problem(objective, constraints)
