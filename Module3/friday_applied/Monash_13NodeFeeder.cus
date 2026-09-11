@@ -22,25 +22,25 @@ Vnom2_ph_to_gnd = Vnom2_ph_to_ph/np.sqrt(3)
 Vnom_ph_to_gnd = Vnom_ph_to_ph/np.sqrt(3)
 
 
-import os
-import subprocess
+# import os
+# import subprocess
 
-SETTINGS_DIR = r"C:\Users\leroy\OneDrive\Documents\MyDrive\My Drive\4191\Monash IEEE Feeder Model"
-SCRIPT_PATH = os.path.join(SETTINGS_DIR, "pv_load_windows_typhoon_students.py")
-CSV_PATH = os.path.join(SETTINGS_DIR, "agg_jan2013_students.csv")
+# SETTINGS_DIR = r"C:\Users\leroy\OneDrive\Documents\MyDrive\My Drive\4191\Monash IEEE Feeder Model"
+# SCRIPT_PATH = os.path.join(SETTINGS_DIR, "pv_load_windows_typhoon_students.py")
+# CSV_PATH = os.path.join(SETTINGS_DIR, "agg_jan2013_students.csv")
 
-TYPHOON_PYTHON = r"C:\Program Files\Typhoon HIL Control Center 2026.1 sp1\bin\typhoon-python.cmd"
+# TYPHOON_PYTHON = r"C:\Program Files\Typhoon HIL Control Center 2026.1 sp1\bin\typhoon-python.cmd"
 
-subprocess.Popen(
-    [
-        TYPHOON_PYTHON,
-        SCRIPT_PATH,
-        "--input",
-        CSV_PATH,
-        "--no-prompt"
-    ],
-    cwd=SETTINGS_DIR
-)
+# subprocess.Popen(
+#     [
+#         TYPHOON_PYTHON,
+#         SCRIPT_PATH,
+#         "--input",
+#         CSV_PATH,
+#         "--no-prompt"
+#     ],
+#     cwd=SETTINGS_DIR
+# )
 ]]></initialization_code>
     <components>
         <component_data>
@@ -8493,7 +8493,7 @@ widgetValue = None
 widgetValue = None
 ]]></on_timer_code>
                 <on_start_code_source><![CDATA[Custom code]]></on_start_code_source>
-                <inputValue><![CDATA[Local Control]]></inputValue>
+                <inputValue><![CDATA[Remote Control]]></inputValue>
                 <availableValues><![CDATA[['Local Control', 'Remote Control']]]></availableValues>
                 <unit><![CDATA[]]></unit>
                 <autocomplete_enabled>False</autocomplete_enabled>
@@ -10789,6 +10789,191 @@ refCurveData1 = {
 # list of reference curves data: [ref1, ref2,...refN]
 referenceCurves = [refCurveData1]
 
+]]></reference_curve_code>
+                </advance_widget_settings>
+            </component_data>
+        <component_data>
+                <id>a57acd86ac1c11f1a677cc153131dc87</id>
+                <name><![CDATA[Trace graph]]></name>
+                <type>TraceDisplay</type>
+                <description><![CDATA[]]></description>
+                <data_type>Signals</data_type>
+                <code><![CDATA[# HIL API is imported as 'hil'
+# NOTE: Only read functions are available from the HIL API
+
+# SCADA API is imported as 'panel'
+# SCADA API constants are imported as 'api_const'
+# 'WIDGET_HANDLE' constant holds the WidgetHandle object of this widget.
+# This object can be used as an argument in SCADA API functions.
+
+# mandatory variable used for storing values that will be displayed
+# specify data (one pairs of "names" and "values" parts are mandatory)
+data = {
+    # analog like signals/data names: ["Analog 1 name","Analog 2 name","Analog N name"]
+    "analog_names": [],
+
+    # analog data values: [aVal1,aVal2,aVal3]
+    "analog_values": [],
+
+    # digital like signals/data names: ["Digital 1 name","Digital 2 name","Digital 3 name"]
+    "digital_names": [],
+
+    # digital data values: [dVal1,dVal2,aVal3]
+    "digital_values": [],
+    }
+displayValue = data
+]]></code>
+                <analog_signals><![CDATA[['Node 632.Probe1']]]></analog_signals>
+                <digital_signals><![CDATA[[]]]></digital_signals>
+                <streaming_analog_signals><![CDATA[[]]]></streaming_analog_signals>
+                <streaming_digital_signals><![CDATA[[]]]></streaming_digital_signals>
+                <analog_signals_scaling_factors><![CDATA[{'Node 632.Probe1': 1.0}]]></analog_signals_scaling_factors>
+                <streaming_analog_signals_scaling_factors><![CDATA[{}]]></streaming_analog_signals_scaling_factors>
+                <update_rate>1000</update_rate>
+                <execution_rate>None</execution_rate>
+                <background_color>white</background_color>
+                <widget_settings>
+                    <x>1552</x>
+                    <y>392</y>
+                    <width>1120</width>
+                    <height>480</height>
+                    <appearance><![CDATA[Flat]]></appearance>
+                    <hierarchy_position><![CDATA[1]]></hierarchy_position>
+                    <is_background><![CDATA[False]]></is_background>
+                    <label><![CDATA[]]></label>
+                    <use_label>False</use_label>
+                </widget_settings>
+                <advance_widget_settings>
+                    <x_title><![CDATA[x axes]]></x_title>
+                    <y_title><![CDATA[y axes]]></y_title>
+                    <y_range_min>-100.0</y_range_min>
+                    <y_range_max>100.0</y_range_max>
+                    <time_window>600</time_window>
+                    <auto_scale_enabled>True</auto_scale_enabled>
+                    <legend_enabled>True</legend_enabled>
+                    <x_axis_title_enabled>False</x_axis_title_enabled>
+                    <y_axis_title_enabled>False</y_axis_title_enabled>
+                    <use_reference_curve>False</use_reference_curve>
+                    <reference_curve_code><![CDATA[# NOTE: Global namespace variables are available
+# Selected time window is available through variable 'timeWindow'
+# Selected update rate is available through variable 'updateRate'
+
+# reference curve data point
+curveData = 12.0
+
+# specify curve options ('data' part is mandatory)
+refCurveData1 = {
+    # reference curve data point
+    "data": curveData,
+
+    # curve line style: 'solid', 'dashed', 'dashdot', 'dotted'
+    "line_style": "dashed",
+
+    # curve line color: 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow'
+    "line_color": 'red',
+
+    # curve line width: float number
+    "line_width": 2.0,
+    
+    # reference curve title
+    "title": "Reference curve",
+
+    # show a title in the legend
+    "show_in_legend": True
+}
+
+# list of reference curves data: [ref1, ref2,...refN]
+referenceCurves = [refCurveData1]
+
+]]></reference_curve_code>
+                </advance_widget_settings>
+            </component_data>
+        <component_data>
+                <id>c6b553fdac1c11f1a8d8cc153131dc87</id>
+                <name><![CDATA[Trace graph1]]></name>
+                <type>TraceDisplay</type>
+                <description><![CDATA[]]></description>
+                <data_type>Signals</data_type>
+                <code><![CDATA[# HIL API is imported as 'hil'
+# NOTE: Only read functions are available from the HIL API
+
+# SCADA API is imported as 'panel'
+# SCADA API constants are imported as 'api_const'
+# 'WIDGET_HANDLE' constant holds the WidgetHandle object of this widget.
+# This object can be used as an argument in SCADA API functions.
+
+# mandatory variable used for storing values that will be displayed
+# specify data (one pairs of "names" and "values" parts are mandatory)
+data = {
+    # analog like signals/data names: ["Analog 1 name","Analog 2 name","Analog N name"]
+    "analog_names": [],
+
+    # analog data values: [aVal1,aVal2,aVal3]
+    "analog_values": [],
+
+    # digital like signals/data names: ["Digital 1 name","Digital 2 name","Digital 3 name"]
+    "digital_names": [],
+
+    # digital data values: [dVal1,dVal2,aVal3]
+    "digital_values": [],
+    }
+displayValue = data
+]]></code>
+                <analog_signals><![CDATA[['Node 632.V1_rms', 'Node 632.V2_rms', 'Node 632.V3_rms']]]></analog_signals>
+                <digital_signals><![CDATA[[]]]></digital_signals>
+                <streaming_analog_signals><![CDATA[[]]]></streaming_analog_signals>
+                <streaming_digital_signals><![CDATA[[]]]></streaming_digital_signals>
+                <analog_signals_scaling_factors><![CDATA[{'Node 632.V1_rms': 1.0, 'Node 632.V2_rms': 1.0, 'Node 632.V3_rms': 1.0}]]></analog_signals_scaling_factors>
+                <streaming_analog_signals_scaling_factors><![CDATA[{}]]></streaming_analog_signals_scaling_factors>
+                <update_rate>1000</update_rate>
+                <execution_rate>None</execution_rate>
+                <background_color>white</background_color>
+                <widget_settings>
+                    <x>2063</x>
+                    <y>888</y>
+                    <width>576</width>
+                    <height>304</height>
+                    <appearance><![CDATA[Flat]]></appearance>
+                    <hierarchy_position><![CDATA[1]]></hierarchy_position>
+                    <is_background><![CDATA[False]]></is_background>
+                    <label><![CDATA[]]></label>
+                    <use_label>False</use_label>
+                </widget_settings>
+                <advance_widget_settings>
+                    <x_title><![CDATA[x axes]]></x_title>
+                    <y_title><![CDATA[y axes]]></y_title>
+                    <y_range_min>-100.0</y_range_min>
+                    <y_range_max>100.0</y_range_max>
+                    <time_window>600</time_window>
+                    <auto_scale_enabled>True</auto_scale_enabled>
+                    <legend_enabled>True</legend_enabled>
+                    <x_axis_title_enabled>False</x_axis_title_enabled>
+                    <y_axis_title_enabled>False</y_axis_title_enabled>
+                    <use_reference_curve>True</use_reference_curve>
+                    <reference_curve_code><![CDATA[# reference curve data points 
+# 2401 +- 5%
+upperBound = 277*1.05
+lowerBound = 277*0.95
+# Define the first curve (Pref)
+refCurve1 = {
+    "data": upperBound,
+    "line_style": "dashed",
+    "line_color": 'blue',
+    "line_width": 2.0,
+    "title": "UpperBound",
+    "show_in_legend": True
+}
+# Define the second curve (Qref)
+refCurve2 = {
+    "data": lowerBound,
+    "line_style": "dotted",
+    "line_color": 'red',
+    "line_width": 2.0,
+    "title": "LowerBound",
+    "show_in_legend": True
+}
+# Add both to the list of reference curves
+referenceCurves = [refCurve1, refCurve2]
 ]]></reference_curve_code>
                 </advance_widget_settings>
             </component_data>
