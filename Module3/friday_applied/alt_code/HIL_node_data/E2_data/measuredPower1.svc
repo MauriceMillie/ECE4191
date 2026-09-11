@@ -1,0 +1,127 @@
+{
+    "signals": {
+        "Time Varying Load 611.Single phase time-varying load1.P_measured": {
+            "viewports": [
+                1
+            ],
+            "type": "analog",
+            "color": {
+                "1": "#FF0000"
+            },
+            "display": {
+                "1": "solid"
+            }
+        },
+        "Time Varying Load 634.Single phase time-varying load with the Master PulseA.P_measured": {
+            "viewports": [
+                1
+            ],
+            "type": "analog",
+            "color": {
+                "1": "#00CC00"
+            },
+            "display": {
+                "1": "solid"
+            }
+        },
+        "Time Varying Load 634.Single phase time-varying load with the Master PulseB.P_measured": {
+            "viewports": [
+                1
+            ],
+            "type": "analog",
+            "color": {
+                "1": "#0099FF"
+            },
+            "display": {
+                "1": "solid"
+            }
+        },
+        "Time Varying Load 634.Single phase time-varying load with the Master PulseC.P_measured": {
+            "viewports": [
+                1
+            ],
+            "type": "analog",
+            "color": {
+                "1": "#FFCC00"
+            },
+            "display": {
+                "1": "solid"
+            }
+        },
+        "Time Varying Load 645.Single phase time-varying load645.P_measured": {
+            "viewports": [
+                1
+            ],
+            "type": "analog",
+            "color": {
+                "1": "#FF00FF"
+            },
+            "display": {
+                "1": "solid"
+            }
+        },
+        "Time Varying Load 646.Single phase time-varying load646.P_measured": {
+            "viewports": [
+                1
+            ],
+            "type": "analog",
+            "color": {
+                "1": "#33CCCC"
+            },
+            "display": {
+                "1": "solid"
+            }
+        },
+        "Time Varying Load 652.Single phase time-varying load652.P_measured": {
+            "viewports": [
+                1
+            ],
+            "type": "analog",
+            "color": {
+                "1": "#FF0000"
+            },
+            "display": {
+                "1": "solid"
+            }
+        },
+        "Time Varying Load 692.Single phase time-varying loadC.P_measured": {
+            "viewports": [
+                1
+            ],
+            "type": "analog",
+            "color": {
+                "1": "#00CC00"
+            },
+            "display": {
+                "1": "solid"
+            }
+        }
+    },
+    "viewports": {
+        "1": {
+            "log_scale_x": false,
+            "log_scale_y": false,
+            "y_axis_db": false
+        },
+        "2": {
+            "log_scale_x": false,
+            "log_scale_y": false,
+            "y_axis_db": false
+        },
+        "3": {
+            "log_scale_x": false,
+            "log_scale_y": false,
+            "y_axis_db": false
+        },
+        "4": {
+            "log_scale_x": false,
+            "log_scale_y": false,
+            "y_axis_db": false
+        }
+    },
+    "plot_settings": {
+        "layout": "Grid",
+        "background_color": "white",
+        "legend_visible": true
+    }
+}
