@@ -306,6 +306,8 @@ def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh,
 
     constraints = [
         grid == p_load - p_pv - batt,
+        grid <=3000, 
+        grid >=-1500,
         batt >= -batt_power_kw,
         batt <=  batt_power_kw,
         soc[0] == soc0_kwh,
