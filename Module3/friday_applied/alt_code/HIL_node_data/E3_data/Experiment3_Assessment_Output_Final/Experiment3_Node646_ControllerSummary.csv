@@ -1,0 +1,2 @@
+MinBatteryCommand_kW,MaxBatteryCommand_kW,SoC_MAE_pctPoint,SoC_RMSE_pctPoint,SoC_MaxAbsError_pctPoint,SoC_MaxErrorSimHour,SoC_FinalError_pctPoint
+-77.7086,227.419,0.388280729166667,0.621617479385098,3.5183,44.5,-0.4018
