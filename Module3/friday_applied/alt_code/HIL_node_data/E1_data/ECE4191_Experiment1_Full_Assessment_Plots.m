@@ -1,12 +1,8 @@
 %% ECE4191 Module 3 - Experiment 1 (QP)
-% ROBUST FULL ASSESSMENT / PRESENTATION PLOTTING SCRIPT
+% EXACT-DATA ASSESSMENT PLOTTING SCRIPT
 %
-% This version avoids brittle exact Typhoon signal-name matching.
-% It searches the actual CSV headers for the required node/phase signals and
-% continues with a warning if a non-critical channel is missing, rather than
-% stopping the whole script.
-%
-% Expected Experiment 1 files:
+% Built specifically for the Experiment 1 files supplied:
+%   experiment1_qp_schedule_20260911_160042.csv
 %   measured_activePower1.csv
 %   measured_activePower2.csv
 %   node632_probe1.csv
@@ -15,31 +11,35 @@
 %   rmsVoltage2.csv
 %   rmsVoltage3.csv
 %
-% Optional:
-%   experiment1_qp_schedule*.csv
-%       Used for the Node 646 measured SoC figure.
+% The script produces the five required Experiment 1 plots:
+%   1) Node 632 measured feeder active power
+%   2) Measured active power at all time-varying node-phases
+%   3) Node 634 RMS voltages A/B/C with +/-5% limits
+%   4) RMS voltages at all other monitored nodes with +/-5% limits
+%   5) Measured Node 646 battery SoC
 %
-% Required Experiment 1 plots:
-%   1. Feeder active power at Node 632
-%   2. Active power at all monitored time-varying node-phase loads
-%   3. Node 634 RMS voltage A/B/C with +/-5% limits about 277 V
-%   4. RMS voltages at all other monitored feeder nodes with +/-5% limits
-%      about 2401 V
-%   5. Measured Node 646 battery SoC, if the controller CSV is present
+% It also creates assessment-support figures/tables for:
+%   - voltage violations
+%   - reverse active power flow
+%   - feeder peak time/magnitude
+%   - node contributions at feeder peak
+%   - feeder voltage profile at feeder peak
 %
-% Additional assessment figures:
-%   6. Worst minimum per-unit voltage by node-phase
-%   7. Largest reverse active power by node-phase
-%   8. Node contributions at measured feeder peak
-%   9. Voltage profile at measured feeder peak
+% IMPORTANT TIME ALIGNMENT
+% ------------------------
+% The HIL playback uses:
+%       2 real seconds = 30 simulated minutes
 %
-% Time mapping:
-%   2 real seconds = 30 simulated minutes
-%   96 real seconds = 1 simulated day
-%   480 real seconds = 5 simulated days
+% The first schedule entry is the interval ENDING at 00:30. Therefore the
+% continuous HIL playback begins 30 minutes before the first schedule label.
 %
-% If Signal Analyzer started before the Raspberry Pi playback, modify
-% PLAYBACK_START_REAL_S below.
+% If Signal Analyzer was started before the Raspberry Pi playback, adjust:
+%       PLAYBACK_START_REAL_S
+%
+% Example: if the controller began 5 s after recording:
+%       PLAYBACK_START_REAL_S = 5;
+%
+% Default assumes recording and playback both began at Time = 0.
 
 clear;
 clc;
@@ -49,57 +49,35 @@ close all;
 % USER SETTINGS
 % ========================================================================
 
-ACTIVE_POWER_FILES = [
-    "measured_activePower1.csv"
-    "measured_activePower2.csv"
-];
-
-FEEDER_POWER_FILE = "node632_probe1.csv";
-
-VOLTAGE_FILES = [
-    "node634_rmsVoltage.csv"
-    "rmsVoltage1.csv"
-    "rmsVoltage2.csv"
-    "rmsVoltage3.csv"
-];
-
-% Optional schedule/log CSV. Leave blank for automatic detection.
-SCHEDULE_FILE = "";
-
-% Five-day QP playback.
 PLAYBACK_START_REAL_S = 0.0;
-PLAYBACK_DURATION_REAL_S = 480.0;
+REAL_SECONDS_PER_STEP = 2.0;
+SIM_MINUTES_PER_STEP = 30.0;
+
+% Five days x 48 half-hour steps.
+N_PLAYBACK_STEPS = 240;
+PLAYBACK_DURATION_REAL_S = N_PLAYBACK_STEPS * REAL_SECONDS_PER_STEP;
 PLAYBACK_END_REAL_S = PLAYBACK_START_REAL_S + PLAYBACK_DURATION_REAL_S;
 
-REAL_SECONDS_PER_DATA_STEP = 2.0;
-SIM_HOURS_PER_DATA_STEP = 0.5;
-SIM_HOURS_PER_REAL_SECOND = ...
-    SIM_HOURS_PER_DATA_STEP / REAL_SECONDS_PER_DATA_STEP;
-
-% First half-hour interval in the experiment.
-SIM_FIRST_COMMAND_TIME = datetime(2013,1,7,0,30,0);
-
-% Assessment voltage limits.
+% Required voltage limits.
 NOMINAL_634_V = 277.0;
 NOMINAL_OTHER_V = 2401.0;
 
-LOWER_634_V = 0.95 * NOMINAL_634_V;
-UPPER_634_V = 1.05 * NOMINAL_634_V;
+LOWER_634_V = 0.95 * NOMINAL_634_V;       % 263.15 V
+UPPER_634_V = 1.05 * NOMINAL_634_V;       % 290.85 V
 
-LOWER_OTHER_V = 0.95 * NOMINAL_OTHER_V;
-UPPER_OTHER_V = 1.05 * NOMINAL_OTHER_V;
+LOWER_OTHER_V = 0.95 * NOMINAL_OTHER_V;   % 2280.95 V
+UPPER_OTHER_V = 1.05 * NOMINAL_OTHER_V;   % 2521.05 V
 
-% Output settings.
 SAVE_PNG = true;
 SAVE_FIG = true;
-OUTPUT_FOLDER = "Experiment1_Assessment_Output_Robust";
+OUTPUT_FOLDER = "Experiment1_Assessment_Output_Final";
 
 FONT_SIZE = 10;
-LINE_WIDTH = 1.35;
+LINE_WIDTH = 1.25;
 LIMIT_LINE_WIDTH = 1.15;
 
 %% ========================================================================
-% DATA DIRECTORY
+% LOCATE FILES
 % ========================================================================
 
 scriptPath = mfilename("fullpath");
@@ -110,6 +88,45 @@ else
     dataDir = fileparts(scriptPath);
 end
 
+scheduleFile = resolveCsv(dataDir, [ ...
+    "experiment1_qp_schedule_20260911_160042.csv", ...
+    "experiment1_qp_schedule*.csv"]);
+
+powerFile1 = resolveCsv(dataDir, [ ...
+    "measured_activePower1.csv", ...
+    "measured_activePower1.csv", ...
+    "*activePower1*.csv"]);
+
+powerFile2 = resolveCsv(dataDir, [ ...
+    "measured_activePower2.csv", ...
+    "measured_activePower2.csv", ...
+    "*activePower2*.csv"]);
+
+feederFile = resolveCsv(dataDir, [ ...
+    "node632_probe1.csv", ...
+    "node632_probe1.csv", ...
+    "*node632*probe1*.csv"]);
+
+node634VoltageFile = resolveCsv(dataDir, [ ...
+    "node634_rmsVoltage.csv", ...
+    "node634_rmsVoltage.csv", ...
+    "*634*rmsVoltage*.csv"]);
+
+voltageFile1 = resolveCsv(dataDir, [ ...
+    "rmsVoltage1.csv", ...
+    "rmsVoltage1.csv", ...
+    "*rmsVoltage1*.csv"]);
+
+voltageFile2 = resolveCsv(dataDir, [ ...
+    "rmsVoltage2.csv", ...
+    "rmsVoltage2.csv", ...
+    "*rmsVoltage2*.csv"]);
+
+voltageFile3 = resolveCsv(dataDir, [ ...
+    "rmsVoltage3.csv", ...
+    "rmsVoltage3.csv", ...
+    "*rmsVoltage3*.csv"]);
+
 outputDir = fullfile(dataDir, OUTPUT_FOLDER);
 
 if ~isfolder(outputDir)
@@ -118,273 +135,313 @@ end
 
 fprintf("============================================================\n");
 fprintf(" ECE4191 MODULE 3 - EXPERIMENT 1 (QP)\n");
-fprintf(" FIXED ROBUST ASSESSMENT ANALYSIS - 11 SEP VERSION\n");
+fprintf(" HEADER-SAFE EXACT-DATA ASSESSMENT ANALYSIS\n");
 fprintf("============================================================\n");
-fprintf("Data folder       : %s\n", dataDir);
-fprintf("Output folder     : %s\n", outputDir);
-fprintf("Playback real time: %.2f to %.2f s\n", ...
-    PLAYBACK_START_REAL_S, PLAYBACK_END_REAL_S);
-fprintf("Playback length   : 5 simulated days\n\n");
+fprintf("Schedule     : %s\n", scheduleFile);
+fprintf("Power file 1 : %s\n", powerFile1);
+fprintf("Power file 2 : %s\n", powerFile2);
+fprintf("Node 632     : %s\n", feederFile);
+fprintf("Node 634 V   : %s\n", node634VoltageFile);
+fprintf("Voltage 1    : %s\n", voltageFile1);
+fprintf("Voltage 2    : %s\n", voltageFile2);
+fprintf("Voltage 3    : %s\n", voltageFile3);
+fprintf("Output folder: %s\n\n", outputDir);
 
 %% ========================================================================
-% LOAD ACTIVE-POWER CSVs
+% LOAD SCHEDULE / BUILD SIMULATED TIME REFERENCE
 % ========================================================================
 
-powerTables = cell(numel(ACTIVE_POWER_FILES), 1);
+S = readtable(scheduleFile, ...
+    "VariableNamingRule", "preserve", ...
+    "TextType", "string");
 
-for k = 1:numel(ACTIVE_POWER_FILES)
-    path = fullfile(dataDir, ACTIVE_POWER_FILES(k));
-    powerTables{k} = readTyphoonCsv(path);
-    powerTables{k} = cropByRealTime( ...
-        powerTables{k}, ...
-        PLAYBACK_START_REAL_S, ...
-        PLAYBACK_END_REAL_S);
-end
+requiredScheduleColumns = [ ...
+    "step", ...
+    "date_label", ...
+    "profile_time", ...
+    "pbat_aggregate_kw", ...
+    "soc_predicted_pct", ...
+    "soc646_measured_pct"];
 
-% Required monitored time-varying node-phase combinations available in the
-% Experiment 1 exports.
-requiredPowerChannels = [
-    "611_C"
-    "634_A"
-    "634_B"
-    "634_C"
-    "645_B"
-    "646_B"
-    "652_A"
-    "671_A"
-    "671_B"
-    "671_C"
-    "675_A"
-    "675_B"
-    "675_C"
-    "692_C"
-];
+assert(all(ismember(requiredScheduleColumns, ...
+    string(S.Properties.VariableNames))), ...
+    "The QP schedule is missing one or more required columns.");
+
+assert(height(S) >= N_PLAYBACK_STEPS, ...
+    "Expected at least %d schedule rows; found %d.", ...
+    N_PLAYBACK_STEPS, height(S));
+
+S = S(1:N_PLAYBACK_STEPS, :);
+
+scheduleTime = datetime( ...
+    string(S.("date_label")) + " " + string(S.("profile_time")), ...
+    "InputFormat", "d-MMM-yy H:mm", ...
+    "Locale", "en_US");
+
+% The first schedule value is an interval-ending value at 00:30.
+simPlaybackStart = scheduleTime(1) - minutes(SIM_MINUTES_PER_STEP);
+
+fprintf("Schedule rows   : %d\n", height(S));
+fprintf("Simulated start : %s\n", ...
+    char(string(simPlaybackStart, "dd-MMM-yyyy HH:mm")));
+fprintf("Simulated end   : %s\n\n", ...
+    char(string(scheduleTime(end), "dd-MMM-yyyy HH:mm")));
+
+%% ========================================================================
+% LOAD HIL ACTIVE POWER DATA
+% ========================================================================
+
+P1 = readTyphoonCsv(powerFile1);
+P2 = readTyphoonCsv(powerFile2);
+PF = readTyphoonCsv(feederFile);
+
+P1 = cropRealTime(P1, PLAYBACK_START_REAL_S, PLAYBACK_END_REAL_S);
+P2 = cropRealTime(P2, PLAYBACK_START_REAL_S, PLAYBACK_END_REAL_S);
+PF = cropRealTime(PF, PLAYBACK_START_REAL_S, PLAYBACK_END_REAL_S);
+
+% Header-safe column mapping for the supplied Experiment 1 exports.
+%
+% WHY THIS USES COLUMN POSITIONS:
+% Some MATLAB versions truncate long table variable names to namelengthmax
+% characters. The Typhoon active-power headers are 64-86 characters long,
+% so exact string matching can fail even though the CSV is correct.
+%
+% The uploaded Signal Analyzer exports have a fixed, verified column order:
+%
+% measured_activePower1:
+%   1 Time
+%   2 611-C
+%   3 634-A
+%   4 634-B
+%   5 634-C
+%   6 645-B
+%   7 646-B
+%   8 652-A
+%   9 692-C
+%
+% measured_activePower2:
+%   1 Time
+%   2 671-A
+%   3 675-B
+%   4 671-B
+%   5 671-C
+%   6 675-A
+%   7 675-C
+%
+% Using numeric column positions completely avoids MATLAB header truncation
+% and duplicate-name modification.
+
+powerMap = {
+    "N611_C", 1, 2;
+    "N634_A", 1, 3;
+    "N634_B", 1, 4;
+    "N634_C", 1, 5;
+    "N645_B", 1, 6;
+    "N646_B", 1, 7;
+    "N652_A", 1, 8;
+    "N692_C", 1, 9;
+    "N671_A", 2, 2;
+    "N675_B", 2, 3;
+    "N671_B", 2, 4;
+    "N671_C", 2, 5;
+    "N675_A", 2, 6;
+    "N675_C", 2, 7
+};
 
 powerSeries = struct();
-missingPowerChannels = strings(0);
 
-for k = 1:numel(requiredPowerChannels)
-    canonical = requiredPowerChannels(k);
+for k = 1:size(powerMap,1)
 
-    [found, tableIndex, columnName] = ...
-        findPowerSignal(powerTables, canonical);
+    field = string(powerMap{k,1});
+    sourceNumber = powerMap{k,2};
+    columnIndex = powerMap{k,3};
 
-    if ~found
-        warning("Active-power channel %s was not found. Continuing without it.", canonical);
-        missingPowerChannels(end+1) = canonical; %#ok<SAGROW>
-        continue;
+    if sourceNumber == 1
+        T = P1;
+    else
+        T = P2;
     end
 
-    T = powerTables{tableIndex};
-    field = "N" + canonical;
+    assert(width(T) >= columnIndex, ...
+        "Active-power CSV %d has only %d columns; expected column %d for %s.", ...
+        sourceNumber, width(T), columnIndex, field);
 
     powerSeries.(char(field)).realTime = T.("Time");
-    powerSeries.(char(field)).simTime = realToSimTime( ...
+    powerSeries.(char(field)).simTime = hilToSimTime( ...
         T.("Time"), ...
         PLAYBACK_START_REAL_S, ...
-        SIM_FIRST_COMMAND_TIME, ...
-        SIM_HOURS_PER_REAL_SECOND);
+        simPlaybackStart, ...
+        REAL_SECONDS_PER_STEP, ...
+        SIM_MINUTES_PER_STEP);
 
-    % Typhoon P_measured exports are in watts.
-    powerSeries.(char(field)).kW = T.(char(columnName)) / 1000.0;
-    powerSeries.(char(field)).sourceColumn = columnName;
+    % Typhoon active-power exports are in W.
+    powerSeries.(char(field)).kW = T{:, columnIndex} / 1000.0;
 
-    fprintf("Power %-6s -> %s\n", canonical, columnName);
+    % Keep whatever MATLAB imported the header as, for diagnostics only.
+    powerSeries.(char(field)).column = ...
+        string(T.Properties.VariableNames{columnIndex});
 end
 
 powerFields = string(fieldnames(powerSeries));
 
-if isempty(powerFields)
-    fprintf("\nNo monitored power channels were matched. CSV headers read were:\n");
-    for tt = 1:numel(powerTables)
-        fprintf("\n--- %s ---\n", ACTIVE_POWER_FILES(tt));
-        disp(string(powerTables{tt}.Properties.VariableNames)');
-    end
-    error([ ...
-        "No monitored active-power channels were found. " ...
-        "Check that this FIXED script is being run with the Experiment 1 " ...
-        "files measured_activePower1.csv and measured_activePower2.csv."]);
-end
-
-if ~isempty(missingPowerChannels)
-    fprintf("\nWARNING: Missing active-power channels:\n  %s\n\n", ...
-        strjoin(missingPowerChannels, ", "));
-end
-
-%% ========================================================================
-% LOAD NODE 632 FEEDER POWER
-% ========================================================================
-
-PF = readTyphoonCsv(fullfile(dataDir, FEEDER_POWER_FILE));
-PF = cropByRealTime( ...
-    PF, ...
-    PLAYBACK_START_REAL_S, ...
-    PLAYBACK_END_REAL_S);
-
-[found632, feederColumn] = findColumnContaining( ...
-    string(PF.Properties.VariableNames), ...
-    ["632", "Probe"]);
-
-if ~found632
-    error("Could not locate the Node 632 feeder-power probe column.");
-end
+% Node 632 feeder power.
+assert(ismember("Node 632.Probe1", string(PF.Properties.VariableNames)), ...
+    "Node 632.Probe1 was not found in the feeder-power CSV.");
 
 feederRealTime = PF.("Time");
-feederSimTime = realToSimTime( ...
+feederSimTime = hilToSimTime( ...
     feederRealTime, ...
     PLAYBACK_START_REAL_S, ...
-    SIM_FIRST_COMMAND_TIME, ...
-    SIM_HOURS_PER_REAL_SECOND);
+    simPlaybackStart, ...
+    REAL_SECONDS_PER_STEP, ...
+    SIM_MINUTES_PER_STEP);
 
-feederKW = PF.(char(feederColumn)) / 1000.0;
-
-fprintf("Feeder power -> %s\n\n", feederColumn);
+feederKW = PF.("Node 632.Probe1") / 1000.0;
 
 %% ========================================================================
-% LOAD VOLTAGE CSVs
+% LOAD HIL RMS VOLTAGE DATA
 % ========================================================================
 
-voltageTables = cell(numel(VOLTAGE_FILES), 1);
+V634 = readTyphoonCsv(node634VoltageFile);
+V1 = readTyphoonCsv(voltageFile1);
+V2 = readTyphoonCsv(voltageFile2);
+V3 = readTyphoonCsv(voltageFile3);
 
-for k = 1:numel(VOLTAGE_FILES)
-    path = fullfile(dataDir, VOLTAGE_FILES(k));
-    voltageTables{k} = readTyphoonCsv(path);
-    voltageTables{k} = cropByRealTime( ...
-        voltageTables{k}, ...
-        PLAYBACK_START_REAL_S, ...
-        PLAYBACK_END_REAL_S);
-end
+V634 = cropRealTime(V634, PLAYBACK_START_REAL_S, PLAYBACK_END_REAL_S);
+V1 = cropRealTime(V1, PLAYBACK_START_REAL_S, PLAYBACK_END_REAL_S);
+V2 = cropRealTime(V2, PLAYBACK_START_REAL_S, PLAYBACK_END_REAL_S);
+V3 = cropRealTime(V3, PLAYBACK_START_REAL_S, PLAYBACK_END_REAL_S);
 
+voltageTables = {V634, V1, V2, V3};
 voltageSeries = struct();
 
 for t = 1:numel(voltageTables)
+
     T = voltageTables{t};
     names = string(T.Properties.VariableNames);
 
     for k = 1:numel(names)
+
         name = names(k);
 
-        % Ignore metadata / exported limit traces. We calculate assessment
-        % limits directly from the specified nominal voltages.
-        if name == "Time" || ...
-                contains(lower(name), "upperbound") || ...
-                contains(lower(name), "lowerbound")
+        if name == "Time" || name == "UpperBound" || name == "LowerBound"
             continue;
         end
 
-        token = regexp( ...
-            char(name), ...
+        token = regexp(char(name), ...
             '^Node\s+(\d+)\.V([123])_rms$', ...
-            'tokens', ...
-            'once');
+            'tokens', 'once');
 
         if isempty(token)
             continue;
         end
 
         node = string(token{1});
-        phaseNumber = str2double(token{2});
-        phaseLetters = 'ABC';
-        phase = string(phaseLetters(phaseNumber));
+        phaseIndex = str2double(token{2});
+        phaseChars = 'ABC';
+        phase = string(phaseChars(phaseIndex));
 
-        canonical = "N" + node + "_" + phase;
+        field = "N" + node + "_" + phase;
 
-        % If the same channel appears twice, keep the first occurrence.
-        if isfield(voltageSeries, char(canonical))
+        % Keep first occurrence if duplicated between exports.
+        if isfield(voltageSeries, char(field))
             continue;
         end
 
-        voltageSeries.(char(canonical)).node = node;
-        voltageSeries.(char(canonical)).phase = phase;
-        voltageSeries.(char(canonical)).realTime = T.("Time");
-        voltageSeries.(char(canonical)).simTime = realToSimTime( ...
+        voltageSeries.(char(field)).node = node;
+        voltageSeries.(char(field)).phase = phase;
+        voltageSeries.(char(field)).realTime = T.("Time");
+        voltageSeries.(char(field)).simTime = hilToSimTime( ...
             T.("Time"), ...
             PLAYBACK_START_REAL_S, ...
-            SIM_FIRST_COMMAND_TIME, ...
-            SIM_HOURS_PER_REAL_SECOND);
-        voltageSeries.(char(canonical)).V = T.(char(name));
-        voltageSeries.(char(canonical)).sourceColumn = name;
+            simPlaybackStart, ...
+            REAL_SECONDS_PER_STEP, ...
+            SIM_MINUTES_PER_STEP);
+
+        voltageSeries.(char(field)).V = T.(char(name));
+        voltageSeries.(char(field)).column = name;
 
         if node == "634"
-            voltageSeries.(char(canonical)).nominalV = NOMINAL_634_V;
-            voltageSeries.(char(canonical)).lowerV = LOWER_634_V;
-            voltageSeries.(char(canonical)).upperV = UPPER_634_V;
+            voltageSeries.(char(field)).nominalV = NOMINAL_634_V;
+            voltageSeries.(char(field)).lowerV = LOWER_634_V;
+            voltageSeries.(char(field)).upperV = UPPER_634_V;
         else
-            voltageSeries.(char(canonical)).nominalV = NOMINAL_OTHER_V;
-            voltageSeries.(char(canonical)).lowerV = LOWER_OTHER_V;
-            voltageSeries.(char(canonical)).upperV = UPPER_OTHER_V;
+            voltageSeries.(char(field)).nominalV = NOMINAL_OTHER_V;
+            voltageSeries.(char(field)).lowerV = LOWER_OTHER_V;
+            voltageSeries.(char(field)).upperV = UPPER_OTHER_V;
         end
     end
 end
 
 voltageFields = string(fieldnames(voltageSeries));
 
-if isempty(voltageFields)
-    error("No RMS-voltage channels were found in the supplied CSVs.");
-end
-
-fprintf("Voltage channels found: %d\n\n", numel(voltageFields));
+fprintf("Active-power channels loaded: %d\n", numel(powerFields));
+fprintf("RMS-voltage channels loaded : %d\n\n", numel(voltageFields));
 
 %% ========================================================================
-% FIGURE 1 - REQUIRED: FEEDER ACTIVE POWER AT NODE 632
+% REQUIRED FIGURE 1 - NODE 632 FEEDER ACTIVE POWER
 % ========================================================================
 
 [peakFeederKW, peakIdx] = max(feederKW);
 [minFeederKW, minIdx] = min(feederKW);
 
-peakRealTime = feederRealTime(peakIdx);
-peakSimTime = feederSimTime(peakIdx);
+peakFeederTime = feederSimTime(peakIdx);
+minFeederTime = feederSimTime(minIdx);
+peakFeederRealTime = feederRealTime(peakIdx);
 
 fig1 = figure( ...
-    "Name", "Exp1 - Node 632 feeder active power", ...
+    "Name", "Experiment 1 - Node 632 feeder active power", ...
     "Color", "w", ...
     "Position", [80 80 1250 650]);
 
 plot(feederSimTime, feederKW, ...
     "LineWidth", 1.6, ...
-    "DisplayName", "Node 632 measured feeder power");
+    "DisplayName", "Measured Node 632 feeder power");
+
 hold on;
 
-plot(peakSimTime, peakFeederKW, "o", ...
+yline(0, "-", ...
+    "0 kW", ...
+    "HandleVisibility", "off");
+
+plot(peakFeederTime, peakFeederKW, "o", ...
     "MarkerSize", 8, ...
-    "LineWidth", 1.5, ...
-    "DisplayName", sprintf("Peak = %.1f kW", peakFeederKW));
+    "LineWidth", 1.4, ...
+    "DisplayName", sprintf("Peak %.1f kW", peakFeederKW));
 
-yline(0, "-", "HandleVisibility", "off");
+plot(minFeederTime, minFeederKW, "s", ...
+    "MarkerSize", 8, ...
+    "LineWidth", 1.4, ...
+    "DisplayName", sprintf("Minimum %.1f kW", minFeederKW));
+
 hold off;
-
 grid on;
 box on;
+
 xlabel("Simulated date/time");
 ylabel("Measured feeder active power (kW)");
 title("Experiment 1 (QP): Measured Feeder Active Power at Node 632");
-subtitle(sprintf("Peak %.1f kW at %s", ...
-    peakFeederKW, ...
-    char(string(peakSimTime, "dd-MMM HH:mm"))));
+subtitle(sprintf("Peak %.1f kW | Minimum %.1f kW", ...
+    peakFeederKW, minFeederKW));
+
 legend("Location", "best");
 set(gca, "FontSize", FONT_SIZE);
 formatDateAxis(gca);
 
-saveAssessmentFigure( ...
-    fig1, outputDir, ...
+saveAssessmentFigure(fig1, outputDir, ...
     "01_Exp1_Node632_Feeder_Active_Power", ...
     SAVE_PNG, SAVE_FIG);
 
 %% ========================================================================
-% FIGURE 2 - REQUIRED: ALL MONITORED TIME-VARYING ACTIVE POWERS
+% REQUIRED FIGURE 2 - ALL TIME-VARYING NODE-PHASE ACTIVE POWERS
 % ========================================================================
 
-nPower = numel(powerFields);
-
 fig2 = figure( ...
-    "Name", "Exp1 - time-varying active powers", ...
+    "Name", "Experiment 1 - node-phase active powers", ...
     "Color", "w", ...
-    "Position", [20 20 1650 950]);
+    "Position", [20 20 1700 950]);
 
-nCols = 4;
-nRows = ceil(nPower / nCols);
-
-tl2 = tiledlayout(nRows, nCols, ...
+tl2 = tiledlayout(4,4, ...
     "TileSpacing", "compact", ...
     "Padding", "compact");
 
@@ -392,7 +449,8 @@ title(tl2, ...
     "Experiment 1 (QP): Measured Active Power at Time-Varying Node-Phases", ...
     "FontWeight", "bold");
 
-for k = 1:nPower
+for k = 1:numel(powerFields)
+
     field = powerFields(k);
     s = powerSeries.(char(field));
 
@@ -407,74 +465,76 @@ for k = 1:nPower
 
     grid on;
     box on;
-    title(canonicalPowerLabel(field));
+
+    title(powerFieldLabel(field));
     ylabel("kW");
+
     set(gca, "FontSize", 8);
     formatDateAxis(gca);
 end
 
 xlabel(tl2, "Simulated date/time");
 
-saveAssessmentFigure( ...
-    fig2, outputDir, ...
+saveAssessmentFigure(fig2, outputDir, ...
     "02_Exp1_All_TimeVarying_NodePhase_Active_Powers", ...
     SAVE_PNG, SAVE_FIG);
 
 %% ========================================================================
-% FIGURE 3 - REQUIRED: NODE 634 RMS VOLTAGES
+% REQUIRED FIGURE 3 - NODE 634 RMS VOLTAGES
 % ========================================================================
 
 node634Fields = voltageFields(startsWith(voltageFields, "N634_"));
 
-if isempty(node634Fields)
-    warning("No Node 634 voltage channels were found; Figure 3 cannot be produced.");
-else
-    fig3 = figure( ...
-        "Name", "Exp1 - Node 634 RMS voltage", ...
-        "Color", "w", ...
-        "Position", [90 90 1250 650]);
+assert(numel(node634Fields) == 3, ...
+    "Expected three Node 634 voltage phases; found %d.", ...
+    numel(node634Fields));
 
-    hold on;
+fig3 = figure( ...
+    "Name", "Experiment 1 - Node 634 RMS voltage", ...
+    "Color", "w", ...
+    "Position", [90 90 1250 650]);
 
-    for k = 1:numel(node634Fields)
-        f = node634Fields(k);
-        s = voltageSeries.(char(f));
+hold on;
 
-        plot(s.simTime, s.V, ...
-            "LineWidth", 1.5, ...
-            "DisplayName", sprintf("Phase %s", s.phase));
-    end
+for k = 1:numel(node634Fields)
 
-    yline(LOWER_634_V, "--", ...
-        sprintf("-5%% = %.2f V", LOWER_634_V), ...
-        "LineWidth", LIMIT_LINE_WIDTH, ...
-        "HandleVisibility", "off");
+    f = node634Fields(k);
+    s = voltageSeries.(char(f));
 
-    yline(UPPER_634_V, "--", ...
-        sprintf("+5%% = %.2f V", UPPER_634_V), ...
-        "LineWidth", LIMIT_LINE_WIDTH, ...
-        "HandleVisibility", "off");
-
-    hold off;
-    grid on;
-    box on;
-
-    xlabel("Simulated date/time");
-    ylabel("RMS line-to-ground voltage (V)");
-    title("Experiment 1 (QP): Node 634 RMS Voltages");
-    subtitle("Nominal = 277 V; permitted range = 263.15 to 290.85 V");
-    legend("Location", "best");
-    set(gca, "FontSize", FONT_SIZE);
-    formatDateAxis(gca);
-
-    saveAssessmentFigure( ...
-        fig3, outputDir, ...
-        "03_Exp1_Node634_RMS_Voltages", ...
-        SAVE_PNG, SAVE_FIG);
+    plot(s.simTime, s.V, ...
+        "LineWidth", 1.4, ...
+        "DisplayName", "Phase " + s.phase);
 end
 
+yline(LOWER_634_V, "--", ...
+    sprintf("-5%% limit = %.2f V", LOWER_634_V), ...
+    "LineWidth", LIMIT_LINE_WIDTH, ...
+    "HandleVisibility", "off");
+
+yline(UPPER_634_V, "--", ...
+    sprintf("+5%% limit = %.2f V", UPPER_634_V), ...
+    "LineWidth", LIMIT_LINE_WIDTH, ...
+    "HandleVisibility", "off");
+
+hold off;
+grid on;
+box on;
+
+xlabel("Simulated date/time");
+ylabel("RMS line-to-ground voltage (V)");
+title("Experiment 1 (QP): Node 634 RMS Voltages");
+subtitle("Nominal = 277 V; permitted range = 263.15-290.85 V");
+
+legend("Location", "best");
+set(gca, "FontSize", FONT_SIZE);
+formatDateAxis(gca);
+
+saveAssessmentFigure(fig3, outputDir, ...
+    "03_Exp1_Node634_RMS_Voltages", ...
+    SAVE_PNG, SAVE_FIG);
+
 %% ========================================================================
-% FIGURE 4 - REQUIRED: ALL OTHER MONITORED RMS VOLTAGES
+% REQUIRED FIGURE 4 - ALL OTHER MONITORED RMS VOLTAGES
 % ========================================================================
 
 otherFields = voltageFields(~startsWith(voltageFields, "N634_"));
@@ -488,247 +548,169 @@ end
 
 otherNodes = unique(otherNodes, "stable");
 
-if isempty(otherNodes)
-    warning("No non-634 voltage channels were found; Figure 4 cannot be produced.");
-else
-    nNodes = numel(otherNodes);
+fig4 = figure( ...
+    "Name", "Experiment 1 - all other monitored RMS voltages", ...
+    "Color", "w", ...
+    "Position", [10 10 1750 1000]);
 
-    fig4 = figure( ...
-        "Name", "Exp1 - other monitored RMS voltages", ...
-        "Color", "w", ...
-        "Position", [10 10 1700 1000]);
+nCols = 4;
+nRows = ceil(numel(otherNodes) / nCols);
 
-    nCols = 4;
-    nRows = ceil(nNodes / nCols);
+tl4 = tiledlayout(nRows, nCols, ...
+    "TileSpacing", "compact", ...
+    "Padding", "compact");
 
-    tl4 = tiledlayout(nRows, nCols, ...
-        "TileSpacing", "compact", ...
-        "Padding", "compact");
+title(tl4, ...
+    "Experiment 1 (QP): RMS Voltages at All Other Monitored Feeder Nodes", ...
+    "FontWeight", "bold");
 
-    title(tl4, ...
-        "Experiment 1 (QP): RMS Voltages at All Other Monitored Feeder Nodes", ...
-        "FontWeight", "bold");
+for n = 1:numel(otherNodes)
 
-    for n = 1:nNodes
-        node = otherNodes(n);
-        nexttile;
-        hold on;
+    node = otherNodes(n);
 
-        fieldsThisNode = strings(0);
+    nexttile;
+    hold on;
 
-        for k = 1:numel(otherFields)
-            s = voltageSeries.(char(otherFields(k)));
+    fieldsThisNode = strings(0);
 
-            if s.node == node
-                fieldsThisNode(end+1) = otherFields(k); %#ok<SAGROW>
-            end
+    for k = 1:numel(otherFields)
+
+        f = otherFields(k);
+        s = voltageSeries.(char(f));
+
+        if s.node == node
+            fieldsThisNode(end+1) = f; %#ok<SAGROW>
         end
-
-        for k = 1:numel(fieldsThisNode)
-            f = fieldsThisNode(k);
-            s = voltageSeries.(char(f));
-
-            plot(s.simTime, s.V, ...
-                "LineWidth", 1.05, ...
-                "DisplayName", sprintf("Phase %s", s.phase));
-        end
-
-        yline(LOWER_OTHER_V, "--", ...
-            "LineWidth", 0.9, ...
-            "HandleVisibility", "off");
-
-        yline(UPPER_OTHER_V, "--", ...
-            "LineWidth", 0.9, ...
-            "HandleVisibility", "off");
-
-        hold off;
-        grid on;
-        box on;
-
-        title("Node " + node);
-        ylabel("V");
-        legend("Location", "best", "FontSize", 7);
-        set(gca, "FontSize", 8);
-        formatDateAxis(gca);
     end
 
-    xlabel(tl4, "Simulated date/time");
+    for k = 1:numel(fieldsThisNode)
 
-    saveAssessmentFigure( ...
-        fig4, outputDir, ...
-        "04_Exp1_All_Other_Monitored_RMS_Voltages", ...
-        SAVE_PNG, SAVE_FIG);
-end
+        f = fieldsThisNode(k);
+        s = voltageSeries.(char(f));
 
-%% ========================================================================
-% FIGURE 5 - REQUIRED IF SCHEDULE CSV IS AVAILABLE: NODE 646 SOC
-% ========================================================================
-
-scheduleFile = resolveScheduleFile( ...
-    dataDir, ...
-    SCHEDULE_FILE, ...
-    ["experiment1_qp_schedule*.csv", "*qp*schedule*.csv"]);
-
-if strlength(scheduleFile) > 0
-
-    S = readtable(scheduleFile, ...
-        "VariableNamingRule", "preserve", ...
-        "TextType", "string");
-
-    scheduleNames = string(S.Properties.VariableNames);
-
-    if ismember("soc646_measured_pct", scheduleNames)
-
-        nRows = min(height(S), 240);
-        S = S(1:nRows,:);
-
-        if all(ismember(["date_label","profile_time"], ...
-                string(S.Properties.VariableNames)))
-
-            socTime = datetime( ...
-                string(S.("date_label")) + " " + ...
-                string(S.("profile_time")), ...
-                "InputFormat", "d-MMM-yy H:mm", ...
-                "Locale", "en_US");
-        else
-            socTime = SIM_FIRST_COMMAND_TIME + ...
-                minutes((0:height(S)-1)' * 30);
-        end
-
-        socMeasured = S.("soc646_measured_pct");
-
-        fig5 = figure( ...
-            "Name", "Exp1 - Node 646 measured SoC", ...
-            "Color", "w", ...
-            "Position", [100 100 1250 650]);
-
-        plot(socTime, socMeasured, ...
-            "LineWidth", 1.7, ...
-            "DisplayName", "Measured Node 646 SoC");
-
-        hold on;
-
-        if ismember("soc_predicted_pct", ...
-                string(S.Properties.VariableNames))
-
-            plot(socTime, S.("soc_predicted_pct"), "--", ...
-                "LineWidth", 1.2, ...
-                "DisplayName", "QP predicted SoC");
-        end
-
-        yline(0, ":", "HandleVisibility", "off");
-        yline(100, ":", "HandleVisibility", "off");
-
-        hold off;
-        grid on;
-        box on;
-
-        xlabel("Simulated date/time");
-        ylabel("Battery State of Charge (%)");
-        title("Experiment 1 (QP): Node 646 Battery State of Charge");
-        legend("Location", "best");
-        ylim([-2 102]);
-        set(gca, "FontSize", FONT_SIZE);
-        formatDateAxis(gca);
-
-        saveAssessmentFigure( ...
-            fig5, outputDir, ...
-            "05_Exp1_Node646_Measured_SoC", ...
-            SAVE_PNG, SAVE_FIG);
-
-        fprintf("Node 646 SoC schedule found: %s\n\n", scheduleFile);
-
-    else
-        warning("Schedule CSV found, but soc646_measured_pct is absent.");
+        plot(s.simTime, s.V, ...
+            "LineWidth", 1.0, ...
+            "DisplayName", "Phase " + s.phase);
     end
 
-else
-    warning('%s', [ ...
-        'No Experiment 1 QP schedule CSV was found. ' ...
-        'Figure 5 (Node 646 measured SoC) was skipped.']);
+    yline(LOWER_OTHER_V, "--", ...
+        "LineWidth", 0.9, ...
+        "HandleVisibility", "off");
+
+    yline(UPPER_OTHER_V, "--", ...
+        "LineWidth", 0.9, ...
+        "HandleVisibility", "off");
+
+    hold off;
+    grid on;
+    box on;
+
+    title("Node " + node);
+    ylabel("V");
+
+    legend("Location", "best", "FontSize", 7);
+    set(gca, "FontSize", 8);
+    formatDateAxis(gca);
 end
 
+xlabel(tl4, "Simulated date/time");
+
+saveAssessmentFigure(fig4, outputDir, ...
+    "04_Exp1_All_Other_Monitored_RMS_Voltages", ...
+    SAVE_PNG, SAVE_FIG);
+
 %% ========================================================================
-% Q1-Q3: VOLTAGE VIOLATIONS
+% REQUIRED FIGURE 5 - NODE 646 MEASURED BATTERY SOC
 % ========================================================================
 
-voltageRows = table();
-voltageEventRows = table();
+socMeasured = double(S.("soc646_measured_pct"));
+socPredicted = double(S.("soc_predicted_pct"));
+
+fig5 = figure( ...
+    "Name", "Experiment 1 - Node 646 battery SoC", ...
+    "Color", "w", ...
+    "Position", [100 100 1250 650]);
+
+plot(scheduleTime, socMeasured, ...
+    "LineWidth", 1.7, ...
+    "DisplayName", "Measured Node 646 SoC");
+
+hold on;
+
+plot(scheduleTime, socPredicted, "--", ...
+    "LineWidth", 1.2, ...
+    "DisplayName", "QP predicted SoC");
+
+yline(0, ":", "HandleVisibility", "off");
+yline(100, ":", "HandleVisibility", "off");
+
+hold off;
+grid on;
+box on;
+
+xlabel("Simulated date/time");
+ylabel("Battery State of Charge (%)");
+title("Experiment 1 (QP): Node 646 Battery State of Charge");
+legend("Location", "best");
+
+ylim([-2 102]);
+
+set(gca, "FontSize", FONT_SIZE);
+formatDateAxis(gca);
+
+saveAssessmentFigure(fig5, outputDir, ...
+    "05_Exp1_Node646_Measured_SoC", ...
+    SAVE_PNG, SAVE_FIG);
+
+%% ========================================================================
+% Q1-Q3 - VOLTAGE VIOLATION ANALYSIS
+% ========================================================================
+
+voltageStats = table();
+voltageIntervals = table();
 
 for k = 1:numel(voltageFields)
 
     f = voltageFields(k);
     s = voltageSeries.(char(f));
 
-    values = s.V;
-    under = values < s.lowerV;
-    over = values > s.upperV;
-    violates = under | over;
+    v = s.V;
 
-    [minV, iMin] = min(values);
-    [maxV, iMax] = max(values);
+    under = v < s.lowerV;
+    over = v > s.upperV;
+    violation = under | over;
+
+    [minV, iMin] = min(v);
+    [maxV, iMax] = max(v);
 
     minPU = minV / s.nominalV;
     maxPU = maxV / s.nominalV;
 
-    if any(violates)
+    underMagnitude = max(0, s.lowerV - minV);
+    overMagnitude = max(0, maxV - s.upperV);
 
-        badIdx = find(violates);
-        firstViolation = s.simTime(badIdx(1));
-        lastViolation = s.simTime(badIdx(end));
+    if underMagnitude >= overMagnitude && underMagnitude > 0
 
-        underMagnitude = max(0, s.lowerV - minV);
-        overMagnitude = max(0, maxV - s.upperV);
+        worstType = "UNDER";
+        worstVoltage = minV;
+        worstTime = s.simTime(iMin);
+        worstLimit = s.lowerV;
+        worstMagnitude = underMagnitude;
 
-        if underMagnitude >= overMagnitude
-            worstType = "UNDER";
-            worstV = minV;
-            worstTime = s.simTime(iMin);
-            limitV = s.lowerV;
-            worstMagnitude = underMagnitude;
-        else
-            worstType = "OVER";
-            worstV = maxV;
-            worstTime = s.simTime(iMax);
-            limitV = s.upperV;
-            worstMagnitude = overMagnitude;
-        end
+    elseif overMagnitude > 0
 
-        intervals = logicalIntervals(violates);
-
-        for q = 1:height(intervals)
-
-            iStart = intervals.StartIndex(q);
-            iEnd = intervals.EndIndex(q);
-
-            eventType = "MIXED";
-
-            if all(under(iStart:iEnd))
-                eventType = "UNDER";
-            elseif all(over(iStart:iEnd))
-                eventType = "OVER";
-            end
-
-            eventRow = table( ...
-                s.node, ...
-                s.phase, ...
-                eventType, ...
-                s.simTime(iStart), ...
-                s.simTime(iEnd), ...
-                'VariableNames', { ...
-                'Node','Phase','Type','StartTime','EndTime'});
-
-            voltageEventRows = [voltageEventRows; eventRow]; %#ok<AGROW>
-        end
+        worstType = "OVER";
+        worstVoltage = maxV;
+        worstTime = s.simTime(iMax);
+        worstLimit = s.upperV;
+        worstMagnitude = overMagnitude;
 
     else
 
-        firstViolation = NaT;
-        lastViolation = NaT;
         worstType = "NONE";
-        worstV = NaN;
+        worstVoltage = NaN;
         worstTime = NaT;
-        limitV = NaN;
+        worstLimit = NaN;
         worstMagnitude = 0;
     end
 
@@ -742,104 +724,161 @@ for k = 1:numel(voltageFields)
         maxPU, ...
         any(under), ...
         any(over), ...
-        sum(under), ...
-        sum(over), ...
-        firstViolation, ...
-        lastViolation, ...
         worstType, ...
-        worstV, ...
+        worstVoltage, ...
         worstTime, ...
-        limitV, ...
+        worstLimit, ...
         worstMagnitude, ...
         'VariableNames', { ...
         'Node','Phase','Nominal_V', ...
         'Min_V','Min_pu','Max_V','Max_pu', ...
         'UnderVoltage','OverVoltage', ...
-        'UnderSamples','OverSamples', ...
-        'FirstViolation','LastViolation', ...
         'WorstType','WorstVoltage_V','WorstTime', ...
         'RelevantLimit_V','ViolationMagnitude_V'});
 
-    voltageRows = [voltageRows; newRow]; %#ok<AGROW>
-end
+    voltageStats = [voltageStats; newRow]; %#ok<AGROW>
 
-violTable = voltageRows( ...
-    voltageRows.UnderVoltage | voltageRows.OverVoltage, :);
+    intervals = logicalIntervals(violation);
 
-writetable( ...
-    voltageRows, ...
-    fullfile(outputDir, "Experiment1_AllVoltageStatistics.csv"));
+    for q = 1:height(intervals)
 
-writetable( ...
-    violTable, ...
-    fullfile(outputDir, "Experiment1_VoltageViolations.csv"));
+        iStart = intervals.StartIndex(q);
+        iEnd = intervals.EndIndex(q);
 
-if ~isempty(voltageEventRows)
+        type = "MIXED";
 
-    writetable( ...
-        voltageEventRows, ...
-        fullfile(outputDir, ...
-        "Experiment1_VoltageViolationIntervals.csv"));
-end
+        if all(under(iStart:iEnd))
+            type = "UNDER";
+        elseif all(over(iStart:iEnd))
+            type = "OVER";
+        end
 
-fprintf("\n============================================================\n");
-fprintf(" EXPERIMENT 1 Q1-Q3 - VOLTAGE VIOLATIONS\n");
-fprintf("============================================================\n");
+        intervalRow = table( ...
+            s.node, ...
+            s.phase, ...
+            type, ...
+            s.simTime(iStart), ...
+            s.simTime(iEnd), ...
+            'VariableNames', { ...
+            'Node','Phase','Type','StartTime','EndTime'});
 
-if isempty(violTable)
-
-    fprintf("Q1: No monitored node-phase violates the +/-5%% limits.\n");
-
-else
-
-    violatingNodes = unique(violTable.Node, "stable");
-
-    fprintf("Q1 - Nodes with voltage violations:\n");
-    fprintf("  %s\n", ...
-        strjoin("Node " + violatingNodes, ", "));
-
-    fprintf("\nQ2/Q3 - Timing and worst violation by node-phase:\n");
-
-    for r = 1:height(violTable)
-
-        fprintf([ ...
-            "  Node %s Phase %s: %s; worst %.2f V at %s; " ...
-            "limit %.2f V; violation %.2f V.\n"], ...
-            violTable.Node(r), ...
-            violTable.Phase(r), ...
-            violTable.WorstType(r), ...
-            violTable.WorstVoltage_V(r), ...
-            formatTimestamp(violTable.WorstTime(r)), ...
-            violTable.RelevantLimit_V(r), ...
-            violTable.ViolationMagnitude_V(r));
+        voltageIntervals = [voltageIntervals; intervalRow]; %#ok<AGROW>
     end
 end
 
+violatingStats = voltageStats( ...
+    voltageStats.UnderVoltage | voltageStats.OverVoltage, :);
+
+writetable(voltageStats, ...
+    fullfile(outputDir, "Experiment1_AllVoltageStatistics.csv"));
+
+writetable(violatingStats, ...
+    fullfile(outputDir, "Experiment1_VoltageViolations.csv"));
+
+if ~isempty(voltageIntervals)
+    writetable(voltageIntervals, ...
+        fullfile(outputDir, "Experiment1_VoltageViolationIntervals.csv"));
+end
+
 %% ========================================================================
-% FIGURE 6 - WORST MINIMUM PER-UNIT VOLTAGE
+% Q4-Q6 - REVERSE ACTIVE POWER FLOW ANALYSIS
 % ========================================================================
 
-labelsVoltage = "N" + voltageRows.Node + "-" + voltageRows.Phase;
+powerStats = table();
+reverseIntervals = table();
 
-[minPUSorted, orderV] = sort( ...
-    voltageRows.Min_pu, ...
-    "ascend");
+for k = 1:numel(powerFields)
 
-labelsSorted = labelsVoltage(orderV);
+    field = powerFields(k);
+    s = powerSeries.(char(field));
+
+    parts = split(field, "_");
+    node = erase(parts(1), "N");
+    phase = parts(2);
+
+    reverse = s.kW < 0;
+
+    [minimumKW, iMinimum] = min(s.kW);
+    [maximumKW, iMaximum] = max(s.kW);
+
+    if any(reverse)
+        largestReverseTime = s.simTime(iMinimum);
+    else
+        largestReverseTime = NaT;
+    end
+
+    newRow = table( ...
+        node, ...
+        phase, ...
+        any(reverse), ...
+        minimumKW, ...
+        maximumKW, ...
+        largestReverseTime, ...
+        'VariableNames', { ...
+        'Node','Phase','ReverseFlow', ...
+        'MinimumPower_kW','MaximumPower_kW','WorstReverseTime'});
+
+    powerStats = [powerStats; newRow]; %#ok<AGROW>
+
+    intervals = logicalIntervals(reverse);
+
+    for q = 1:height(intervals)
+
+        iStart = intervals.StartIndex(q);
+        iEnd = intervals.EndIndex(q);
+
+        intervalRow = table( ...
+            node, ...
+            phase, ...
+            s.simTime(iStart), ...
+            s.simTime(iEnd), ...
+            'VariableNames', { ...
+            'Node','Phase','StartTime','EndTime'});
+
+        reverseIntervals = [reverseIntervals; intervalRow]; %#ok<AGROW>
+    end
+end
+
+reverseStats = powerStats(powerStats.ReverseFlow, :);
+
+writetable(powerStats, ...
+    fullfile(outputDir, "Experiment1_AllActivePowerStatistics.csv"));
+
+writetable(reverseStats, ...
+    fullfile(outputDir, "Experiment1_ReversePowerFlow.csv"));
+
+if ~isempty(reverseIntervals)
+    writetable(reverseIntervals, ...
+        fullfile(outputDir, "Experiment1_ReversePowerFlowIntervals.csv"));
+end
+
+%% ========================================================================
+% EXTRA FIGURE 6 - WORST MINIMUM VOLTAGE BY NODE-PHASE
+% ========================================================================
+
+[sortedMinPU, orderVoltage] = sort(voltageStats.Min_pu, "ascend");
+
+voltageLabels = ...
+    "N" + voltageStats.Node + "-" + voltageStats.Phase;
+
+voltageLabels = voltageLabels(orderVoltage);
 
 fig6 = figure( ...
-    "Name", "Exp1 - worst minimum voltage", ...
+    "Name", "Experiment 1 - minimum voltage summary", ...
     "Color", "w", ...
     "Position", [120 80 1250 800]);
 
-barh(categorical(labelsSorted, labelsSorted), minPUSorted);
+barh(categorical(voltageLabels, voltageLabels), sortedMinPU);
+
 hold on;
 
-xline(0.95, "--", "0.95 pu lower limit", ...
-    "LineWidth", 1.3);
+xline(0.95, "--", ...
+    "0.95 pu lower limit", ...
+    "LineWidth", 1.25);
 
-xline(1.05, "--", "1.05 pu upper limit", ...
-    "LineWidth", 1.3);
+xline(1.05, "--", ...
+    "1.05 pu upper limit", ...
+    "LineWidth", 1.25);
 
 hold off;
 grid on;
@@ -848,178 +887,65 @@ box on;
 xlabel("Minimum measured RMS voltage (pu)");
 ylabel("Node-phase");
 title("Experiment 1 (QP): Worst Minimum Voltage by Node-Phase");
+
 set(gca, "FontSize", FONT_SIZE);
 
-saveAssessmentFigure( ...
-    fig6, outputDir, ...
+saveAssessmentFigure(fig6, outputDir, ...
     "06_Exp1_Worst_Minimum_Voltage_Summary", ...
     SAVE_PNG, SAVE_FIG);
 
 %% ========================================================================
-% Q4-Q6: REVERSE ACTIVE POWER FLOW
+% EXTRA FIGURE 7 - REVERSE ACTIVE POWER SUMMARY
 % ========================================================================
 
-reverseRows = table();
-reverseEventRows = table();
+[sortedMinimumPower, orderPower] = sort( ...
+    powerStats.MinimumPower_kW, "ascend");
 
-for k = 1:numel(powerFields)
+powerLabels = ...
+    "N" + powerStats.Node + "-" + powerStats.Phase;
 
-    field = powerFields(k);
-    s = powerSeries.(char(field));
-
-    parts = split(field, "_");
-    node = erase(parts(1), "N");
-    phase = parts(2);
-
-    reverseMask = s.kW < 0;
-
-    if any(reverseMask)
-
-        [minKW, minIdx] = min(s.kW);
-        badIdx = find(reverseMask);
-
-        firstReverse = s.simTime(badIdx(1));
-        lastReverse = s.simTime(badIdx(end));
-        worstTime = s.simTime(minIdx);
-
-        intervals = logicalIntervals(reverseMask);
-
-        for q = 1:height(intervals)
-
-            iStart = intervals.StartIndex(q);
-            iEnd = intervals.EndIndex(q);
-
-            eventRow = table( ...
-                string(node), ...
-                string(phase), ...
-                s.simTime(iStart), ...
-                s.simTime(iEnd), ...
-                'VariableNames', { ...
-                'Node','Phase','StartTime','EndTime'});
-
-            reverseEventRows = [reverseEventRows; eventRow]; %#ok<AGROW>
-        end
-
-    else
-
-        minKW = min(s.kW);
-        firstReverse = NaT;
-        lastReverse = NaT;
-        worstTime = NaT;
-    end
-
-    newRow = table( ...
-        string(node), ...
-        string(phase), ...
-        any(reverseMask), ...
-        minKW, ...
-        firstReverse, ...
-        lastReverse, ...
-        worstTime, ...
-        'VariableNames', { ...
-        'Node','Phase','ReverseFlow','MinimumPower_kW', ...
-        'FirstReverseFlow','LastReverseFlow','WorstReverseTime'});
-
-    reverseRows = [reverseRows; newRow]; %#ok<AGROW>
-end
-
-reverseTable = reverseRows(reverseRows.ReverseFlow, :);
-
-writetable( ...
-    reverseRows, ...
-    fullfile(outputDir, "Experiment1_AllActivePowerStatistics.csv"));
-
-writetable( ...
-    reverseTable, ...
-    fullfile(outputDir, "Experiment1_ReversePowerFlow.csv"));
-
-if ~isempty(reverseEventRows)
-
-    writetable( ...
-        reverseEventRows, ...
-        fullfile(outputDir, ...
-        "Experiment1_ReversePowerFlowIntervals.csv"));
-end
-
-fprintf("\n============================================================\n");
-fprintf(" EXPERIMENT 1 Q4-Q6 - REVERSE POWER FLOW\n");
-fprintf("============================================================\n");
-
-if isempty(reverseTable)
-
-    fprintf("Q4: No monitored node-phase exhibits reverse active power flow.\n");
-
-else
-
-    reverseNodes = unique(reverseTable.Node, "stable");
-
-    fprintf("Q4 - Nodes with reverse active power flow:\n");
-    fprintf("  %s\n", ...
-        strjoin("Node " + reverseNodes, ", "));
-
-    fprintf("\nQ5/Q6 - Largest reverse flow by node-phase:\n");
-
-    for r = 1:height(reverseTable)
-
-        fprintf([ ...
-            "  Node %s Phase %s: minimum %.2f kW at %s.\n"], ...
-            reverseTable.Node(r), ...
-            reverseTable.Phase(r), ...
-            reverseTable.MinimumPower_kW(r), ...
-            formatTimestamp(reverseTable.WorstReverseTime(r)));
-    end
-end
-
-%% ========================================================================
-% FIGURE 7 - LARGEST REVERSE FLOW SUMMARY
-% ========================================================================
-
-[minPowerSorted, orderP] = sort( ...
-    reverseRows.MinimumPower_kW, ...
-    "ascend");
-
-labelsPower = ...
-    "N" + reverseRows.Node + "-" + reverseRows.Phase;
-labelsPower = labelsPower(orderP);
+powerLabels = powerLabels(orderPower);
 
 fig7 = figure( ...
-    "Name", "Exp1 - reverse active power summary", ...
+    "Name", "Experiment 1 - reverse power summary", ...
     "Color", "w", ...
     "Position", [130 80 1250 750]);
 
-barh(categorical(labelsPower, labelsPower), minPowerSorted);
+barh(categorical(powerLabels, powerLabels), sortedMinimumPower);
+
 hold on;
 xline(0, "-", "0 kW");
 hold off;
 
 grid on;
 box on;
+
 xlabel("Minimum measured active power (kW)");
 ylabel("Node-phase");
-title("Experiment 1 (QP): Largest Reverse Active-Power Flow");
-subtitle("Negative active power indicates reverse power flow");
+title("Experiment 1 (QP): Largest Reverse Active Power by Node-Phase");
+subtitle("Negative values indicate reverse active power flow");
+
 set(gca, "FontSize", FONT_SIZE);
 
-saveAssessmentFigure( ...
-    fig7, outputDir, ...
+saveAssessmentFigure(fig7, outputDir, ...
     "07_Exp1_Reverse_Power_Flow_Summary", ...
     SAVE_PNG, SAVE_FIG);
 
 %% ========================================================================
-% Q7-Q10: FEEDER PEAK AND NODE CONTRIBUTIONS
+% Q7-Q10 - FEEDER PEAK AND NODE CONTRIBUTIONS
 % ========================================================================
 
-contribRows = table();
+contributionRows = table();
 
 for k = 1:numel(powerFields)
 
     field = powerFields(k);
     s = powerSeries.(char(field));
 
-    pAtPeak = interp1( ...
+    powerAtPeak = interp1( ...
         s.realTime, ...
         s.kW, ...
-        peakRealTime, ...
+        peakFeederRealTime, ...
         "linear", ...
         "extrap");
 
@@ -1028,31 +954,28 @@ for k = 1:numel(powerFields)
     phase = parts(2);
 
     newRow = table( ...
-        string(node), ...
-        string(phase), ...
-        pAtPeak, ...
+        node, ...
+        phase, ...
+        powerAtPeak, ...
         'VariableNames', { ...
         'Node','Phase','PowerAtFeederPeak_kW'});
 
-    contribRows = [contribRows; newRow]; %#ok<AGROW>
+    contributionRows = [contributionRows; newRow]; %#ok<AGROW>
 end
 
-nodesMeasured = unique(contribRows.Node, "stable");
-nodeTotals = zeros(numel(nodesMeasured), 1);
+nodes = unique(contributionRows.Node, "stable");
+nodeTotals = zeros(numel(nodes),1);
 
-for n = 1:numel(nodesMeasured)
+for n = 1:numel(nodes)
 
     nodeTotals(n) = sum( ...
-        contribRows.PowerAtFeederPeak_kW( ...
-        contribRows.Node == nodesMeasured(n)), ...
+        contributionRows.PowerAtFeederPeak_kW( ...
+        contributionRows.Node == nodes(n)), ...
         "omitnan");
 end
 
-[nodeTotalsSorted, orderNode] = sort( ...
-    nodeTotals, ...
-    "descend");
-
-nodesSorted = nodesMeasured(orderNode);
+[nodeTotalsSorted, orderNode] = sort(nodeTotals, "descend");
+nodesSorted = nodes(orderNode);
 
 peakContributionTable = table( ...
     nodesSorted, ...
@@ -1061,62 +984,42 @@ peakContributionTable = table( ...
     'VariableNames', { ...
     'Node','MeasuredContribution_kW','ShareOfFeederPeak_pct'});
 
-writetable( ...
-    peakContributionTable, ...
+writetable(peakContributionTable, ...
     fullfile(outputDir, ...
     "Experiment1_PeakLoad_NodeContributions.csv"));
 
-fprintf("\n============================================================\n");
-fprintf(" EXPERIMENT 1 Q7-Q10 - FEEDER PEAK\n");
-fprintf("============================================================\n");
-
-fprintf("Q7 - Highest feeder net load occurs at:\n");
-fprintf("  %s\n", formatTimestamp(peakSimTime));
-
-fprintf("\nQ8 - Peak measured feeder net load:\n");
-fprintf("  %.3f kW (%.3f MW)\n", ...
-    peakFeederKW, ...
-    peakFeederKW / 1000);
-
-fprintf("\nQ9 - Measurement method:\n");
-fprintf([ ...
-    "  Node 632 is at the feeder head. The Typhoon Power Meter measures\n" ...
-    "  three-phase feeder active power and Node 632.Probe1 records it.\n" ...
-    "  Peak feeder net load is the maximum measured Probe1 value.\n"]);
-
-fprintf("\nQ10 - Measured node contributions at feeder peak:\n");
-disp(peakContributionTable);
-
 %% ========================================================================
-% FIGURE 8 - NODE CONTRIBUTIONS AT FEEDER PEAK
+% EXTRA FIGURE 8 - NODE CONTRIBUTIONS AT FEEDER PEAK
 % ========================================================================
 
 fig8 = figure( ...
-    "Name", "Exp1 - node contributions at feeder peak", ...
+    "Name", "Experiment 1 - node contributions at peak", ...
     "Color", "w", ...
     "Position", [140 100 1150 650]);
 
-bar( ...
-    categorical("Node " + nodesSorted, "Node " + nodesSorted), ...
+bar(categorical( ...
+    "Node " + nodesSorted, ...
+    "Node " + nodesSorted), ...
     nodeTotalsSorted);
 
 grid on;
 box on;
-ylabel("Measured active-power contribution (kW)");
+
 xlabel("Node");
+ylabel("Measured active-power contribution (kW)");
 title("Experiment 1 (QP): Node Contributions at Measured Feeder Peak");
-subtitle(sprintf("Node 632 peak = %.1f kW at %s", ...
+subtitle(sprintf("Node 632 feeder peak = %.1f kW at %s", ...
     peakFeederKW, ...
-    char(string(peakSimTime, "dd-MMM HH:mm"))));
+    char(string(peakFeederTime, "dd-MMM HH:mm"))));
+
 set(gca, "FontSize", FONT_SIZE);
 
-saveAssessmentFigure( ...
-    fig8, outputDir, ...
+saveAssessmentFigure(fig8, outputDir, ...
     "08_Exp1_Node_Contributions_At_Feeder_Peak", ...
     SAVE_PNG, SAVE_FIG);
 
 %% ========================================================================
-% FIGURE 9 - VOLTAGE PROFILE AT FEEDER PEAK
+% EXTRA FIGURE 9 - FEEDER VOLTAGE PROFILE AT PEAK LOAD
 % ========================================================================
 
 peakVoltageRows = table();
@@ -1126,14 +1029,14 @@ for k = 1:numel(voltageFields)
     f = voltageFields(k);
     s = voltageSeries.(char(f));
 
-    vAtPeak = interp1( ...
+    voltageAtPeak = interp1( ...
         s.realTime, ...
         s.V, ...
-        peakRealTime, ...
+        peakFeederRealTime, ...
         "linear", ...
         "extrap");
 
-    puAtPeak = vAtPeak / s.nominalV;
+    puAtPeak = voltageAtPeak / s.nominalV;
 
     status = "within";
 
@@ -1146,7 +1049,7 @@ for k = 1:numel(voltageFields)
     newRow = table( ...
         s.node, ...
         s.phase, ...
-        vAtPeak, ...
+        voltageAtPeak, ...
         puAtPeak, ...
         status, ...
         'VariableNames', { ...
@@ -1155,25 +1058,25 @@ for k = 1:numel(voltageFields)
     peakVoltageRows = [peakVoltageRows; newRow]; %#ok<AGROW>
 end
 
-writetable( ...
-    peakVoltageRows, ...
+writetable(peakVoltageRows, ...
     fullfile(outputDir, ...
     "Experiment1_Voltages_At_Feeder_Peak.csv"));
 
-[peakPUSorted, orderPeakV] = sort( ...
-    peakVoltageRows.VoltageAtPeak_pu, ...
-    "ascend");
+[sortedPeakPU, orderPeak] = sort( ...
+    peakVoltageRows.VoltageAtPeak_pu, "ascend");
 
 peakLabels = ...
     "N" + peakVoltageRows.Node + "-" + peakVoltageRows.Phase;
-peakLabels = peakLabels(orderPeakV);
+
+peakLabels = peakLabels(orderPeak);
 
 fig9 = figure( ...
-    "Name", "Exp1 - voltage profile at feeder peak", ...
+    "Name", "Experiment 1 - voltage profile at peak", ...
     "Color", "w", ...
     "Position", [150 80 1250 800]);
 
-barh(categorical(peakLabels, peakLabels), peakPUSorted);
+barh(categorical(peakLabels, peakLabels), sortedPeakPU);
+
 hold on;
 
 xline(0.95, "--", ...
@@ -1193,103 +1096,215 @@ ylabel("Node-phase");
 title("Experiment 1 (QP): Feeder Voltage Profile at Peak Net Load");
 subtitle(sprintf("Peak %.1f kW at %s", ...
     peakFeederKW, ...
-    char(string(peakSimTime, "dd-MMM HH:mm"))));
+    char(string(peakFeederTime, "dd-MMM HH:mm"))));
+
 set(gca, "FontSize", FONT_SIZE);
 
-saveAssessmentFigure( ...
-    fig9, outputDir, ...
+saveAssessmentFigure(fig9, outputDir, ...
     "09_Exp1_Voltage_Profile_At_Feeder_Peak", ...
     SAVE_PNG, SAVE_FIG);
 
 %% ========================================================================
-% PRESENTATION SUMMARY
+% NODE 632 REVERSE-FLOW DIAGNOSTIC
+% ========================================================================
+
+feederReverse = feederKW < 0;
+feederReverseIntervals = logicalIntervals(feederReverse);
+
+if ~isempty(feederReverseIntervals)
+
+    feederReverseOutput = table();
+
+    for q = 1:height(feederReverseIntervals)
+
+        iStart = feederReverseIntervals.StartIndex(q);
+        iEnd = feederReverseIntervals.EndIndex(q);
+
+        intervalRow = table( ...
+            feederSimTime(iStart), ...
+            feederSimTime(iEnd), ...
+            'VariableNames', {'StartTime','EndTime'});
+
+        feederReverseOutput = ...
+            [feederReverseOutput; intervalRow]; %#ok<AGROW>
+    end
+
+    writetable(feederReverseOutput, ...
+        fullfile(outputDir, ...
+        "Experiment1_Node632_ReverseFlowIntervals.csv"));
+end
+
+%% ========================================================================
+% COMMAND-WINDOW ASSESSMENT SUMMARY
 % ========================================================================
 
 fprintf("\n============================================================\n");
-fprintf(" EXPERIMENT 1 PRESENTATION SUMMARY\n");
+fprintf(" EXPERIMENT 1 ASSESSMENT SUMMARY\n");
 fprintf("============================================================\n");
 
-fprintf("Peak feeder power : %.3f MW at %s\n", ...
-    peakFeederKW / 1000, ...
-    formatTimestamp(peakSimTime));
+% Q1-Q3
+fprintf("\nQ1 - Nodes violating voltage limits:\n");
 
-if ~isempty(violTable)
+if isempty(violatingStats)
 
-    violatingNodes = unique(violTable.Node, "stable");
-
-    fprintf("Voltage violations: %s\n", ...
-        strjoin("Node " + violatingNodes, ", "));
-
-    [~, worstIdx] = max(violTable.ViolationMagnitude_V);
-
-    fprintf("Worst violation : Node %s Phase %s, %.2f V at %s\n", ...
-        violTable.Node(worstIdx), ...
-        violTable.Phase(worstIdx), ...
-        violTable.WorstVoltage_V(worstIdx), ...
-        formatTimestamp(violTable.WorstTime(worstIdx)));
+    fprintf("  None.\n");
 
 else
-    fprintf("Voltage violations: none\n");
+
+    violatingNodes = unique(violatingStats.Node, "stable");
+    fprintf("  %s\n", strjoin("Node " + violatingNodes, ", "));
+
+    fprintf("\nQ2/Q3 - Worst violation by affected node-phase:\n");
+
+    for r = 1:height(violatingStats)
+
+        fprintf([ ...
+            "  Node %s Phase %s: %s, worst %.2f V " ...
+            "(%.4f pu) at %s; %.2f V beyond limit.\n"], ...
+            violatingStats.Node(r), ...
+            violatingStats.Phase(r), ...
+            violatingStats.WorstType(r), ...
+            violatingStats.WorstVoltage_V(r), ...
+            violatingStats.WorstVoltage_V(r) / ...
+                violatingStats.Nominal_V(r), ...
+            formatTimestamp(violatingStats.WorstTime(r)), ...
+            violatingStats.ViolationMagnitude_V(r));
+    end
 end
 
-if ~isempty(reverseTable)
+% Q4-Q6
+fprintf("\nQ4 - Nodes exhibiting reverse active power flow:\n");
 
-    reverseNodes = unique(reverseTable.Node, "stable");
+if isempty(reverseStats)
 
-    fprintf("Reverse-flow nodes: %s\n", ...
-        strjoin("Node " + reverseNodes, ", "));
-
-    [worstReverse, worstReverseIdx] = min( ...
-        reverseTable.MinimumPower_kW);
-
-    fprintf([ ...
-        "Largest reverse flow: %.2f kW at " ...
-        "Node %s Phase %s (%s)\n"], ...
-        worstReverse, ...
-        reverseTable.Node(worstReverseIdx), ...
-        reverseTable.Phase(worstReverseIdx), ...
-        formatTimestamp( ...
-        reverseTable.WorstReverseTime(worstReverseIdx)));
+    fprintf("  None.\n");
 
 else
-    fprintf("Reverse-flow nodes: none\n");
+
+    reverseNodes = unique(reverseStats.Node, "stable");
+    fprintf("  %s\n", strjoin("Node " + reverseNodes, ", "));
+
+    fprintf("\nQ5/Q6 - Largest reverse flow by affected node-phase:\n");
+
+    for r = 1:height(reverseStats)
+
+        fprintf([ ...
+            "  Node %s Phase %s: %.2f kW at %s.\n"], ...
+            reverseStats.Node(r), ...
+            reverseStats.Phase(r), ...
+            reverseStats.MinimumPower_kW(r), ...
+            formatTimestamp(reverseStats.WorstReverseTime(r)));
+    end
 end
 
-fprintf("Top peak contributor: Node %s = %.2f kW (%.2f%%)\n", ...
-    peakContributionTable.Node(1), ...
-    peakContributionTable.MeasuredContribution_kW(1), ...
-    peakContributionTable.ShareOfFeederPeak_pct(1));
+% Q7-Q9
+fprintf("\nQ7 - Highest total feeder net load occurs at:\n");
+fprintf("  %s\n", formatTimestamp(peakFeederTime));
 
-fprintf("\nAll figures and tables saved to:\n  %s\n", outputDir);
+fprintf("\nQ8 - Peak feeder net load:\n");
+fprintf("  %.3f kW (%.3f MW)\n", ...
+    peakFeederKW, peakFeederKW / 1000);
 
-if ~isempty(missingPowerChannels)
-    fprintf("\nChannels not found and therefore omitted:\n  %s\n", ...
-        strjoin(missingPowerChannels, ", "));
-end
+fprintf("\nQ9 - Peak-load measurement method:\n");
+fprintf([ ...
+    "  The feeder-head active power is measured at Node 632 using\n" ...
+    "  Node 632.Probe1. The peak feeder net load is the maximum value\n" ...
+    "  of that measured signal over the five-day Experiment 1 playback.\n"]);
 
+% Q10
+fprintf("\nQ10 - Node contributions at measured feeder peak:\n");
+disp(peakContributionTable);
+
+% Useful diagnostics.
+fprintf("\nAdditional diagnostics:\n");
+fprintf("  Minimum Node 632 feeder power : %.3f kW at %s\n", ...
+    minFeederKW, formatTimestamp(minFeederTime));
+
+fprintf("  Node 632 samples below 0 kW  : %d of %d\n", ...
+    sum(feederReverse), numel(feederReverse));
+
+fprintf("  Measured Node 646 SoC range  : %.2f%% to %.2f%%\n", ...
+    min(socMeasured), max(socMeasured));
+
+[lowestPU, lowestIdx] = min(voltageStats.Min_pu);
+
+fprintf("  Lowest measured feeder voltage: Node %s Phase %s = %.4f pu\n", ...
+    voltageStats.Node(lowestIdx), ...
+    voltageStats.Phase(lowestIdx), ...
+    lowestPU);
+
+fprintf("\nNOTE FOR Q1 AND Q10:\n");
+fprintf([ ...
+    "  The assessment also asks for comparison with Module 1.\n" ...
+    "  This script analyses Experiment 1 only; add Module 1 data for the\n" ...
+    "  quantitative no-control comparison.\n"]);
+
+fprintf("\nFigures and CSV summaries saved to:\n  %s\n", outputDir);
 fprintf("============================================================\n");
-
 
 %% ========================================================================
 % LOCAL FUNCTIONS
 % ========================================================================
 
-function T = readTyphoonCsv(path)
+function pathOut = resolveCsv(folder, candidates)
 
-    assert(isfile(path), ...
-        "Required file not found: %s", path);
+    pathOut = "";
 
-    T = readtable( ...
-        path, ...
-        "VariableNamingRule", "preserve");
+    % Exact names first.
+    for k = 1:numel(candidates)
 
-    assert( ...
-        ismember("Time", string(T.Properties.VariableNames)), ...
-        "Typhoon CSV does not contain a Time column: %s", path);
+        candidate = string(candidates(k));
+
+        if ~contains(candidate, "*")
+
+            p = fullfile(folder, candidate);
+
+            if isfile(p)
+                pathOut = string(p);
+                return;
+            end
+        end
+    end
+
+    % Wildcard fallback.
+    for k = 1:numel(candidates)
+
+        candidate = string(candidates(k));
+
+        if contains(candidate, "*")
+
+            d = dir(fullfile(folder, candidate));
+
+            if ~isempty(d)
+
+                % Use newest matching file.
+                [~, idx] = max([d.datenum]);
+
+                pathOut = string(fullfile( ...
+                    d(idx).folder, d(idx).name));
+
+                return;
+            end
+        end
+    end
+
+    error("Could not locate required CSV. Tried: %s", ...
+        strjoin(candidates, ", "));
 end
 
 
-function T = cropByRealTime(T, startS, endS)
+function T = readTyphoonCsv(path)
+
+    T = readtable(path, ...
+        "VariableNamingRule", "preserve");
+
+    assert(ismember("Time", ...
+        string(T.Properties.VariableNames)), ...
+        "File does not contain a Time column:\n%s", path);
+end
+
+
+function T = cropRealTime(T, startS, endS)
 
     mask = ...
         T.("Time") >= startS & ...
@@ -1298,161 +1313,35 @@ function T = cropByRealTime(T, startS, endS)
     T = T(mask,:);
 
     assert(~isempty(T), ...
-        "No samples remain after cropping to %.2f-%.2f seconds.", ...
+        "No samples remain after cropping to %.2f-%.2f s.", ...
         startS, endS);
 end
 
 
-function simTime = realToSimTime( ...
+function simTime = hilToSimTime( ...
     realTime, ...
     startRealS, ...
-    firstCommandTime, ...
-    hoursPerRealSecond)
+    simStart, ...
+    realSecondsPerStep, ...
+    simMinutesPerStep)
 
-    simTime = ...
-        firstCommandTime + ...
-        hours((realTime - startRealS) * hoursPerRealSecond);
+    minutesPerRealSecond = ...
+        simMinutesPerStep / realSecondsPerStep;
+
+    simTime = simStart + ...
+        minutes((realTime - startRealS) * minutesPerRealSecond);
 end
 
 
-function [found, tableIndex, columnName] = ...
-    findPowerSignal(powerTables, canonical)
-
-    found = false;
-    tableIndex = NaN;
-    columnName = "";
-
-    parts = split(string(canonical), "_");
-    node = parts(1);
-    phase = parts(2);
-
-    for t = 1:numel(powerTables)
-
-        names = string(powerTables{t}.Properties.VariableNames);
-
-        % Only inspect measured-power columns belonging to this node.
-        nodeMask = ...
-            contains(lower(names), ...
-                lower("Time Varying Load " + node)) & ...
-            contains(lower(names), "p_measured");
-
-        candidates = names(nodeMask);
-
-        if isempty(candidates)
-            continue;
-        end
-
-        % Single-phase node exports. There should only be one P_measured
-        % channel for these nodes, so use it directly.
-        if any(node == ["611","645","646","652","692"])
-            if numel(candidates) == 1
-                found = true;
-                tableIndex = t;
-                columnName = candidates(1);
-                return;
-            end
-
-            % Node 692 assessment channel is Phase C.
-            if node == "692"
-                mask = contains(lower(candidates), "loadc.p_measured");
-                if any(mask)
-                    found = true;
-                    tableIndex = t;
-                    columnName = candidates(find(mask,1));
-                    return;
-                end
-            end
-        end
-
-        % Node 634 encodes phase in Master PulseA/B/C.
-        if node == "634"
-
-            pattern = lower("Master Pulse" + phase + ".P_measured");
-            mask = contains(lower(candidates), pattern);
-
-            if any(mask)
-                found = true;
-                tableIndex = t;
-                columnName = candidates(find(mask,1));
-                return;
-            end
-        end
-
-        % Node 675 uses loadA/loadB/loadC.
-        if node == "675"
-
-            pattern = lower("load" + phase + ".P_measured");
-            mask = contains(lower(candidates), pattern);
-
-            if any(mask)
-                found = true;
-                tableIndex = t;
-                columnName = candidates(find(mask,1));
-                return;
-            end
-        end
-
-        % Node 671 uses A, A1, A2 for physical phases A, B, C.
-        if node == "671"
-
-            if phase == "A"
-                pattern = "loada.p_measured";
-            elseif phase == "B"
-                pattern = "loada1.p_measured";
-            else
-                pattern = "loada2.p_measured";
-            end
-
-            mask = contains(lower(candidates), pattern);
-
-            if any(mask)
-                found = true;
-                tableIndex = t;
-                columnName = candidates(find(mask,1));
-                return;
-            end
-        end
-    end
-end
-
-
-function [found, columnName] = ...
-    findColumnContaining(names, requiredPieces)
-
-    found = false;
-    columnName = "";
-
-    names = string(names);
-    mask = true(size(names));
-
-    for k = 1:numel(requiredPieces)
-        mask = ...
-            mask & ...
-            contains(lower(names), lower(requiredPieces(k)));
-    end
-
-    idx = find(mask, 1);
-
-    if ~isempty(idx)
-        found = true;
-        columnName = names(idx);
-    end
-end
-
-
-function label = canonicalPowerLabel(field)
+function label = powerFieldLabel(field)
 
     parts = split(string(field), "_");
 
-    if numel(parts) == 2
-        label = ...
-            "Node " + ...
-            erase(parts(1), "N") + ...
-            " Phase " + ...
-            parts(2);
-    else
-        label = string(field);
-    end
+    label = ...
+        "Node " + ...
+        erase(parts(1), "N") + ...
+        " Phase " + ...
+        parts(2);
 end
 
 
@@ -1469,52 +1358,6 @@ function intervals = logicalIntervals(mask)
         starts, ...
         ends, ...
         'VariableNames', {'StartIndex','EndIndex'});
-end
-
-
-function pathOut = resolveScheduleFile( ...
-    folder, requested, patterns)
-
-    if strlength(requested) > 0
-
-        candidate = fullfile(folder, requested);
-
-        if isfile(candidate)
-            pathOut = string(candidate);
-        else
-            warning("Requested schedule CSV not found: %s", candidate);
-            pathOut = "";
-        end
-
-        return;
-    end
-
-    candidates = strings(0);
-    dates = [];
-
-    for p = 1:numel(patterns)
-
-        d = dir(fullfile(folder, patterns(p)));
-
-        for k = 1:numel(d)
-
-            candidates(end+1) = ...
-                string(fullfile(d(k).folder, d(k).name)); %#ok<AGROW>
-
-            dates(end+1) = d(k).datenum; %#ok<AGROW>
-        end
-    end
-
-    if isempty(candidates)
-        pathOut = "";
-        return;
-    end
-
-    [candidates, ia] = unique(candidates, "stable");
-    dates = dates(ia);
-
-    [~, idx] = max(dates);
-    pathOut = candidates(idx);
 end
 
 
@@ -1549,15 +1392,15 @@ function saveAssessmentFigure( ...
     saveFig)
 
     if savePng
-        exportgraphics( ...
-            fig, ...
+
+        exportgraphics(fig, ...
             fullfile(outputDir, baseName + ".png"), ...
             "Resolution", 300);
     end
 
     if saveFig
-        savefig( ...
-            fig, ...
+
+        savefig(fig, ...
             fullfile(outputDir, baseName + ".fig"));
     end
 end
