@@ -10833,8 +10833,8 @@ displayValue = data
                 <execution_rate>None</execution_rate>
                 <background_color>white</background_color>
                 <widget_settings>
-                    <x>1512</x>
-                    <y>416</y>
+                    <x>1552</x>
+                    <y>400</y>
                     <width>1120</width>
                     <height>480</height>
                     <appearance><![CDATA[Flat]]></appearance>

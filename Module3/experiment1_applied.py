@@ -25,7 +25,7 @@ Grid power = Pload - PPV - Pbat
 
 Important
 ---------
-The default objective weight below is 1 only as a documented working
+The default objective weight below is 1e-3 only as a documented working
 reference value from the team's Module 2 studies. If your group selected a
 different final w, run this script with --weight <value>.
 """
@@ -73,8 +73,6 @@ DEFAULT_WEIGHT = 1
 BATTERY_KWH_PER_CUSTOMER = 10.0
 BATTERY_KW_PER_CUSTOMER = 5.0
 
-DEFAULT_PLAYBACK_DAYS = 4
-
 # Modbus server on the HIL model.
 DEFAULT_HIL_IP = "192.168.1.210"
 DEFAULT_HIL_PORT = 502
@@ -89,6 +87,7 @@ SIGNED_16BIT_MAX = 32767
 RECONNECT_RETRIES = 5
 RECONNECT_DELAY_S = 2.0
 INITIAL_SETTLE_SECONDS = 12
+
 
 TIME_COL_RE = re.compile(r"^\d{1,2}:\d{2}$")
 
@@ -149,28 +148,28 @@ BATTERY_POWER_KW = BATTERY_KW_PER_CUSTOMER * TOTAL_CUSTOMERS
 INITIAL_SOC_KWH = 0.5 * BATTERY_CAPACITY_KWH
 
 # Module 1 feeder playback used Qref = 0 for the time-varying loads.
-# QREF_MAP = {node: 0.0 for node in NODE_MAP}
+#QREF_MAP = {node: 0.0 for node in NODE_MAP}
 QREF_MAP = {
-    "646_B": 132.0,
-    "645_B": 0.0,
-    "611_C": 0.0,
-    "652_A": 0.0,
+    "646_B": 132,
+    "645_B": 125,
+    "611_C": 80,
+    "652_A": 86,
 
-    "671_A": 0.0,
-    "671_B": 0.0,
-    "671_C": 0.0,
+    "671_A": 220,
+    "671_B": 220,
+    "671_C": 220,
 
-    "692_C": 0.0,
-    "692_B": 0.0,
-    "692_A": 0.0,
+    "692_C": 151,
+    "692_B": 0,
+    "692_A": 0,
 
-    "675_C": 0.0,
-    "675_B": 0.0,
-    "675_A": 0.0,
+    "675_C": 212,
+    "675_B": 60,
+    "675_A": 190,
 
-    "634_C": 0.0,
-    "634_B": 0.0,
-    "634_A": 0.0,    
+    "634_C": 90,
+    "634_B": 90,
+    "634_A": 110,
 }
 
 PHASE_MAP = {
@@ -405,24 +404,45 @@ def make_tariff() -> np.ndarray:
     eta[28:40] = 0.30
     return eta
 
-def make_eta_array(n_steps_total: int) -> np.ndarray:
-    """Time-of-use tariff, tiled to cover `n_steps_total` half-hourly steps."""
-    pattern = np.zeros(N_STEPS)
-    pattern[np.r_[0:14, 44:48]] = 0.03   # Off-peak ($/kWh)
-    pattern[np.r_[14:28, 40:44]] = 0.06  # Shoulder ($/kWh)
-    pattern[28:40] = 0.30                # Peak ($/kWh)
-    reps = int(np.ceil(n_steps_total / N_STEPS)) + 1
-    return np.tile(pattern, reps)[:n_steps_total]
 
-def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh,
-                    soc0_kwh, solver):
-    """Single QP solve over an n-step horizon (n need not be 48 -- this is reused
-    for the receding-horizon MPC solves as well as a one-shot day-ahead QP)."""
+def solve_daily_qp(
+    p_load: np.ndarray,
+    p_pv: np.ndarray,
+    eta: np.ndarray,
+    weight: float,
+    batt_power_kw: float,
+    capacity_kwh: float,
+    soc0_kwh: float,
+    solver: str,
+):
+    """
+    Solve the Module 2 day-ahead QP:
+
+        min sum_k[-Delta*eta(k)*Pbat(k)
+                  + w*eta(k)*Pgrid(k)^2]
+
+        Pgrid = Pload_hat - PPV_hat - Pbat
+        SoC(k+1) = SoC(k) - Delta*Pbat(k)
+        -Bch <= Pbat <= Bdis
+        0 <= SoC <= C
+        SoC(end) = SoC(start)
+    """
+    p_load = np.asarray(p_load, dtype=float)
+    p_pv = np.asarray(p_pv, dtype=float)
+    eta = np.asarray(eta, dtype=float)
+
+    if not (len(p_load) == len(p_pv) == len(eta) == N_STEPS):
+        raise ValueError("Daily QP requires 48 load, PV, and tariff samples.")
+    if weight <= 0:
+        raise ValueError("QP weight w must be > 0.")
+    if not (0.0 <= soc0_kwh <= capacity_kwh):
+        raise ValueError("Initial SoC must lie within [0, capacity].")
+
     n = len(p_load)
-
-    batt = cp.Variable(n)
-    grid = cp.Variable(n)
-    soc = cp.Variable(n + 1)
+    batt = cp.Variable(n, name="Pbat")
+    grid = cp.Variable(n, name="Pgrid")
+    # soc = cp.Variable(n + 1, name="SoC")
+    soc = soc0_kwh - cp.cumsum(batt * DELTA_HOURS)
 
     objective = cp.Minimize(
         cp.sum(
@@ -432,29 +452,47 @@ def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh,
     )
 
     constraints = [
-        grid == p_load - p_pv - batt,
-        batt >= -batt_power_kw,
-        batt <=  batt_power_kw,
-        soc[0] == soc0_kwh,
-        soc[1:] == soc[:-1] - DELTA_HOURS * batt,
-        soc >= 0.0,
-        soc <= capacity_kwh,
-        soc[-1] == soc0_kwh,   # terminal SoC(t+n|t) = SoC(t|t), Eq. (12)
+        # grid == p_load - p_pv - batt,
+        # grid <=3000, 
+        # grid >=-1500,
+        # batt >= -batt_power_kw,
+        # batt <= batt_power_kw,
+        # soc[0] == soc0_kwh,
+        # soc[1:] == soc[:-1] - DELTA_HOURS * batt,
+        # soc >= 0.0,
+        # soc <= capacity_kwh,
+        # soc[-1] == soc0_kwh,
+        
+        grid == p_load - p_pv - batt,        # A2: grid definition
+        cp.sum(batt) == 0,                   # A2: daily net-zero (terminal SoC)
+        batt <=  batt_power_kw,              # A1
+        batt >= -batt_power_kw,              # A1
+        soc >= 0.0,                    # A1
+        soc <= capacity_kwh,           # A1
+        grid <= 3000,                  # A1 (wide by default)
+        grid >= -1500,                  # A1
     ]
 
     problem = cp.Problem(objective, constraints)
-    problem.solve(solver=getattr(cp, solver), verbose=False)
 
-    if batt.value is None:
-        raise RuntimeError(f"QP failed: {problem.status}")
+    installed = set(cp.installed_solvers())
+    
+    if solver not in installed:
+        raise RuntimeError(
+            f"Requested solver {solver!r} is not installed. "
+            f"Available solvers: {sorted(installed)}"
+        )
 
-    return (
-        np.asarray(batt.value).flatten(),
-        np.asarray(grid.value).flatten(),
-        np.asarray(soc.value).flatten(),
-        str(problem.status),
-        float(problem.value),
-    )
+    problem.solve(solver=solver, verbose=False)
+
+    if problem.status not in ("optimal", "optimal_inaccurate") or batt.value is None:
+        raise RuntimeError(f"QP failed with status: {problem.status}")
+
+    batt_v = np.asarray(batt.value, dtype=float).reshape(-1)
+    grid_v = np.asarray(grid.value, dtype=float).reshape(-1)
+    soc_v = np.asarray(soc.value, dtype=float).reshape(-1)
+
+    return batt_v, grid_v, soc_v, str(problem.status), float(problem.value)
 
 
 def battery_action(value_kw: float) -> str:
@@ -464,8 +502,6 @@ def battery_action(value_kw: float) -> str:
         return "Charge"
     return "Idle"
 
-def _action(v: float) -> str:
-    return "Discharge" if v > 0.5 else ("Charge" if v < -0.5 else "Idle")
 
 def disaggregate_battery(pbat_aggregate_kw: float) -> Dict[str, float]:
     commands = {
@@ -744,9 +780,6 @@ def print_day_summary(
     )
     print("=" * 78)
 
-_HDR = (f"{'Step':>5} {'Day':>3} {'k':>3} {'Load kW':>9} {'PV kW':>8} "
-        f"{'Batt kW':>9} {'Action':>10} {'Grid kW':>10} "
-        f"{'SoC% pred':>10} {'SoC% meas(646)':>14}")
 
 def print_step(
     step: int,
@@ -799,206 +832,396 @@ def make_log_header() -> list[str]:
 # 6. Main
 # =============================================================================
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
-        description="ECE4191 Module 3 -- Experiment 2: feeder-wide MPC over Modbus TCP"
+        description=(
+            "ECE4191 Module 3 Experiment 1 - feeder-wide day-ahead QP "
+            "battery playback over Modbus TCP."
+        )
     )
-    parser.add_argument("--forecast", default="central_agg_forecast_data_students.csv",
-                        help="Feeder-total day-ahead forecast CSV (drives the MPC).")
-    parser.add_argument("--actual", default="agg_jan2013_students.csv",
-                        help="Per-node actual load/PV CSV (fed to the feeder in real time).")
-    parser.add_argument("--playback-days", type=int, default=DEFAULT_PLAYBACK_DAYS,
-                        help=f"Number of days to play back (default {DEFAULT_PLAYBACK_DAYS}).")
-    parser.add_argument("--step-seconds", type=float, default=STEP_SECONDS)
-    parser.add_argument("--weight", type=float, default=DEFAULT_WEIGHT,
-                        help=f"QP objective weight w (default {DEFAULT_WEIGHT}).")
-    parser.add_argument("--batt-power", type=float, default=BATTERY_POWER_KW,
-                        help=f"Aggregate battery power limit in kW (default {BATTERY_POWER_KW:.0f}).")
-    parser.add_argument("--capacity", type=float, default=BATTERY_CAPACITY_KWH,
-                        help=f"Aggregate battery capacity in kWh (default {BATTERY_CAPACITY_KWH:.0f}).")
-    parser.add_argument("--initial-soc", type=float, default=INITIAL_SOC_KWH,
-                        help=f"Initial aggregate SoC in kWh (default {INITIAL_SOC_KWH:.0f} = 50%%).")
+
+    parser.add_argument(
+        "--input",
+        default="Code_and_data/central_agg_forecast_data_students.csv",
+        help="Central feeder forecast CSV used by the QP.",
+    )
+    parser.add_argument(
+        "--actual",
+        default="Code_and_data/agg_jan2013_students.csv",
+        help="Actual per-node Module 1 load/PV CSV played into Typhoon.",
+    )
+    parser.add_argument(
+        "--output",
+        default="Output/experiment1_qp_schedule.csv",
+        help="Base output CSV name; a timestamp is appended automatically.",
+    )
+
+    parser.add_argument(
+        "--weight",
+        type=float,
+        default=DEFAULT_WEIGHT,
+        help=(
+            f"QP objective weight w (default {DEFAULT_WEIGHT:g}; "
+            "override with your team's chosen Module 2 value)."
+        ),
+    )
+    parser.add_argument(
+        "--batt-power",
+        type=float,
+        default=BATTERY_POWER_KW,
+        help=f"Aggregate battery charge/discharge limit in kW (default {BATTERY_POWER_KW:.0f}).",
+    )
+    parser.add_argument(
+        "--capacity",
+        type=float,
+        default=BATTERY_CAPACITY_KWH,
+        help=f"Aggregate battery capacity in kWh (default {BATTERY_CAPACITY_KWH:.0f}).",
+    )
+    parser.add_argument(
+        "--initial-soc",
+        type=float,
+        default=INITIAL_SOC_KWH,
+        help=f"Initial aggregate battery energy in kWh (default {INITIAL_SOC_KWH:.0f}, 50%).",
+    )
     parser.add_argument("--solver", default="OSQP")
-    parser.add_argument("--no-wait", action="store_true",
-                        help="Skip sleep between steps (fast test mode).")
-    parser.add_argument("--no-prompt", action="store_true",
-                        help="Skip pre-start confirmation prompt.")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Run without connecting to the HIL.")
-    parser.add_argument("--keep-final", action="store_true",
-                        help="Leave final values on the HIL after playback ends.")
+
+    parser.add_argument("--step-seconds", type=float, default=STEP_SECONDS)
+    parser.add_argument(
+        "--measurement-delay",
+        type=float,
+        default=0.2,
+        help="Delay after Modbus write before reading Node 646 SoC.",
+    )
+    parser.add_argument(
+        "--progress-every",
+        type=int,
+        default=1,
+        help="Print one playback row every N steps; 0 = summaries only.",
+    )
+
     parser.add_argument("--ip", default=DEFAULT_HIL_IP)
     parser.add_argument("--port", type=int, default=DEFAULT_HIL_PORT)
-    parser.add_argument("--no-measurements", action="store_true",
-                        help="Disable reading Node-646 SoC (soc_measured_pct stays blank).")
-    parser.add_argument("--measurement-delay", type=float, default=0.2,
-                        help="Seconds to wait after a write before reading SoC.")
-    parser.add_argument("--progress-every", type=int, default=1,
-                        help="Print one row every N steps (0 = summary only).")
-    parser.add_argument("--verbose", action="store_true",
-                        help="Print full dry-run Modbus payloads.")
+
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Solve and build payloads without connecting/writing to the HIL.",
+    )
+    parser.add_argument(
+        "--no-wait",
+        action="store_true",
+        help="Skip the 12 s initial settle and per-step timing delays.",
+    )
+    parser.add_argument(
+        "--no-prompt",
+        action="store_true",
+        help="Skip the live-run pre-start confirmation.",
+    )
+    parser.add_argument(
+        "--no-measurements",
+        action="store_true",
+        help="Do not read Node 646 SoC register 3000.",
+    )
+    parser.add_argument(
+        "--keep-final",
+        action="store_true",
+        help="Leave final holding-register values applied after playback.",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print full 64-register payloads in dry-run mode.",
+    )
+
     args = parser.parse_args()
 
-    # ── Connect ───────────────────────────────────────────────────────────────
-    conn = None
-    if not args.dry_run:
-        conn = ModbusConnection(args.ip, args.port)
-        print(f"\nConnecting to HIL Modbus server at {args.ip}:{args.port} ...")
-        conn.connect()
-        print("  Connected.")
+    if args.capacity <= 0:
+        raise ValueError("--capacity must be > 0.")
+    if args.batt_power <= 0:
+        raise ValueError("--batt-power must be > 0.")
+    if not 0 <= args.initial_soc <= args.capacity:
+        raise ValueError("--initial-soc must lie within [0, capacity].")
+    if args.weight <= 0:
+        raise ValueError("--weight must be > 0.")
+    if args.step_seconds < 0 or args.measurement_delay < 0:
+        raise ValueError("Timing values cannot be negative.")
+    if args.progress_every < 0:
+        raise ValueError("--progress-every cannot be negative.")
 
-    # ── Load forecast (feeder-total) + actual (per-node) CSVs ───────────────────
-    fc_path = Path(args.forecast)
-    if not fc_path.exists():
-        raise FileNotFoundError(f"Forecast CSV not found: {fc_path}")
-    act_path = Path(args.actual)
-    if not act_path.exists():
-        raise FileNotFoundError(f"Actual CSV not found: {act_path}")
+    forecast_path = Path(args.input)
+    actual_path = Path(args.actual)
 
-    print(f"\nLoading forecast CSV : {fc_path.name}")
-    pv_days, load_days, n_days_fc = load_forecast_csv(fc_path)
-    pv_fc_flat   = pv_days.flatten()
-    load_fc_flat = load_days.flatten()
+    if not forecast_path.exists():
+        raise FileNotFoundError(f"Forecast CSV not found: {forecast_path}")
+    if not actual_path.exists():
+        raise FileNotFoundError(f"Actual feeder CSV not found: {actual_path}")
 
-    print(f"Loading actual   CSV: {act_path.name}")
-    node_data, total_load_act, total_pv_act, dates = load_actual_feeder_csv(act_path)
-    n_days_act = len(dates)
+    print("\nLoading forecast data ...")
+    pv_days, load_days, forecast_dates, forecast_time_cols = load_forecast_csv(
+        forecast_path
+    )
 
-    playback_days = min(args.playback_days, n_days_act)
-    total_steps = playback_days * N_STEPS
-    print(f"  Forecast days available : {n_days_fc}")
-    print(f"  Actual days available   : {n_days_act}")
-    print(f"  Playback days used      : {playback_days}  ({total_steps} steps)")
+    print("Loading actual feeder playback data ...")
+    (
+        node_data,
+        total_load_actual,
+        total_pv_actual,
+        actual_dates,
+        actual_time_cols,
+    ) = load_actual_feeder_csv(actual_path)
 
+    if forecast_dates != actual_dates:
+        raise ValueError(
+            "Forecast and actual CSV dates do not match.\n"
+            f"Forecast: {forecast_dates}\n"
+            f"Actual:   {actual_dates}"
+        )
 
+    if forecast_time_cols != actual_time_cols:
+        raise ValueError(
+            "Forecast and actual CSV half-hour columns do not match."
+        )
 
-    eta_flat = make_eta_array(len(load_fc_flat))
+    n_days = len(forecast_dates)
+    total_steps = n_days * N_STEPS
 
-    # ── Banner ────────────────────────────────────────────────────────────────
+    if n_days != 5:
+        print(
+            f"WARNING: Experiment 1 specifies a 5-day playback, "
+            f"but the supplied files contain {n_days} day(s)."
+        )
+
+    eta = make_tariff()
+
+    # Solve all daily QPs before touching the HIL. This catches data/solver
+    # problems before the live experiment starts.
+    print("\nPre-solving feeder-wide day-ahead QP schedules ...")
+    daily_results = []
+
+    soc0_day = float(args.initial_soc)
+    for day_i in range(n_days):
+        batt_kw, grid_kw, soc_kwh, status, obj_val = solve_daily_qp(
+            p_load=load_days[day_i],
+            p_pv=pv_days[day_i],
+            eta=eta,
+            weight=args.weight,
+            batt_power_kw=args.batt_power,
+            capacity_kwh=args.capacity,
+            soc0_kwh=soc0_day,
+            solver=args.solver,
+        )
+
+        daily_results.append({
+            "batt_kw": batt_kw,
+            "grid_kw": grid_kw,
+            "soc_kwh": soc_kwh,
+            "status": status,
+            "objective": obj_val,
+        })
+
+        print_day_summary(
+            day_num=day_i + 1,
+            date_label=forecast_dates[day_i],
+            batt_kw=batt_kw,
+            grid_kw=grid_kw,
+            soc_kw_h=soc_kwh,
+            p_load=load_days[day_i],
+            p_pv=pv_days[day_i],
+            status=status,
+            obj_val=obj_val,
+            capacity_kwh=args.capacity,
+        )
+
+        # State inheritance from Module 2 daily-batch framework.
+        # With the terminal equality, this should equal soc0_day (apart from
+        # numerical tolerance), but carrying it explicitly is clearer.
+        soc0_day = float(soc_kwh[-1])
+
+    print("\n" + "=" * 78)
+    print("ECE4191 Module 3 | Experiment 1 - Feeder-wide QP Playback")
     print("=" * 78)
-    print("ECE4191 Module 3  |  Experiment 2 -- Feeder-wide MPC Playback (Modbus TCP)")
-    print("=" * 78)
-    print(f"  HIL target      : {args.ip}:{args.port}")
-    print(f"  Forecast CSV    : {fc_path.name}  (feeder-total, MPC input)")
-    print(f"  Actual   CSV    : {act_path.name}  (per-node, fed to all 16 nodes)")
-    print(f"  Aggregate batt  : {args.capacity:,.0f} kWh   +/-{args.batt_power:,.0f} kW")
-    print(f"  Objective weight: w = {args.weight}")
-    print(f"  Playback period : {playback_days} day(s), {total_steps} steps")
+    print(f"  HIL target         : {args.ip}:{args.port}")
+    print(f"  Forecast CSV       : {forecast_path}")
+    print(f"  Actual feeder CSV  : {actual_path}")
+    print(f"  Dates              : {', '.join(forecast_dates)}")
+    print(f"  Playback           : {n_days} day(s), {total_steps} steps")
+    print(f"  Step mapping       : {args.step_seconds:g} s real = 30 min simulated")
+    print(f"  Customers          : {TOTAL_CUSTOMERS}")
+    print(f"  Capacity           : {args.capacity:,.0f} kWh")
+    print(f"  Battery limit      : +/-{args.batt_power:,.0f} kW")
+    print(f"  Initial SoC        : {args.initial_soc:,.0f} kWh "
+          f"({100*args.initial_soc/args.capacity:.1f}%)")
+    print(f"  QP weight w        : {args.weight:g}")
+    print(f"  Qref feeder inputs : 0 kVAr")
+    print(f"  Holding registers  : 2000-2063 (64 values written each step)")
+    print(f"  SoC measurement    : register 3000, logging only (no QP feedback)")
+    if np.isclose(args.weight, DEFAULT_WEIGHT):
+        print(
+            "  NOTE               : w=1e-3 is the script's reference default; "
+            "change it with --weight if your team selected another value."
+        )
     if args.dry_run:
-        print("  *** DRY-RUN MODE -- no Modbus writes will occur ***")
+        print("  *** DRY-RUN MODE - NO MODBUS CONNECTION OR WRITES ***")
     print("=" * 78)
 
     if not args.no_prompt and not args.dry_run:
         print("\nPre-run checklist:")
-        print("  1. Model compiled and running in Typhoon HIL Control Center.")
-        print("  2. SCADA open; Control Type = REMOTE CONTROL.")
-        print("  3. BusSplitMap holding registers 2000-2063 enabled.")
-        print("  4. Voltage/active-power Signal Analyzer export ready (see Appendix B).")
-        input("\nPress Enter to start playback ...\n")
+        print("  1. HIL model is compiled and running.")
+        print("  2. SCADA Control Type is set to REMOTE CONTROL.")
+        print("  3. Module 1 Windows auto-launch playback is disabled/stopped.")
+        print("  4. BusSplitMap holding registers 2000-2063 are enabled.")
+        print("  5. Battery initial SoC is consistent with the optimisation setting.")
+        input("\nPress Enter to start Experiment 1 playback ...\n")
 
-    # ── Initial clear ─────────────────────────────────────────────────────────
-    print("\nClearing all registers ...")
-    clear_all_registers(conn, args.dry_run)
+    conn = None
+    if not args.dry_run:
+        conn = ModbusConnection(args.ip, args.port)
+        print("\nConnecting to Modbus server ...")
+        conn.connect()
+        print("Connected.")
 
-    settle = 12
-    if args.no_wait or args.dry_run:
-        print("Settle delay skipped.")
-    else:
-        print(f"Waiting {settle} s for model to settle ...")
-        for i in range(settle, 0, -1):
-            print(f"  Starting in {i}s ...", end="\r")
-            time.sleep(1)
-        print(" " * 30)
-    print("Ready.\n")
+    output_path = timestamped_output_path(Path(args.output))
+    soc_logger = SocLogger(
+        conn,
+        enabled=(not args.dry_run and not args.no_measurements),
+    )
 
-    # ── SoC reader (Node 646, logging only) ─────────────────────────────────────
-    log_enabled = not args.no_measurements and not args.dry_run
-    soc_logger = SocLogger(conn, log_enabled)
-    soc_logger.start()
-
-    # ── Receding-horizon MPC playback ────────────────────────────────────────
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    sched_rows = []
     aborted = False
-    soc_pred = args.initial_soc
-
-    if args.verbose or args.progress_every > 0:
-        print(_HDR)
-        print("-" * len(_HDR))
 
     try:
-        for i in range(total_steps):
-            t0 = time.time()
-            step = i + 1
-            day_num = (i // N_STEPS) + 1
-            k = (i % N_STEPS) + 1
+        print("\nClearing all 64 holding registers ...")
+        clear_all_registers(conn, args.dry_run)
 
-            # 48-step (or shorter, near the very end) look-ahead window from the
-            # forecast CSV, starting at the current step -- Eq. (7)-(13).
-            window_end = min(i + N_STEPS, len(load_fc_flat))
-            p_load_win = load_fc_flat[i:window_end]
-            p_pv_win   = pv_fc_flat[i:window_end]
-            eta_win    = eta_flat[i:window_end]
+        if args.no_wait or args.dry_run:
+            print("Initial settle delay skipped.")
+        else:
+            print(f"Waiting {INITIAL_SETTLE_SECONDS} s for model to settle ...")
+            for remaining in range(INITIAL_SETTLE_SECONDS, 0, -1):
+                print(f"  Starting in {remaining}s ...", end="\r")
+                time.sleep(1)
+            print(" " * 40)
 
-            batt_traj, grid_traj, soc_traj, status, obj_val = solve_daily_qp(
-                p_load_win, p_pv_win, eta_win,
-                weight=args.weight,
-                batt_power_kw=args.batt_power,
-                capacity_kwh=args.capacity,
-                soc0_kwh=soc_pred,
-                solver=args.solver,
-            )
+        soc_logger.start()
 
-            if status not in ("optimal", "optimal_inaccurate"):
-                print(f"  WARNING: MPC status = {status} at step {step}; "
-                      "applying zero battery command for this step.")
-                p_bat_agg = 0.0
-                soc_pred_next = soc_pred
-                grid_forecast_kw = float(p_load_win[0] - p_pv_win[0])
-            else:
-                p_bat_agg = float(batt_traj[0])
-                soc_pred_next = float(soc_traj[1])
-                grid_forecast_kw = float(grid_traj[0])
+        header = make_log_header()
+        step = 0
 
-            pbat_nodes = disaggregate_battery(p_bat_agg)
+        print(f"\nLogging schedule/playback to: {output_path}")
 
-            payload = build_feeder_payload(node_data, i, pbat_nodes)
-            modbus_write_feeder(conn, payload, args.dry_run, args.verbose)
+        with output_path.open("w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(fh, fieldnames=header)
+            writer.writeheader()
+            fh.flush()
 
-            if not args.no_wait and args.measurement_delay > 0 and not args.dry_run:
-                time.sleep(args.measurement_delay)
-            measured_soc_646 = soc_logger.log_step()
+            for day_i, date_label in enumerate(forecast_dates):
+                result = daily_results[day_i]
+                batt_day = result["batt_kw"]
+                grid_fc_day = result["grid_kw"]
+                soc_day = result["soc_kwh"]
 
-            soc_pred = soc_pred_next
-            soc_pred_pct = 100.0 * soc_pred / args.capacity
+                for k, time_label in enumerate(forecast_time_cols):
+                    t0 = time.time()
+                    step += 1
+                    step_index = day_i * N_STEPS + k
 
-            load_act_i = float(total_load_act[i])
-            pv_act_i   = float(total_pv_act[i])
-            grid_act_i = load_act_i - pv_act_i - p_bat_agg
+                    pbat_aggregate = float(batt_day[k])
+                    pbat_nodes = disaggregate_battery(pbat_aggregate)
 
-            sched_rows.append({
-                "step": step, "day": day_num, "k": k,
-                "p_load_fc_kw": round(float(p_load_win[0]), 4),
-                "p_pv_fc_kw":   round(float(p_pv_win[0]), 4),
-                "p_load_total_actual_kw": round(load_act_i, 4),
-                "p_pv_total_actual_kw":   round(pv_act_i, 4),
-                "baseline_grid_kw": round(load_act_i - pv_act_i, 4),
-                "battery_agg_kw": round(p_bat_agg, 4),
-                "battery_action": _action(p_bat_agg),
-                "grid_kw": round(grid_act_i, 4),
-                "grid_forecast_kw": round(grid_forecast_kw, 4),
-                "soc_predicted_pct": round(soc_pred_pct, 4),
-                "soc_measured_646_pct": "" if measured_soc_646 is None else round(float(measured_soc_646), 4),
-                "mpc_status": status,
-            })
+                    payload = build_feeder_payload(
+                        node_data=node_data,
+                        step_index=step_index,
+                        pbat_nodes=pbat_nodes,
+                    )
 
-            if args.verbose or (args.progress_every > 0 and
-                                (step in (1, total_steps) or step % args.progress_every == 0)):
-                print_step(step, day_num, k, load_act_i, pv_act_i, p_bat_agg,
-                           grid_act_i, soc_pred_pct, measured_soc_646)
+                    modbus_write_feeder(
+                        conn=conn,
+                        payload=payload,
+                        dry_run=args.dry_run,
+                        verbose=args.verbose,
+                    )
 
-            if not args.no_wait and not args.dry_run:
-                time.sleep(max(0.0, args.step_seconds - (time.time() - t0)))
+                    # Let the plant update before sampling SoC; the total
+                    # step duration remains approximately --step-seconds.
+                    if (
+                        not args.no_wait
+                        and not args.dry_run
+                        and args.measurement_delay > 0
+                    ):
+                        time.sleep(args.measurement_delay)
+
+                    soc_measured_pct = soc_logger.read_pct()
+
+                    load_actual = float(total_load_actual[step_index])
+                    pv_actual = float(total_pv_actual[step_index])
+                    baseline_actual = load_actual - pv_actual
+                    grid_actual = baseline_actual - pbat_aggregate
+                    soc_predicted_pct = (
+                        100.0 * float(soc_day[k]) / args.capacity
+                    )
+
+                    # Time columns are interval-ending labels. The last
+                    # "0:00" belongs to the start of the next calendar day.
+                    log_date = (
+                        next_day_label(date_label)
+                        if time_label == "0:00"
+                        else date_label
+                    )
+
+                    row = {
+                        "step": step,
+                        "day": day_i + 1,
+                        "date_label": log_date,
+                        "profile_time": time_label,
+                        "eta_per_kwh": round(float(eta[k]), 6),
+                        "p_load_forecast_total_kw": round(float(load_days[day_i][k]), 6),
+                        "p_pv_forecast_total_kw": round(float(pv_days[day_i][k]), 6),
+                        "p_load_actual_total_kw": round(load_actual, 6),
+                        "p_pv_actual_total_kw": round(pv_actual, 6),
+                        "baseline_grid_actual_kw": round(baseline_actual, 6),
+                        "pbat_aggregate_kw": round(pbat_aggregate, 6),
+                        "battery_action": battery_action(pbat_aggregate),
+                        "grid_forecast_qp_kw": round(float(grid_fc_day[k]), 6),
+                        "grid_actual_calculated_kw": round(grid_actual, 6),
+                        "soc_predicted_pct": round(soc_predicted_pct, 6),
+                        "soc646_measured_pct": (
+                            ""
+                            if soc_measured_pct is None
+                            else round(float(soc_measured_pct), 6)
+                        ),
+                        "qp_status": result["status"],
+                        "qp_objective_day": round(float(result["objective"]), 6),
+                    }
+
+                    for node in NODE_MAP:
+                        row[f"pbat_{node}_kw"] = round(float(pbat_nodes[node]), 6)
+
+                    writer.writerow(row)
+                    fh.flush()
+
+                    if (
+                        args.progress_every > 0
+                        and (
+                            step == 1
+                            or step == total_steps
+                            or step % args.progress_every == 0
+                        )
+                    ):
+                        print_step(
+                            step=step,
+                            total_steps=total_steps,
+                            date_label=log_date,
+                            time_label=time_label,
+                            load_actual=load_actual,
+                            pv_actual=pv_actual,
+                            batt=pbat_aggregate,
+                            grid_actual=grid_actual,
+                            soc_pred_pct=soc_predicted_pct,
+                            soc_meas_pct=soc_measured_pct,
+                        )
+
+                    if not args.no_wait and not args.dry_run and step < total_steps:
+                        elapsed = time.time() - t0
+                        time.sleep(max(0.0, args.step_seconds - elapsed))
 
     except KeyboardInterrupt:
         print("\nPlayback stopped by user.")
@@ -1006,23 +1229,19 @@ def main():
 
     finally:
         if args.keep_final:
-            print("\nFinal HIL state kept (--keep-final).")
+            print("\nFinal HIL register values kept (--keep-final).")
         else:
-            print("\nClearing all registers ...")
-            clear_all_registers(conn, args.dry_run)
-        soc_logger.close()
+            print("\nClearing all 64 holding registers ...")
+            try:
+                clear_all_registers(conn, args.dry_run)
+            except Exception as exc:
+                print(f"WARNING: final register clear failed: {exc}")
+
         if conn is not None:
             conn.close()
-        print("Done.")
 
-    print("-" * len(_HDR))
-
-    if sched_rows:
-        sched_path = Path(f"mpc_feeder_schedule_{ts}.csv")
-        pd.DataFrame(sched_rows).to_csv(sched_path, index=False)
-        print(f"MPC schedule saved     : {sched_path}")
-
-    print("\nPlayback complete." + ("  (aborted)" if aborted else ""))
+    print("\nExperiment 1 playback complete." + (" (aborted)" if aborted else ""))
+    print(f"Schedule/playback log: {output_path}")
 
 
 if __name__ == "__main__":
