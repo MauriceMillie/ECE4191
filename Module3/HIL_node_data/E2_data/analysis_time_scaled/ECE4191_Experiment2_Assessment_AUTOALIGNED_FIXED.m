@@ -55,7 +55,7 @@
 %   4) subtracts the known 384 s Experiment 2 playback duration to infer
 %      the true controller/playback start;
 %   5) crops EVERY panel CSV to that same common playback window; and
-%   6) remaps that window to 0-96 simulated hours.
+%   6) remaps that window to 07-Jan-2013 00:00 through 11-Jan-2013 00:00.
 %
 % IMPORTANT:
 % Alignment uses the CSV Time values, NOT row counts. This matters because
@@ -93,6 +93,11 @@ MANUAL_PLAYBACK_START_REAL_S = 0.0;
 
 REAL_SECONDS_PER_STEP = 2.0;
 SIM_HOURS_PER_STEP = 0.5;
+
+% Calendar reference for the four-day Experiment 2 playback.
+% The playback starts at 00:00 on 07-Jan-2013.
+SIM_START_DATETIME = datetime(2013, 1, 7, 0, 0, 0);
+SIM_END_DATETIME = SIM_START_DATETIME + hours(96);
 
 N_PLAYBACK_STEPS = 192;
 PLAYBACK_DURATION_REAL_S = N_PLAYBACK_STEPS * REAL_SECONDS_PER_STEP;
@@ -228,6 +233,7 @@ S = S(1:N_PLAYBACK_STEPS, :);
 
 % Schedule values are interval-ending quantities.
 scheduleSimHour = double(S.("step")) * SIM_HOURS_PER_STEP;
+scheduleDateTime = SIM_START_DATETIME + hours(scheduleSimHour);
 
 fprintf("MPC schedule rows: %d\n", height(S));
 fprintf("Measured Node 646 SoC range: %.2f%% to %.2f%%\n\n", ...
@@ -430,6 +436,9 @@ for k = 1:size(powerMap,1)
         double(T.("Time")), PLAYBACK_START_REAL_S, ...
         REAL_SECONDS_PER_STEP, SIM_HOURS_PER_STEP);
 
+    powerSeries.(char(field)).dateTime = ...
+        SIM_START_DATETIME + hours(powerSeries.(char(field)).simHour);
+
     % Typhoon P_measured values are in watts.
     powerSeries.(char(field)).kW = double(T{:,columnIndex}) / 1000.0;
 
@@ -449,6 +458,8 @@ feederRealTime = double(PF.("Time"));
 feederSimHour = realToSimHour( ...
     feederRealTime, PLAYBACK_START_REAL_S, ...
     REAL_SECONDS_PER_STEP, SIM_HOURS_PER_STEP);
+
+feederDateTime = SIM_START_DATETIME + hours(feederSimHour);
 
 feederKW = double(PF.("Node 632.Probe1")) / 1000.0;
 
@@ -511,6 +522,9 @@ for t = 1:numel(voltageTables)
             double(T.("Time")), PLAYBACK_START_REAL_S, ...
             REAL_SECONDS_PER_STEP, SIM_HOURS_PER_STEP);
 
+        voltageSeries.(char(field)).dateTime = ...
+            SIM_START_DATETIME + hours(voltageSeries.(char(field)).simHour);
+
         voltageSeries.(char(field)).V = double(T.(char(name)));
         voltageSeries.(char(field)).sourceColumn = name;
 
@@ -542,12 +556,15 @@ peakFeederRealTime = feederRealTime(peakIdx);
 peakFeederHour = feederSimHour(peakIdx);
 minFeederHour = feederSimHour(minIdx);
 
+peakFeederDateTime = feederDateTime(peakIdx);
+minFeederDateTime = feederDateTime(minIdx);
+
 fig1 = figure( ...
     "Name", "Experiment 2 - Node 632 feeder active power", ...
     "Color", "w", ...
     "Position", [80 80 1250 650]);
 
-plot(feederSimHour, feederKW, ...
+plot(feederDateTime, feederKW, ...
     "LineWidth", 1.6, ...
     "DisplayName", "Measured Node 632 feeder power");
 
@@ -557,29 +574,30 @@ yline(0, "-", ...
     "0 kW", ...
     "HandleVisibility", "off");
 
-plot(peakFeederHour, peakFeederKW, "o", ...
+plot(peakFeederDateTime, peakFeederKW, "o", ...
     "MarkerSize", 8, ...
     "LineWidth", 1.4, ...
     "DisplayName", sprintf("Peak %.1f kW", peakFeederKW));
 
-plot(minFeederHour, minFeederKW, "s", ...
+plot(minFeederDateTime, minFeederKW, "s", ...
     "MarkerSize", 8, ...
     "LineWidth", 1.4, ...
     "DisplayName", sprintf("Minimum %.1f kW", minFeederKW));
 
-addDaySeparators(gca, 4);
+addDaySeparatorsDate(gca, SIM_START_DATETIME, 4);
 
 hold off;
 grid on;
 box on;
 
-xlabel("Simulated time (hours)");
+xlabel("Simulation date/time");
 ylabel("Measured feeder active power (kW)");
 title("Experiment 2 (MPC): Measured Feeder Active Power at Node 632");
 subtitle(sprintf("Peak %.1f kW | Minimum %.1f kW", ...
     peakFeederKW, minFeederKW));
 
-xlim([0 96]);
+xlim([SIM_START_DATETIME SIM_END_DATETIME]);
+formatDateAxis(gca);
 legend("Location", "best");
 set(gca, "FontSize", FONT_SIZE);
 
@@ -611,12 +629,12 @@ for k = 1:numel(powerFields)
 
     nexttile;
 
-    plot(s.simHour, s.kW, ...
+    plot(s.dateTime, s.kW, ...
         "LineWidth", LINE_WIDTH);
 
     hold on;
     yline(0, "-", "HandleVisibility", "off");
-    addDaySeparators(gca, 4);
+    addDaySeparatorsDate(gca, SIM_START_DATETIME, 4);
     hold off;
 
     grid on;
@@ -624,12 +642,13 @@ for k = 1:numel(powerFields)
 
     title(powerFieldLabel(field));
     ylabel("kW");
-    xlim([0 96]);
+    xlim([SIM_START_DATETIME SIM_END_DATETIME]);
+formatDateAxis(gca);
 
     set(gca, "FontSize", 8);
 end
 
-xlabel(tl2, "Simulated time (hours)");
+xlabel(tl2, "Simulation date/time");
 
 saveAssessmentFigure(fig2, outputDir, ...
     "02_Exp2_All_TimeVarying_NodePhase_Active_Powers", ...
@@ -657,7 +676,7 @@ for k = 1:numel(node634Fields)
     f = node634Fields(k);
     s = voltageSeries.(char(f));
 
-    plot(s.simHour, s.V, ...
+    plot(s.dateTime, s.V, ...
         "LineWidth", 1.4, ...
         "DisplayName", "Phase " + s.phase);
 end
@@ -672,18 +691,19 @@ yline(UPPER_634_V, "--", ...
     "LineWidth", LIMIT_LINE_WIDTH, ...
     "HandleVisibility", "off");
 
-addDaySeparators(gca, 4);
+addDaySeparatorsDate(gca, SIM_START_DATETIME, 4);
 
 hold off;
 grid on;
 box on;
 
-xlabel("Simulated time (hours)");
+xlabel("Simulation date/time");
 ylabel("RMS line-to-ground voltage (V)");
 title("Experiment 2 (MPC): Node 634 RMS Voltages");
 subtitle("Nominal = 277 V; permitted range = 263.15-290.85 V");
 
-xlim([0 96]);
+xlim([SIM_START_DATETIME SIM_END_DATETIME]);
+formatDateAxis(gca);
 legend("Location", "best");
 set(gca, "FontSize", FONT_SIZE);
 
@@ -746,7 +766,7 @@ for n = 1:numel(otherNodes)
         f = fieldsThisNode(k);
         s = voltageSeries.(char(f));
 
-        plot(s.simHour, s.V, ...
+        plot(s.dateTime, s.V, ...
             "LineWidth", 1.0, ...
             "DisplayName", "Phase " + s.phase);
     end
@@ -759,7 +779,7 @@ for n = 1:numel(otherNodes)
         "LineWidth", 0.9, ...
         "HandleVisibility", "off");
 
-    addDaySeparators(gca, 4);
+    addDaySeparatorsDate(gca, SIM_START_DATETIME, 4);
 
     hold off;
     grid on;
@@ -767,13 +787,14 @@ for n = 1:numel(otherNodes)
 
     title("Node " + node);
     ylabel("V");
-    xlim([0 96]);
+    xlim([SIM_START_DATETIME SIM_END_DATETIME]);
+formatDateAxis(gca);
 
     legend("Location", "best", "FontSize", 7);
     set(gca, "FontSize", 8);
 end
 
-xlabel(tl4, "Simulated time (hours)");
+xlabel(tl4, "Simulation date/time");
 
 saveAssessmentFigure(fig4, outputDir, ...
     "04_Exp2_All_Other_Monitored_RMS_Voltages", ...
@@ -791,30 +812,31 @@ fig5 = figure( ...
     "Color", "w", ...
     "Position", [100 100 1250 650]);
 
-plot(scheduleSimHour, socMeasured, ...
+plot(scheduleDateTime, socMeasured, ...
     "LineWidth", 1.7, ...
     "DisplayName", "Measured Node 646 SoC");
 
 hold on;
 
-plot(scheduleSimHour, socPredicted, "--", ...
+plot(scheduleDateTime, socPredicted, "--", ...
     "LineWidth", 1.2, ...
     "DisplayName", "MPC predicted SoC");
 
 yline(0, ":", "HandleVisibility", "off");
 yline(100, ":", "HandleVisibility", "off");
 
-addDaySeparators(gca, 4);
+addDaySeparatorsDate(gca, SIM_START_DATETIME, 4);
 
 hold off;
 grid on;
 box on;
 
-xlabel("Simulated time (hours)");
+xlabel("Simulation date/time");
 ylabel("Battery State of Charge (%)");
 title("Experiment 2 (MPC): Node 646 Battery State of Charge");
 
-xlim([0 96]);
+xlim([SIM_START_DATETIME SIM_END_DATETIME]);
+formatDateAxis(gca);
 ylim([-2 102]);
 
 legend("Location", "best");
@@ -889,7 +911,7 @@ for k = 1:numel(voltageFields)
         worstType, ...
         worstVoltage, ...
         worstHour, ...
-        string(formatSimHour(worstHour)), ...
+        string(formatDateTime(SIM_START_DATETIME + hours(worstHour))), ...
         worstLimit, ...
         worstMagnitude, ...
         'VariableNames', { ...
@@ -925,8 +947,8 @@ for k = 1:numel(voltageFields)
             type, ...
             startHour, ...
             endHour, ...
-            string(formatSimHour(startHour)), ...
-            string(formatSimHour(endHour)), ...
+            string(formatDateTime(SIM_START_DATETIME + hours(startHour))), ...
+            string(formatDateTime(SIM_START_DATETIME + hours(endHour))), ...
             'VariableNames', { ...
             'Node','Phase','Type', ...
             'StartSimHour','EndSimHour','StartWhen','EndWhen'});
@@ -972,7 +994,7 @@ for k = 1:numel(powerFields)
 
     if any(reverse)
         largestReverseHour = s.simHour(iMinimum);
-        largestReverseWhen = string(formatSimHour(largestReverseHour));
+        largestReverseWhen = string(formatDateTime(SIM_START_DATETIME + hours(largestReverseHour)));
     else
         largestReverseHour = NaN;
         largestReverseWhen = "N/A";
@@ -1008,8 +1030,8 @@ for k = 1:numel(powerFields)
             phase, ...
             startHour, ...
             endHour, ...
-            string(formatSimHour(startHour)), ...
-            string(formatSimHour(endHour)), ...
+            string(formatDateTime(SIM_START_DATETIME + hours(startHour))), ...
+            string(formatDateTime(SIM_START_DATETIME + hours(endHour))), ...
             'VariableNames', { ...
             'Node','Phase', ...
             'StartSimHour','EndSimHour','StartWhen','EndWhen'});
@@ -1175,7 +1197,6 @@ fig8 = figure( ...
     "Name", "Experiment 2 - node contributions at peak", ...
     "Color", "w", ...
     "Position", [140 100 1150 650]);
-
 bar(categorical( ...
     "Node " + nodesSorted, ...
     "Node " + nodesSorted), ...
@@ -1188,7 +1209,7 @@ xlabel("Node");
 ylabel("Measured active-power contribution (kW)");
 title("Experiment 2 (MPC): Node Contributions at Measured Feeder Peak");
 subtitle(sprintf("Node 632 feeder peak = %.1f kW at %s", ...
-    peakFeederKW, formatSimHour(peakFeederHour)));
+    peakFeederKW, formatDateTime(peakFeederDateTime)));
 
 set(gca, "FontSize", FONT_SIZE);
 
@@ -1273,7 +1294,7 @@ xlabel("RMS voltage at feeder peak (pu)");
 ylabel("Node-phase");
 title("Experiment 2 (MPC): Feeder Voltage Profile at Peak Net Load");
 subtitle(sprintf("Peak %.1f kW at %s", ...
-    peakFeederKW, formatSimHour(peakFeederHour)));
+    peakFeederKW, formatDateTime(peakFeederDateTime)));
 
 set(gca, "FontSize", FONT_SIZE);
 
@@ -1303,8 +1324,8 @@ if ~isempty(feederReverseIntervals)
         intervalRow = table( ...
             startHour, ...
             endHour, ...
-            string(formatSimHour(startHour)), ...
-            string(formatSimHour(endHour)), ...
+            string(formatDateTime(SIM_START_DATETIME + hours(startHour))), ...
+            string(formatDateTime(SIM_START_DATETIME + hours(endHour))), ...
             'VariableNames', { ...
             'StartSimHour','EndSimHour','StartWhen','EndWhen'});
 
@@ -1333,6 +1354,7 @@ if isfield(voltageSeries, char(v646Field))
     v646 = voltageSeries.(char(v646Field));
 
     commonHour = p646.simHour;
+    commonDateTime = SIM_START_DATETIME + hours(commonHour);
 
     v646Interp = interp1( ...
         v646.simHour, ...
@@ -1343,10 +1365,11 @@ if isfield(voltageSeries, char(v646Field))
 
     node646Comparison = table( ...
         commonHour, ...
+        commonDateTime, ...
         p646.kW, ...
         v646Interp, ...
         'VariableNames', { ...
-        'SimHour','Node646B_ActivePower_kW','Node646B_RMSVoltage_V'});
+        'SimHour','DateTime','Node646B_ActivePower_kW','Node646B_RMSVoltage_V'});
 
     writetable(node646Comparison, ...
         fullfile(outputDir, ...
@@ -1527,7 +1550,7 @@ end
 
 % Q7-Q9
 fprintf("\nQ7 - Highest total feeder net load occurs at:\n");
-fprintf('  %s\n', char(formatSimHour(peakFeederHour)));
+fprintf('  %s\n', char(formatDateTime(peakFeederDateTime)));
 
 fprintf("\nQ8 - Peak feeder net load after MPC:\n");
 fprintf("  %.3f kW (%.3f MW)\n", ...
@@ -1550,7 +1573,7 @@ fprintf('  Module 1 comparison for Q10 requires the Module 1 no-control data.\n'
 
 fprintf("\nQ11 - Peak-load influence on feeder voltages:\n");
 fprintf('  MPC feeder peak occurs at %s.\n', ...
-    char(formatSimHour(peakFeederHour)));
+    char(formatDateTime(peakFeederDateTime)));
 
 fprintf("  Lowest monitored voltage at that instant:\n");
 fprintf("  Node %s Phase %s = %.2f V = %.4f pu.\n", ...
@@ -1615,7 +1638,7 @@ end
 fprintf("\nAdditional Experiment 2 diagnostics:\n");
 
 fprintf("  Minimum Node 632 feeder power : %.3f kW at %s\n", ...
-    minFeederKW, formatSimHour(minFeederHour));
+    minFeederKW, formatDateTime(minFeederDateTime));
 
 fprintf("  Node 632 samples below 0 kW  : %d of %d\n", ...
     sum(feederReverse), numel(feederReverse));
@@ -1756,45 +1779,35 @@ function intervals = logicalIntervals(mask)
 end
 
 
-function text = formatSimHour(simHour)
+function text = formatDateTime(t)
 
-    if isnan(simHour)
-
+    if isnat(t)
         text = "N/A";
         return;
     end
 
-    % 0-24 h = Day 1, 24-48 h = Day 2, etc.
-    day = floor(simHour / 24) + 1;
-
-    hourWithinDay = simHour - (day - 1) * 24;
-
-    % Keep day 4 endpoint at Day 4 24:00 instead of Day 5 00:00.
-    if day > 4
-        day = 4;
-        hourWithinDay = 24;
-    end
-
-    hoursWhole = floor(hourWithinDay);
-    minutesWhole = round((hourWithinDay - hoursWhole) * 60);
-
-    if minutesWhole == 60
-        hoursWhole = hoursWhole + 1;
-        minutesWhole = 0;
-    end
-
-    text = sprintf("Day %d %02d:%02d", ...
-        day, hoursWhole, minutesWhole);
+    text = char(string(t, "dd-MMM-yyyy HH:mm"));
 end
 
 
-function addDaySeparators(ax, nDays)
+function addDaySeparatorsDate(ax, simStart, nDays)
 
     for d = 1:(nDays - 1)
 
-        xline(ax, 24*d, ":", ...
+        xline(ax, simStart + days(d), ":", ...
             "HandleVisibility", "off");
     end
+end
+
+
+function formatDateAxis(ax)
+
+    try
+        xtickformat(ax, "dd-MMM HH:mm");
+    catch
+    end
+
+    ax.XTickLabelRotation = 30;
 end
 
 
