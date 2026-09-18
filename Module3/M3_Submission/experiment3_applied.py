@@ -66,11 +66,6 @@ PHASE_MAP = {
 
 CIL_NODE = "646_B"
 
-# OLD QREF VALS!!! DONT UNCOMMENT FOR M3
-# QREF_646_KVAR = 132
-# QREF_MAP = {node: 0.0 for node in NODE_MAP}
-# QREF_MAP[CIL_NODE] = QREF_646_KVAR
-
 QREF_MAP = {
     "646_B": 132,
     "645_B": 125,
@@ -450,7 +445,7 @@ def main():
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
-    # ── Connect ───────────────────────────────────────────────────────────────
+    # Connect
     conn = None
     if not args.dry_run:
         conn = ModbusConnection(args.ip, args.port)
@@ -458,7 +453,7 @@ def main():
         conn.connect()
         print("  Connected.")
 
-    # ── Load the full-feeder actual CSV (drives all 16 nodes) ───────────────────
+    # Load the full-feeder actual CSV (drives all 16 nodes)
     act_path = Path(args.actual)
     if not act_path.exists():
         raise FileNotFoundError(f"Actual CSV not found: {act_path}")
@@ -475,7 +470,7 @@ def main():
     load646_act = node_data[CIL_NODE]["load_kw"]
     pv646_act   = node_data[CIL_NODE]["pv_kw"]
 
-    # ── Node-646 forecast (real file, or perfect-forecast fallback) ────────────
+    # Node-646 forecast (real file, or perfect-forecast fallback)
     if args.forecast is not None:
         fc_path = Path(args.forecast)
         if not fc_path.exists():
@@ -496,7 +491,7 @@ def main():
 
     eta_flat = make_eta_array(needed_len)
 
-    # ── Banner ────────────────────────────────────────────────────────────────
+    # Banner
     print("=" * 78)
     print("ECE4191 Module 3  |  Experiment 3 -- Node 646 CIL MPC Playback (Modbus TCP)")
     print("=" * 78)
@@ -519,7 +514,7 @@ def main():
         print("  5. Voltage/active-power Signal Analyzer export ready (see Appendix B).")
         input("\nPress Enter to start playback ...\n")
 
-    # ── Initial clear ─────────────────────────────────────────────────────────
+    # Initial clear
     print("\nClearing all registers ...")
     clear_all_registers(conn, args.dry_run)
 
@@ -534,7 +529,7 @@ def main():
         print(" " * 30)
     print("Ready.\n")
 
-    # ── Initial SoC: read the real measurement if we can (CIL feedback) ────────
+    # Initial SoC: read the real measurement if we can (CIL feedback)
     soc0_kwh = args.node646_initial_soc
     if not args.dry_run:
         pct = read_node646_soc_pct(conn)
@@ -545,7 +540,7 @@ def main():
             print(f"  WARNING: could not read initial Node-646 SoC; "
                   f"falling back to {args.node646_initial_soc:.0f} kWh.")
 
-    # ── Receding-horizon CIL MPC playback ───────────────────────────────────────
+    # Receding-horizon CIL MPC playback
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     sched_rows = []
     aborted = False

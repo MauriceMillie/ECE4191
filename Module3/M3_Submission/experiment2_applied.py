@@ -553,7 +553,7 @@ def main():
                         help="Print full dry-run Modbus payloads.")
     args = parser.parse_args()
 
-    # ── Connect ───────────────────────────────────────────────────────────────
+    # Connect
     conn = None
     if not args.dry_run:
         conn = ModbusConnection(args.ip, args.port)
@@ -561,7 +561,7 @@ def main():
         conn.connect()
         print("  Connected.")
 
-    # ── Load forecast and actual CSVs ───────────────────
+    # Load forecast and actual CSVs
     fc_path = Path(args.forecast)
     if not fc_path.exists():
         raise FileNotFoundError(f"Forecast CSV not found: {fc_path}")
@@ -592,7 +592,7 @@ def main():
 
     eta_flat = make_eta_array(len(load_fc_flat))
 
-    # ── Banner ────────────────────────────────────────────────────────────────
+    # Banner
     print("=" * 78)
     print("ECE4191 Module 3  |  Experiment 2 -- Feeder-wide MPC Playback (Modbus TCP)")
     print("=" * 78)
@@ -614,7 +614,7 @@ def main():
         print("  4. Voltage/active-power Signal Analyzer export ready (see Appendix B).")
         input("\nPress Enter to start playback ...\n")
 
-    # ── Initial clear ─────────────────────────────────────────────────────────
+    # Initial clear
     print("\nClearing all registers ...")
     clear_all_registers(conn, args.dry_run)
 
@@ -629,12 +629,12 @@ def main():
         print(" " * 30)
     print("Ready.\n")
 
-    # ── SoC reader (Node 646, logging only) ─────────────────────────────────────
+    # SoC reader (Node 646, logging only)
     log_enabled = not args.no_measurements and not args.dry_run
     soc_logger = SocLogger(conn, log_enabled)
     soc_logger.start()
 
-    # ── Receding-horizon MPC playback ────────────────────────────────────────
+    # Receding-horizon MPC playback
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     sched_rows = []
     aborted = False

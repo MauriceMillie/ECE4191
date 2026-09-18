@@ -122,7 +122,6 @@ BATTERY_POWER_KW = BATTERY_KW_PER_CUSTOMER * TOTAL_CUSTOMERS
 INITIAL_SOC_KWH = 0.5 * BATTERY_CAPACITY_KWH
 
 # Module 1 feeder playback used Qref = 0 for the time-varying loads.
-#QREF_MAP = {node: 0.0 for node in NODE_MAP} # old, dont uncomment
 QREF_MAP = {
     "646_B": 132,
     "645_B": 125,
