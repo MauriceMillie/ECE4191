@@ -1,0 +1,8 @@
+Panel,File,Samples,StartTime_s,EndTime_s,Duration_s,MedianSampleInterval_s,IsAlignmentAnchor
+Active Power 1,C:\ECE4191\Module3\HIL_node_data\E1_data\time_scaled_ver\measured_activePower1.csv,1996,0,498.75,498.75,0.25,0
+Active Power 2,C:\ECE4191\Module3\HIL_node_data\E1_data\time_scaled_ver\measured_activePower2.csv,1988,0,496.75,496.75,0.25,0
+Node 632 Feeder Power,C:\ECE4191\Module3\HIL_node_data\E1_data\time_scaled_ver\node632_probe1.csv,494,0,493,493,1,1
+Node 634 RMS Voltage,C:\ECE4191\Module3\HIL_node_data\E1_data\time_scaled_ver\node634_rmsVoltage.csv,2016,0,503.75,503.75,0.25,0
+RMS Voltage 1,C:\ECE4191\Module3\HIL_node_data\E1_data\time_scaled_ver\rmsVoltage1.csv,2030,0,507.25,507.25,0.25,0
+RMS Voltage 2,C:\ECE4191\Module3\HIL_node_data\E1_data\time_scaled_ver\rmsVoltage2.csv,2007,0,501.5,501.5,0.25,0
+RMS Voltage 3,C:\ECE4191\Module3\HIL_node_data\E1_data\time_scaled_ver\rmsVoltage3.csv,2024,0,505.75,505.75,0.25,0

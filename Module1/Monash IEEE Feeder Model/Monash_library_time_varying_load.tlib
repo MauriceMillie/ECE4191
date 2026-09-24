@@ -1,0 +1,3184 @@
+//
+// Saved by sw version: 2026.2
+//
+
+library "Monash_Time_Varying_Load" {
+    configuration {
+        hil_device = "HIL101"
+        hil_configuration_id = 1
+        simulation_method = exact
+        simulation_time_step = auto
+        simulation_discret_scaling = 1.0
+        dsp_timer_periods = 100e-6, 50e-3
+        ss_calc_method = "systematic elimination"
+        enb_pole_shift = True
+        enb_gds_oversampling = True
+        show_modes = False
+        device_ao_limit_enable = False
+        reset_analog_outputs_on_sim_stop = True
+        reset_analog_outputs_on_sim_stop_mode = Offset values
+        reset_digital_outputs_on_sim_stop = True
+        vhil_adio_loopback = False
+        dma_enable = False
+        cpl_stb = False
+        enb_dep_sw_detect = False
+        code_section = "internal memory"
+        data_section = "internal memory"
+        sys_sp_rate_1 = 0.0001
+        sys_sp_rate_2 = 0.05
+        sys_real_type_precision = "default"
+        user_real_type_precision = "default"
+        sys_cpu_optimization = "high"
+        user_cpu_optimization = "high"
+        user_cpu_part_option = "default"
+        matrix_based_reduction = True
+        cpl_dynamics_analysis = False
+        export_ss_to_pickle = False
+        ground_scope_core = False
+        dss_num_tol = 1e-15
+        cce_platform = "generic"
+        cce_use_relative_names = False
+        cce_type_mapping_real = "double"
+        cce_type_mapping_uint = "unsigned int"
+        cce_type_mapping_int = "int"
+        cce_platform = "generic"
+        cce_use_relative_names = False
+        cce_type_mapping_real = "double"
+        cce_type_mapping_uint = "unsigned int"
+        cce_type_mapping_int = "int"
+        cce_term_var_location = "local"
+        cce_directory = ""
+        cce_custom_type_int = ""
+        cce_custom_type_uint = ""
+        cce_custom_type_real = ""
+        tunable_params = "component defined"
+        sp_compiler_type = "C compiler"
+        sig_stim = "off"
+        export_resource_list = ""
+        export_dependency_list = ""
+        excluded_resource_list = ""
+        excluded_component_from_locking_list = ""
+        export_out_file = ""
+        export_lock_top_level = True
+        export_encrypt_library = True
+        export_encrypt_resources = True
+        solver_type = "DAE"
+        integration_method = "BDF"
+        max_sim_step = 1e-4
+        simulation_time = 1.0
+        abs_tol = 1e-3
+        rel_tol = 1e-3
+        init_sim_step = 1e-6
+        r_on_sw = 1e-3
+        v_on_diode = 0.1
+        data_sampling_rate = 0
+        feedthrough_validation_error_level = error
+    }
+
+    component Subsystem Root {
+        component Subsystem "Single phase time-varying load" {
+            layout = dynamic
+            component "core/Current Measurement" Ia2 {
+                execution_rate = "Ts"
+                sig_output = "True"
+            }
+            [
+                position = 7932, 8728
+                scale = 1, -1
+                size = 64, 32
+            ]
+
+            component "core/Voltage Measurement" Va2 {
+                execution_rate = "Ts"
+                sig_output = "True"
+            }
+            [
+                position = 8104, 8764
+                scale = 1, -1
+                size = 64, 32
+            ]
+
+            component "core/Single Phase Power Meter" "Single Phase Power Meter2" {
+                frequency = "60.0"
+            }
+            [
+                position = 7864, 8924
+                hide_name = True
+                scale = -1, 1
+                size = 48, 48
+            ]
+
+            component "core/Probe" P_measured {
+                override_signal_name = "True"
+                signal_name = "P"
+                signal_type = "active power"
+            }
+            [
+                position = 7744, 8840
+                scale = -1, 1
+            ]
+
+            component "core/Probe" Q_measured {
+                override_signal_name = "True"
+                signal_name = "Q"
+                signal_type = "reactive power"
+            }
+            [
+                position = 7664, 8924
+                scale = -1, 1
+            ]
+
+            component "core/Probe" S_measured {
+                override_signal_name = "True"
+                signal_name = "S"
+                signal_type = "apparent power"
+            }
+            [
+                position = 7744, 9012
+                scale = -1, 1
+            ]
+
+            component "core/Signal Controlled Current Source" Isp1 {
+                execution_rate = "Ts"
+            }
+            [
+                position = 8104, 8688
+                scale = -1, 1
+                size = 64, 32
+            ]
+
+            component Subsystem GenerateCurrentControl {
+                layout = dynamic
+                component "core/Sum" Sum7 {
+                }
+                [
+                    position = 8800, 8316
+                ]
+
+                component Subsystem ReactiveCurrentCalc {
+                    layout = dynamic
+                    component "core/Product" Product7 {
+                        signs = "*/"
+                    }
+                    [
+                        position = 7780, 8024
+                    ]
+
+                    component "core/RMS value" "RMS value4" {
+                    }
+                    [
+                        position = 7452, 8032
+                    ]
+
+                    component "core/Limit" Limit3 {
+                        lower_limit = "[1.0]"
+                    }
+                    [
+                        position = 7596, 8032
+                    ]
+
+                    component "core/Single phase PLL" "Single phase PLL3" {
+                    }
+                    [
+                        position = 7668, 8480
+                        size = 64, 98
+                    ]
+
+                    component "core/Trigonometric function" "Trigonometric function1" {
+                        trigonometric_fn = "cos"
+                    }
+                    [
+                        position = 7940, 8496
+                    ]
+
+                    component "core/Product" Product8 {
+                    }
+                    [
+                        position = 8656, 8024
+                    ]
+
+                    component "core/Product" Product9 {
+                    }
+                    [
+                        position = 8168, 8488
+                    ]
+
+                    component "core/Constant" Constant3 {
+                        execution_rate = "Ts"
+                        value = "-1.414"
+                    }
+                    [
+                        position = 8076, 8412
+                    ]
+
+                    component "core/Signal switch" "Signal switch1" {
+                    }
+                    [
+                        position = 8412, 7968
+                    ]
+
+                    component "core/Constant" Constant5 {
+                        execution_rate = "ex_rate"
+                    }
+                    [
+                        position = 8048, 7872
+                        hide_name = True
+                    ]
+
+                    component "core/Unit Delay" "Unit Delay7" {
+                    }
+                    [
+                        position = 8132, 7872
+                        hide_name = True
+                    ]
+
+                    component "core/Delay" Delay4 {
+                        del_length = "60000"
+                    }
+                    [
+                        position = 8232, 7872
+                    ]
+
+                    component "core/Constant" "Initial Iq" {
+                        execution_rate = "Ts"
+                        value = "30.94959"
+                    }
+                    [
+                        position = 8260, 7984
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition2" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 8340, 7872
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition3" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 7588, 7952
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    port Vout {
+                        label = "Vout"
+                        position = left:3
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7336, 8032
+                    ]
+
+                    port I_feed_reactive {
+                        label = "I_feed_reactive"
+                        position = right:2
+                        kind = sp
+                        direction =  in
+                        sp_type {
+                            default = inherit
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 9048, 8024
+                    ]
+
+                    port Q_reference {
+                        label = "Q_reference"
+                        position = left:2
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7336, 7952
+                    ]
+
+                    port sin_Vout {
+                        label = "sin_Vout"
+                        position = right:1
+                        kind = sp
+                        direction =  in
+                        sp_type {
+                            default = inherit
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 9048, 8564
+                    ]
+
+                    junction Junction68 sp
+                    [
+                        position = 7384, 8032
+                    ]
+
+                    comment Comment12 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">The block for setting the Signal Switch to output input 2 at<br />the start of the simulation.</span> </p></body></html> ENDCOMMENT 
+                    [
+                        position = 8188, 7776
+                    ]
+
+                    comment Comment15 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI';">At the start of the simulation, </span><span style=" font-family:'Segoe UI'; font-weight:700;">the Signal Switch</span><span style=" font-family:'Segoe UI';"> is configured to pass the </span><span style=" font-family:'Segoe UI'; font-weight:700;">F input (input 2)</span><span style=" font-family:'Segoe UI';">, <br />which represents the initial RMS value of the active or reactive current.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI';">While the Signal Switch components are still passing the F inputs (inputs 2), <br />the </span><span style=" font-family:'Segoe UI'; font-weight:700;">Master Pulse is set to 1</span><span style=" font-family:'Segoe UI';">, allowing the </span><span style=" font-family:'Segoe UI'; font-weight:700;">Sample and Hold components</span><span style=" font-family:'Segoe UI';"> <br />to update and store the calculated active and reactive current values.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI';">After a short delay, Signal Switch components transition to the </span><span style=" font-family:'Segoe UI'; font-weight:700;">T inputs (inputs 1)</span><span style=" font-family:'Segoe UI';">, <br />which correspond to the calculated active or reactive currents.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI';">This approach improves the stability of the overall control logic during simulation startup.</span></p></body></html> ENDCOMMENT 
+                    [
+                        position = 7932, 8056
+                    ]
+
+                    scheme_area Area3 {
+                        title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Reactive Current Calculation</p></body></html>
+                    }
+                    [
+                        position = 8100, 8184
+                        size = 1696, 956
+                    ]
+
+                    connect Junction68 Vout as Connection777
+                    connect Product8.out I_feed_reactive as Connection787
+                    connect sin_Vout "Single phase PLL3.sin(wt)" as Connection788
+                    [
+                        breakpoints = 9016, 8564; 7748, 8564; 7748, 8512
+                    ]
+                    connect "RMS value4.out" Limit3.in as Connection653
+                    connect Limit3.out Product7.in1 as Connection655
+                    connect "RMS value4.in" Junction68 as Connection656
+                    connect "Single phase PLL3.In" Junction68 as Connection658
+                    connect "Trigonometric function1.in" "Single phase PLL3.wt" as Connection659
+                    connect Product9.in1 "Trigonometric function1.out" as Connection674
+                    connect Constant3.out Product9.in as Connection675
+                    connect "Initial Iq.out" "Signal switch1.in1" as Connection741
+                    connect Product9.out Product8.in1 as Connection769
+                    connect "Unit Delay7.in" Constant5.out as Connection775
+                    connect "Unit Delay7.out" Delay4.in as Connection776
+                    connect Delay4.out "Rate Transition2.in" as Connection791
+                    connect "Rate Transition2.out" "Signal switch1.in2" as Connection792
+                    connect Product7.in "Rate Transition3.out" as Connection793
+                    connect "Rate Transition3.in" Q_reference as Connection794
+                    connect Product7.out "Signal switch1.in" as Connection795
+                    [
+                        breakpoints = 7820, 7952; 8380, 7952
+                    ]
+                    connect Product8.in "Signal switch1.out" as Connection796
+                    [
+                        breakpoints = 8616, 7968
+                    ]
+                }
+                [
+                    position = 8520, 8428
+                    size = 272, 144
+                ]
+
+                component Subsystem ActiveCurrentCalc {
+                    layout = dynamic
+                    component "core/Sum" Sum6 {
+                        signs = "+--"
+                    }
+                    [
+                        position = 7968, 8240
+                        hide_name = True
+                    ]
+
+                    component "core/Product" Product6 {
+                        signs = "*/"
+                    }
+                    [
+                        position = 8088, 8248
+                        hide_name = True
+                    ]
+
+                    component "core/RMS value" "RMS value2" {
+                    }
+                    [
+                        position = 7844, 8408
+                        hide_name = True
+                    ]
+
+                    component "core/Limit" Limit2 {
+                        lower_limit = "[1.0]"
+                    }
+                    [
+                        position = 7940, 8408
+                        hide_name = True
+                    ]
+
+                    component "core/Product" Product10 {
+                        signs = "***"
+                    }
+                    [
+                        position = 8544, 8344
+                    ]
+
+                    component "core/Constant" Constant4 {
+                        execution_rate = "Ts"
+                        value = "1.414"
+                    }
+                    [
+                        position = 8360, 8344
+                        hide_name = True
+                    ]
+
+                    component "core/Constant" Constant7 {
+                        execution_rate = "ex_rate"
+                    }
+                    [
+                        position = 8228, 8132
+                        hide_name = True
+                    ]
+
+                    component "core/Unit Delay" "Unit Delay8" {
+                    }
+                    [
+                        position = 8284, 8132
+                        hide_name = True
+                    ]
+
+                    component "core/Delay" Delay5 {
+                        del_length = "60000"
+                    }
+                    [
+                        position = 8348, 8132
+                        hide_name = True
+                    ]
+
+                    component "core/Signal switch" "Signal switch2" {
+                    }
+                    [
+                        position = 8400, 8264
+                        hide_name = True
+                    ]
+
+                    component "core/Constant" "Initial Ia" {
+                        execution_rate = "Ts"
+                        value = "53.909"
+                    }
+                    [
+                        position = 8280, 8280
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition1" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 8024, 8240
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition2" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 8400, 8172
+                        rotation = right
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    port sin_Vout {
+                        label = "sin_Vout"
+                        position = left:6
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8476
+                    ]
+
+                    port P_reference {
+                        label = "P_reference"
+                        position = left:2
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8200
+                    ]
+
+                    port PVpanel_P_reference {
+                        label = "PVpanel_P_reference"
+                        position = left:3
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8268
+                    ]
+
+                    port Battery_P_reference {
+                        label = "Battery_P_reference"
+                        position = left:4
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8332
+                    ]
+
+                    port I_feed {
+                        label = "I_feed"
+                        position = right:2
+                        kind = sp
+                        direction =  in
+                        sp_type {
+                            default = inherit
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 8648, 8344
+                    ]
+
+                    port Vout {
+                        label = "Vout"
+                        position = left:5
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8408
+                    ]
+
+                    comment Comment16 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">The block for setting the Signal Switch to output input 2 at<br />the start of the simulation.</span> </p></body></html> ENDCOMMENT 
+                    [
+                        position = 8120, 8040
+                    ]
+
+                    scheme_area Area6 {
+                        title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Active Current Calculation</p></body></html>
+                    }
+                    [
+                        position = 8192, 8264
+                        size = 800, 540
+                    ]
+
+                    connect Product10.in2 sin_Vout as Connection786
+                    connect "RMS value2.in" Vout as Connection792
+                    connect Product10.out I_feed as Connection791
+                    connect Sum6.in1 PVpanel_P_reference as Connection796
+                    [
+                        breakpoints = 7916, 8264
+                    ]
+                    connect Sum6.in P_reference as Connection797
+                    [
+                        breakpoints = 7916, 8224; 7916, 8200
+                    ]
+                    connect Limit2.out Product6.in1 as Connection685
+                    connect Limit2.in "RMS value2.out" as Connection777
+                    connect Constant4.out Product10.in1 as Connection778
+                    connect Constant7.out "Unit Delay8.in" as Connection779
+                    [
+                        hide_name = True
+                    ]
+                    connect "Unit Delay8.out" Delay5.in as Connection780
+                    [
+                        hide_name = True
+                    ]
+                    connect "Initial Ia.out" "Signal switch2.in1" as Connection781
+                    connect Product6.out "Signal switch2.in" as Connection798
+                    connect Sum6.in2 Battery_P_reference as Connection799
+                    connect Sum6.out "Rate Transition1.in" as Connection800
+                    connect "Rate Transition1.out" Product6.in as Connection801
+                    connect Delay5.out "Rate Transition2.in" as Connection802
+                    connect "Rate Transition2.out" "Signal switch2.in2" as Connection803
+                    connect Product10.in "Signal switch2.out" as Connection804
+                    [
+                        breakpoints = 8432, 8264
+                    ]
+                }
+                [
+                    position = 8504, 8192
+                    size = 240, 176
+                ]
+
+                port Vout {
+                    label = "Vout"
+                    position = left:5
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 8052, 8480
+                ]
+
+                port Q_reference {
+                    label = "Q_reference"
+                    position = left:2
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7720, 8208
+                ]
+
+                port Battery_P_reference {
+                    label = "Battery_P_reference"
+                    position = left:4
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7720, 8336
+                ]
+
+                port P_reference {
+                    label = "P_reference"
+                    position = left:1
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7720, 8144
+                ]
+
+                port PVpanel_P_reference {
+                    label = "PVpanel_P_reference"
+                    position = left:3
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7720, 8272
+                ]
+
+                port current_total {
+                    label = "current_total"
+                    position = auto:auto
+                    kind = sp
+                    direction =  in
+                    sp_type {
+                        default = inherit
+                        readonly = True
+                    }
+                }
+                [
+                    position = 9136, 8316
+                ]
+
+                tag Goto5 {
+                    value = "P_reference"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7892, 8144
+                    rotation = down
+                    hide_name = True
+                    scale = -1, 1
+                    size = 108, 20
+                ]
+
+                tag From6 {
+                    value = "P_reference"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8224, 8128
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag Goto10 {
+                    value = "Q_reference"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7892, 8208
+                    rotation = down
+                    hide_name = True
+                    scale = -1, 1
+                    size = 108, 20
+                ]
+
+                tag From12 {
+                    value = "Q_reference"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8224, 8376
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag Goto13 {
+                    value = "Battery_P_reference"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7888, 8336
+                    rotation = down
+                    hide_name = True
+                    scale = -1, 1
+                    size = 116, 20
+                ]
+
+                tag From17 {
+                    value = "Battery_P_reference"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8224, 8192
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag From18 {
+                    value = "PVpanel_P_reference"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8224, 8160
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag Goto14 {
+                    value = "PVpanel_P_reference"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7888, 8272
+                    rotation = down
+                    hide_name = True
+                    scale = -1, 1
+                    size = 116, 20
+                ]
+
+                junction Junction111 sp
+                [
+                    position = 8336, 8480
+                ]
+
+                comment Comment7 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:14pt;">The Sample and Hold component takes the calculated values for <br />active and reactive currents and hold them until the trigger becomes 1.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:14pt;">The trigger becomes 1 only when one of the following conditions is met:</span></p><ul style="margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;"><li style=" font-family:'Segoe UI'; font-size:14pt;" style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The simulation has just started</li><li style=" font-family:'Segoe UI'; font-size:14pt;" style=" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The value of Pref, Qref, Battery_Power or PVpanel_power has changed</li></ul><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:14pt;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:14pt;">When the trigger becomes 1, <br />the newest calculated values for both active and reactive currents<br />pass through the block and are summarized. The updated total value is then written to the<br />Signal Controlled Current Source component  </span></p></body></html> ENDCOMMENT 
+                [
+                    position = 8128, 8544
+                ]
+
+                comment Comment11 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">This is the total calculated current. We are calculating it by summarizing the active and reactive currents.</p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Unlike variable passive components, the Signal Controlled Current Source</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">expects a sinusoidal input signal at all times. Providing a constant value causes </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">the current to lose its sinusoidal shape.</p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">As a result, the logic that updates the load value only at the start of the simulation </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">and when the P and Q reference values change is not currently used.</p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The plan is to reintroduce this logic in the future by using a PLL to decompose the </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">current signal and then reconstruct it. </p></body></html> ENDCOMMENT 
+                [
+                    position = 8120, 7840
+                ]
+
+                scheme_area Area5 {
+                    title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Total Current Calculation</p></body></html>
+                }
+                [
+                    position = 8864, 8308
+                    size = 324, 464
+                ]
+
+                scheme_area Area9 {
+                    title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Current Calculations</p></body></html>
+                }
+                [
+                    position = 8576, 8336
+                    size = 940, 1076
+                    background_color = #0ec0a301
+                ]
+
+                connect ReactiveCurrentCalc.Q_reference From12 as Connection879
+                connect From18 ActiveCurrentCalc.PVpanel_P_reference as Connection885
+                connect From6 ActiveCurrentCalc.P_reference as Connection883
+                connect From17 ActiveCurrentCalc.Battery_P_reference as Connection886
+                connect ReactiveCurrentCalc.sin_Vout ActiveCurrentCalc.sin_Vout as Connection898
+                [
+                    breakpoints = 8672, 8324; 8368, 8324
+                ]
+                connect Q_reference Goto10 as Connection986
+                [
+                    breakpoints = 7796, 8208
+                ]
+                connect PVpanel_P_reference Goto14 as Connection987
+                [
+                    breakpoints = 7796, 8272
+                ]
+                connect P_reference Goto5 as Connection988
+                [
+                    breakpoints = 7796, 8144
+                ]
+                connect Goto13 Battery_P_reference as Connection984
+                [
+                    breakpoints = 7796, 8336
+                ]
+                connect ActiveCurrentCalc.Vout Junction111 as Connection990
+                [
+                    breakpoints = 8336, 8228
+                ]
+                connect Junction111 ReactiveCurrentCalc.Vout as Connection991
+                [
+                    breakpoints = 8336, 8476; 8336, 8480
+                ]
+                connect Vout Junction111 as Connection992
+                connect ActiveCurrentCalc.I_feed Sum7.in as Connection994
+                [
+                    breakpoints = 8712, 8260
+                ]
+                connect Sum7.out current_total as Connection995
+                connect ReactiveCurrentCalc.I_feed_reactive Sum7.in1 as Connection996
+                [
+                    breakpoints = 8712, 8324
+                ]
+            }
+            [
+                position = 7904, 8384
+                size = 248, 424
+            ]
+
+            component "core/Signal switch" "Signal switch3" {
+            }
+            [
+                position = 7648, 8192
+                hide_name = True
+            ]
+
+            component "core/Signal switch" "Signal switch4" {
+            }
+            [
+                position = 7556, 8288
+                hide_name = True
+            ]
+
+            component "core/Signal switch" "Signal switch5" {
+            }
+            [
+                position = 7460, 8384
+                hide_name = True
+            ]
+
+            component "core/Signal switch" "Signal switch6" {
+            }
+            [
+                position = 7356, 8480
+                hide_name = True
+            ]
+
+            component "core/Gain" Gain1 {
+                gain = "1000"
+            }
+            [
+                position = 7288, 8176
+                hide_name = True
+            ]
+
+            component "core/Gain" Gain2 {
+                gain = "1000"
+            }
+            [
+                position = 7288, 8272
+                hide_name = True
+            ]
+
+            component "core/Gain" Gain3 {
+                gain = "1000"
+            }
+            [
+                position = 7292, 8464
+                hide_name = True
+            ]
+
+            component "core/Gain" Gain4 {
+                gain = "1000"
+            }
+            [
+                position = 7292, 8368
+                hide_name = True
+            ]
+
+            port P1 {
+                position = right:auto
+                kind = pe
+            }
+            [
+                position = 7808, 8728
+            ]
+
+            port P2 {
+                position = right:auto
+                kind = pe
+            }
+            [
+                position = 8288, 8728
+                scale = -1, 1
+            ]
+
+            port In1 {
+                label = "P modbus"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7160, 8176
+            ]
+
+            port In2 {
+                label = "Q modbus"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7160, 8272
+            ]
+
+            port In3 {
+                label = "P pv modbus"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7160, 8368
+            ]
+
+            port In4 {
+                label = "P battery modbus"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7160, 8464
+            ]
+
+            port In5 {
+                label = "control mode"
+                position = top:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7160, 8044
+            ]
+
+            port In6 {
+                label = "P SCADA"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7104, 8208
+            ]
+
+            port In7 {
+                label = "Q SCADA"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7104, 8304
+            ]
+
+            port In8 {
+                label = "P pv SCADA"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7104, 8400
+            ]
+
+            port In9 {
+                label = "P battery SCADA"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7104, 8496
+            ]
+
+            port Battery_Output {
+                label = "Battery_Output"
+                position = right:3
+                kind = sp
+                direction =  in
+                sp_type {
+                    default = inherit
+                    readonly = True
+                }
+            }
+            [
+                position = 7432, 8612
+                rotation = down
+            ]
+
+            tag Goto1 {
+                value = "Vout"
+                scope = local
+                kind = sp
+                direction = in
+            }
+            [
+                position = 8208, 8916
+                rotation = down
+                scale = -1, 1
+                size = 60, 20
+            ]
+
+            tag From1 {
+                value = "Vout"
+                scope = local
+                kind = sp
+                direction = out
+            }
+            [
+                position = 7704, 8576
+                rotation = down
+                scale = -1, 1
+                size = 60, 20
+            ]
+
+            junction Junction52 pe
+            [
+                position = 7992, 8728
+            ]
+
+            junction Junction103 sp
+            [
+                position = 7556, 8044
+            ]
+
+            junction Junction104 sp
+            [
+                position = 7460, 8044
+            ]
+
+            junction Junction106 sp
+            [
+                position = 8104, 8916
+            ]
+
+            junction Junction107 pe
+            [
+                position = 8172, 8728
+            ]
+
+            junction Junction108 sp
+            [
+                position = 7356, 8044
+            ]
+
+            junction Junction109 sp
+            [
+                position = 7548, 8480
+            ]
+
+            comment Comment2 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial'; font-size:14pt;">The point of this logic is to take reference values</span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial'; font-size:14pt;">for Pload, Ppv, Pbattery and Qload from SCADA and<br />alongside measured voltage, </span></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial'; font-size:14pt;">use them to calculate the current for the current source.  </span></p></body></html> ENDCOMMENT 
+            [
+                position = 8052, 8236
+            ]
+
+            comment Comment4 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">The calculated current value is sent to the Signal Controlled Current Source.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Unlike variable passive components, a current source allows negative active power.<br />This means that this node can not only act as a load, but also feed power back into the grid. </p></body></html> ENDCOMMENT 
+            [
+                position = 7636, 9068
+            ]
+
+            comment Comment6 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">P, Q, S are measured and are able</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">to be displayed in the SCADA panel.</p></body></html> ENDCOMMENT 
+            [
+                position = 7652, 8768
+            ]
+
+            connect "Single Phase Power Meter2.Q" Q_measured.in as Connection317
+            connect "Single Phase Power Meter2.S" S_measured.in as Connection318
+            connect "Single Phase Power Meter2.P" P_measured.in as Connection319
+            connect Junction52 Ia2.n_node as Connection528
+            [
+                breakpoints = 7992, 8704
+            ]
+            connect Isp1.n_node Junction52 as Connection529
+            connect Junction52 Va2.p_node as Connection855
+            [
+                breakpoints = 7992, 8760
+            ]
+            connect Ia2.out "Single Phase Power Meter2.Ia" as Connection924
+            connect "Signal switch3.in" Gain1.out as Connection1083
+            connect Gain2.out "Signal switch4.in" as Connection1086
+            connect Gain3.out "Signal switch6.in" as Connection1088
+            connect Gain4.out "Signal switch5.in" as Connection1090
+            connect GenerateCurrentControl.current_total Isp1.in as Connection1106
+            connect "Signal switch3.out" GenerateCurrentControl.P_reference as Connection1108
+            connect "Signal switch4.out" GenerateCurrentControl.Q_reference as Connection1109
+            connect "Signal switch5.out" GenerateCurrentControl.PVpanel_P_reference as Connection1110
+            connect Junction103 "Signal switch3.in2" as Connection1113
+            [
+                breakpoints = 7556, 8044; 7648, 8044
+            ]
+            connect "Signal switch4.in2" Junction103 as Connection1114
+            connect Junction104 Junction103 as Connection1116
+            connect "Signal switch5.in2" Junction104 as Connection1117
+            connect Goto1 Junction106 as Connection1122
+            connect Junction106 Va2.out as Connection1123
+            [
+                breakpoints = 8104, 8916
+            ]
+            connect "Single Phase Power Meter2.Va" Junction106 as Connection1124
+            connect P1 Ia2.p_node as Connection1130
+            connect Isp1.p_node Junction107 as Connection1131
+            [
+                breakpoints = 8172, 8688
+            ]
+            connect Junction107 Va2.n_node as Connection1132
+            [
+                breakpoints = 8172, 8728; 8172, 8732
+            ]
+            connect P2 Junction107 as Connection1133
+            connect In1 Gain1.in as Connection1134
+            connect In2 Gain2.in as Connection1135
+            connect In4 Gain3.in as Connection1136
+            connect In3 Gain4.in as Connection1137
+            connect "Signal switch6.in2" Junction108 as Connection1138
+            connect Junction108 Junction104 as Connection1139
+            [
+                breakpoints = 7356, 8044
+            ]
+            connect In5 Junction108 as Connection1140
+            connect In6 "Signal switch3.in1" as Connection1141
+            connect In7 "Signal switch4.in1" as Connection1142
+            connect In8 "Signal switch5.in1" as Connection1143
+            connect In9 "Signal switch6.in1" as Connection1144
+            connect From1 GenerateCurrentControl.Vout as Connection1145
+            connect GenerateCurrentControl.Battery_P_reference Junction109 as Connection1146
+            connect Junction109 "Signal switch6.out" as Connection1147
+            connect Battery_Output Junction109 as Connection1148
+        }
+        [
+            position = 4332, 4000
+            size = 224, 304
+        ]
+
+        component Subsystem "Single phase time-varying load with the Master Pulse" {
+            layout = dynamic
+            component "core/Current Measurement" Ia_PhA {
+                execution_rate = "Ts"
+                feed_forward = "true"
+                sig_output = "True"
+            }
+            [
+                position = 8148, 7604
+                scale = 1, -1
+                size = 64, 32
+            ]
+
+            component "core/Voltage Measurement" Va_PhA {
+                execution_rate = "Ts"
+                feed_forward = "true"
+                sig_output = "True"
+            }
+            [
+                position = 8320, 7636
+                scale = 1, -1
+                size = 64, 32
+            ]
+
+            component "core/Single Phase Power Meter" "Single Phase Power Meter PhA" {
+                frequency = "60.0"
+            }
+            [
+                position = 8080, 7796
+                hide_name = True
+                scale = -1, 1
+                size = 48, 48
+            ]
+
+            component "core/Probe" P_measured {
+                override_signal_name = "True"
+                signal_name = "P"
+                signal_type = "active power"
+            }
+            [
+                position = 7960, 7716
+                scale = -1, 1
+            ]
+
+            component "core/Probe" Q_measured {
+                override_signal_name = "True"
+                signal_name = "Q"
+                signal_type = "reactive power"
+            }
+            [
+                position = 7880, 7796
+                scale = -1, 1
+            ]
+
+            component "core/Probe" S_measured {
+                override_signal_name = "True"
+                signal_name = "S"
+                signal_type = "apparent power"
+            }
+            [
+                position = 7960, 7884
+                scale = -1, 1
+            ]
+
+            component "core/Signal Controlled Current Source" Isp_PhA {
+                execution_rate = "Ts"
+            }
+            [
+                position = 8320, 7564
+                scale = -1, 1
+                size = 64, 32
+            ]
+
+            component Subsystem "GenerateCurrentControl PhA" {
+                layout = dynamic
+                component "core/Sum" Sum7 {
+                }
+                [
+                    position = 8800, 8316
+                    hide_name = True
+                ]
+
+                component Subsystem DetectNGenerate {
+                    layout = dynamic
+                    component "core/Logical operator" "Logical operator4" {
+                        operator = "OR"
+                    }
+                    [
+                        position = 8252, 8552
+                    ]
+
+                    component Subsystem PowerChangeDetector {
+                        layout = dynamic
+                        component "core/Relational operator" "Relational operator1" {
+                            relational_op = "!="
+                        }
+                        [
+                            position = 8168, 7952
+                            hide_name = True
+                        ]
+
+                        component "core/Edge Detection" "Edge Detection1" {
+                        }
+                        [
+                            position = 8248, 7952
+                            size = 32, 32
+                        ]
+
+                        component "core/Logical operator" "Logical operator1" {
+                            inputs = "4"
+                            operator = "OR"
+                        }
+                        [
+                            position = 8408, 8328
+                        ]
+
+                        component "core/Relational operator" "Relational operator2" {
+                            relational_op = "!="
+                        }
+                        [
+                            position = 8168, 8120
+                            hide_name = True
+                        ]
+
+                        component "core/Edge Detection" "Edge Detection2" {
+                        }
+                        [
+                            position = 8248, 8120
+                            size = 32, 32
+                        ]
+
+                        component "core/Unit Delay" "Unit Delay1" {
+                        }
+                        [
+                            position = 8072, 7920
+                            hide_name = True
+                        ]
+
+                        component "core/Unit Delay" "Unit Delay2" {
+                        }
+                        [
+                            position = 8072, 8096
+                        ]
+
+                        component "core/Relational operator" "Relational operator3" {
+                            relational_op = "!="
+                        }
+                        [
+                            position = 8168, 8336
+                            hide_name = True
+                        ]
+
+                        component "core/Edge Detection" "Edge Detection3" {
+                        }
+                        [
+                            position = 8248, 8336
+                            size = 32, 32
+                        ]
+
+                        component "core/Unit Delay" "Unit Delay9" {
+                        }
+                        [
+                            position = 8072, 8312
+                        ]
+
+                        component "core/Relational operator" "Relational operator4" {
+                            relational_op = "!="
+                        }
+                        [
+                            position = 8168, 8480
+                            hide_name = True
+                        ]
+
+                        component "core/Edge Detection" "Edge Detection4" {
+                        }
+                        [
+                            position = 8248, 8480
+                            size = 32, 32
+                        ]
+
+                        component "core/Unit Delay" "Unit Delay10" {
+                        }
+                        [
+                            position = 8072, 8448
+                        ]
+
+                        port Qref_In {
+                            label = "Qref_In"
+                            position = left:2
+                            kind = sp
+                            direction =  out
+                            sp_type {
+                                default = auto
+                                readonly = True
+                            }
+                        }
+                        [
+                            position = 7952, 8160
+                        ]
+
+                        port Pref_In {
+                            label = "Pref_In"
+                            position = left:1
+                            kind = sp
+                            direction =  out
+                            sp_type {
+                                default = auto
+                                readonly = True
+                            }
+                        }
+                        [
+                            position = 7960, 7984
+                        ]
+
+                        port Batt_Pwr_In {
+                            label = "Batt_Pwr_In"
+                            position = left:4
+                            kind = sp
+                            direction =  out
+                            sp_type {
+                                default = auto
+                                readonly = True
+                            }
+                        }
+                        [
+                            position = 7952, 8528
+                        ]
+
+                        port Out5 {
+                            position = right:1
+                            kind = sp
+                            direction =  in
+                            sp_type {
+                                default = inherit
+                                readonly = True
+                            }
+                        }
+                        [
+                            position = 8512, 8328
+                        ]
+
+                        port PV_Pwr_In {
+                            label = "PV_Pwr_In"
+                            position = left:3
+                            kind = sp
+                            direction =  out
+                            sp_type {
+                                default = auto
+                                readonly = True
+                            }
+                        }
+                        [
+                            position = 7928, 8368
+                        ]
+
+                        junction Junction33 sp
+                        [
+                            position = 8000, 8160
+                        ]
+
+                        junction Junction86 sp
+                        [
+                            position = 7976, 8368
+                        ]
+
+                        junction Junction91 sp
+                        [
+                            position = 8008, 7984
+                        ]
+
+                        junction Junction95 sp
+                        [
+                            position = 8000, 8528
+                        ]
+
+                        comment Comment9 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">The block for detecting<br />changes in the Pref, Qref, Pbattery and Ppv signals. </span> </p></body></html> ENDCOMMENT 
+                        [
+                            position = 8160, 7856
+                        ]
+
+                        connect "Logical operator1.out" Out5 as Connection858
+                        connect Junction86 PV_Pwr_In as Connection859
+                        connect Junction95 Batt_Pwr_In as Connection857
+                        connect Junction91 Pref_In as Connection856
+                        connect Junction33 Qref_In as Connection855
+                        connect "Edge Detection1.In1" "Relational operator1.out" as Connection376
+                        connect "Edge Detection2.In1" "Relational operator2.out" as Connection379
+                        connect "Edge Detection1.Out1" "Logical operator1.in" as Connection386
+                        connect "Logical operator1.in1" "Edge Detection2.Out1" as Connection387
+                        connect "Unit Delay1.out" "Relational operator1.in" as Connection394
+                        connect "Unit Delay2.out" "Relational operator2.in" as Connection399
+                        connect "Unit Delay2.in" Junction33 as Connection408
+                        connect "Relational operator2.in1" Junction33 as Connection792
+                        [
+                            breakpoints = 8136, 8160; 8000, 8160
+                        ]
+                        connect "Edge Detection3.In1" "Relational operator3.out" as Connection794
+                        connect "Unit Delay9.out" "Relational operator3.in" as Connection795
+                        connect "Edge Detection4.In1" "Relational operator4.out" as Connection800
+                        connect "Unit Delay10.out" "Relational operator4.in" as Connection801
+                        connect "Unit Delay9.in" Junction86 as Connection809
+                        connect Junction86 "Relational operator3.in1" as Connection810
+                        [
+                            breakpoints = 7976, 8368; 8136, 8368; 8136, 8344
+                        ]
+                        connect "Edge Detection3.Out1" "Logical operator1.in2" as Connection824
+                        connect "Edge Detection4.Out1" "Logical operator1.in3" as Connection825
+                        connect "Unit Delay1.in" Junction91 as Connection836
+                        connect "Relational operator1.in1" Junction91 as Connection838
+                        [
+                            breakpoints = 8136, 7960; 8136, 7984; 8008, 7984
+                        ]
+                        connect "Unit Delay10.in" Junction95 as Connection852
+                        connect "Relational operator4.in1" Junction95 as Connection854
+                        [
+                            breakpoints = 8136, 8528; 8000, 8528
+                        ]
+                    }
+                    [
+                        position = 7968, 8560
+                        size = 112, 80
+                    ]
+
+                    component Subsystem SimStartDetector {
+                        layout = dynamic
+                        component "core/Constant" Constant2 {
+                            execution_rate = "ex_rate"
+                        }
+                        [
+                            position = 7832, 8220
+                        ]
+
+                        component "core/Unit Delay" "Unit Delay3" {
+                        }
+                        [
+                            position = 7920, 8220
+                        ]
+
+                        component "core/Logical operator" "Logical operator2" {
+                            operator = "NOT"
+                        }
+                        [
+                            position = 8056, 8220
+                        ]
+
+                        component "core/Logical operator" "Logical operator3" {
+                        }
+                        [
+                            position = 8232, 8204
+                        ]
+
+                        component "core/Delay" Delay2 {
+                            del_length = "30000"
+                        }
+                        [
+                            position = 8552, 8204
+                        ]
+
+                        port Out1 {
+                            position = right:1
+                            kind = sp
+                            direction =  in
+                            sp_type {
+                                default = inherit
+                                readonly = True
+                            }
+                        }
+                        [
+                            position = 8624, 8204
+                        ]
+
+                        junction Junction37 sp
+                        [
+                            position = 7872, 8220
+                        ]
+
+                        comment Comment8 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The block for detecting<br />the start of the simulation.</p></body></html> ENDCOMMENT 
+                        [
+                            position = 8072, 8076
+                        ]
+
+                        scheme_area Area2 {
+                            title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Block for detecting the start of the simulation</p></body></html>
+                        }
+                        [
+                            position = 8184, 8212
+                            size = 900, 400
+                        ]
+
+                        connect Delay2.out Out1 as Connection465
+                        connect "Unit Delay3.in" Junction37 as Connection427
+                        connect Junction37 Constant2.out as Connection428
+                        connect "Logical operator3.in" Junction37 as Connection466
+                        [
+                            breakpoints = 7872, 8196
+                        ]
+                        connect "Unit Delay3.out" "Logical operator2.in" as Connection467
+                        connect "Logical operator3.in1" "Logical operator2.out" as Connection468
+                        [
+                            breakpoints = 8120, 8220
+                        ]
+                        connect Delay2.in "Logical operator3.out" as Connection469
+                    }
+                    [
+                        position = 8100, 8396
+                        size = 48, 48
+                    ]
+
+                    port MasterPulseOut {
+                        label = "MasterPulseOut"
+                        position = right:1
+                        kind = sp
+                        direction =  in
+                        sp_type {
+                            default = inherit
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 8400, 8552
+                    ]
+
+                    port Pref_In {
+                        label = "Pref_In"
+                        position = left:1
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7680, 8424
+                    ]
+
+                    port Batt_Pwr_In {
+                        label = "Batt_Pwr_In"
+                        position = left:4
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7680, 8696
+                    ]
+
+                    port Qref_In {
+                        label = "Qref_In"
+                        position = left:2
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7624, 8464
+                    ]
+
+                    port PV_Pwr_In {
+                        label = "PV_Pwr_In"
+                        position = left:3
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7624, 8616
+                    ]
+
+                    scheme_area Area7 {
+                        title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Master Pulse Calculations</p></body></html>
+                    }
+                    [
+                        position = 8180, 8484
+                        size = 264, 368
+                        background_color = #0effff00
+                    ]
+
+                    scheme_area Area8 {
+                        title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Block for detecting changes in reference signals</p></body></html>
+                    }
+                    [
+                        position = 7916, 8484
+                        size = 256, 372
+                    ]
+
+                    connect PowerChangeDetector.Batt_Pwr_In Batt_Pwr_In as Connection868
+                    connect PowerChangeDetector.Qref_In Qref_In as Connection869
+                    connect PowerChangeDetector.Pref_In Pref_In as Connection867
+                    connect PowerChangeDetector.PV_Pwr_In PV_Pwr_In as Connection870
+                    connect "Logical operator4.out" MasterPulseOut as Connection866
+                    connect PowerChangeDetector.Out5 "Logical operator4.in1" as Connection871
+                    connect "Logical operator4.in" SimStartDetector.Out1 as Connection865
+                }
+                [
+                    position = 7592, 8216
+                    size = 208, 232
+                ]
+
+                component Subsystem ReactiveCurrentCalc {
+                    layout = dynamic
+                    component "core/Product" Product7 {
+                        signs = "*/"
+                    }
+                    [
+                        position = 7780, 8024
+                        hide_name = True
+                    ]
+
+                    component "core/RMS value" "RMS value4" {
+                        filter_en = "True"
+                    }
+                    [
+                        position = 7452, 8032
+                        hide_name = True
+                    ]
+
+                    component "core/Limit" Limit3 {
+                        lower_limit = "[1.0]"
+                    }
+                    [
+                        position = 7596, 8032
+                        hide_name = True
+                    ]
+
+                    component "core/Single phase PLL" "Single phase PLL3" {
+                    }
+                    [
+                        position = 7668, 8480
+                        size = 64, 98
+                    ]
+
+                    component "core/Trigonometric function" "Trigonometric function1" {
+                        trigonometric_fn = "cos"
+                    }
+                    [
+                        position = 7940, 8496
+                        hide_name = True
+                    ]
+
+                    component "core/Product" Product8 {
+                    }
+                    [
+                        position = 8656, 8024
+                        hide_name = True
+                    ]
+
+                    component "core/Product" Product9 {
+                    }
+                    [
+                        position = 8168, 8488
+                        hide_name = True
+                    ]
+
+                    component "core/Constant" Constant3 {
+                        execution_rate = "Ts"
+                        value = "-np.sqrt(2)"
+                    }
+                    [
+                        position = 8076, 8412
+                        hide_name = True
+                    ]
+
+                    component "core/Sample and Hold" "Sample and Hold4" {
+                        execution_rate = "Ts"
+                        init_value = "30.94959"
+                        operator = ">"
+                    }
+                    [
+                        position = 7988, 7952
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    component "core/Signal switch" "Signal switch1" {
+                    }
+                    [
+                        position = 8412, 7968
+                        hide_name = True
+                    ]
+
+                    component "core/Constant" Constant5 {
+                        execution_rate = "ex_rate"
+                    }
+                    [
+                        position = 8080, 7876
+                        hide_name = True
+                    ]
+
+                    component "core/Unit Delay" "Unit Delay7" {
+                    }
+                    [
+                        position = 8164, 7876
+                        hide_name = True
+                    ]
+
+                    component "core/Delay" Delay4 {
+                        del_length = "60000"
+                    }
+                    [
+                        position = 8264, 7876
+                        hide_name = True
+                    ]
+
+                    component "core/Constant" "Initial Iq" {
+                        execution_rate = "Ts"
+                        value = "30.94959"
+                    }
+                    [
+                        position = 8260, 7984
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition1" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 7680, 7880
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition2" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 7568, 7952
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition3" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 8352, 7876
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    port Vout {
+                        label = "Vout"
+                        position = left:3
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7336, 8032
+                    ]
+
+                    port master_pulse {
+                        label = "master_pulse"
+                        position = left:1
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7336, 7880
+                    ]
+
+                    port I_feed_reactive {
+                        label = "I_feed_reactive"
+                        position = right:2
+                        kind = sp
+                        direction =  in
+                        sp_type {
+                            default = inherit
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 9048, 8024
+                    ]
+
+                    port Q_reference {
+                        label = "Q_reference"
+                        position = left:2
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7336, 7952
+                    ]
+
+                    port sin_Vout {
+                        label = "sin_Vout"
+                        position = right:1
+                        kind = sp
+                        direction =  in
+                        sp_type {
+                            default = inherit
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 9048, 8564
+                    ]
+
+                    junction Junction68 sp
+                    [
+                        position = 7384, 8032
+                    ]
+
+                    comment Comment12 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">The block for setting the Signal Switch to output input 2 at<br />the start of the simulation.</span> </p></body></html> ENDCOMMENT 
+                    [
+                        position = 8188, 7776
+                    ]
+
+                    comment Comment15 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI';">At the start of the simulation, </span><span style=" font-family:'Segoe UI'; font-weight:700;">the Signal Switch</span><span style=" font-family:'Segoe UI';"> is configured to pass the </span><span style=" font-family:'Segoe UI'; font-weight:700;">F input (input 2)</span><span style=" font-family:'Segoe UI';">, <br />which represents the initial RMS value of the active or reactive current.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI';">While the Signal Switch components are still passing the F inputs (inputs 2), <br />the </span><span style=" font-family:'Segoe UI'; font-weight:700;">Master Pulse is set to 1</span><span style=" font-family:'Segoe UI';">, allowing the </span><span style=" font-family:'Segoe UI'; font-weight:700;">Sample and Hold components</span><span style=" font-family:'Segoe UI';"> <br />to update and store the calculated active and reactive current values.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI';">After a short delay, Signal Switch components transition to the </span><span style=" font-family:'Segoe UI'; font-weight:700;">T inputs (inputs 1)</span><span style=" font-family:'Segoe UI';">, <br />which correspond to the calculated active or reactive currents.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI';">This approach improves the stability of the overall control logic during simulation startup.</span></p></body></html> ENDCOMMENT 
+                    [
+                        position = 7932, 8056
+                    ]
+
+                    scheme_area Area3 {
+                        title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Reactive Current Calculation</p></body></html>
+                    }
+                    [
+                        position = 8100, 8184
+                        size = 1696, 956
+                    ]
+
+                    connect Junction68 Vout as Connection777
+                    connect Product8.out I_feed_reactive as Connection787
+                    connect sin_Vout "Single phase PLL3.sin(wt)" as Connection788
+                    [
+                        breakpoints = 9016, 8564; 7748, 8564; 7748, 8512
+                    ]
+                    connect "RMS value4.out" Limit3.in as Connection653
+                    connect Limit3.out Product7.in1 as Connection655
+                    connect "RMS value4.in" Junction68 as Connection656
+                    connect "Single phase PLL3.In" Junction68 as Connection658
+                    connect "Trigonometric function1.in" "Single phase PLL3.wt" as Connection659
+                    connect Product9.in1 "Trigonometric function1.out" as Connection674
+                    connect Constant3.out Product9.in as Connection675
+                    connect "Initial Iq.out" "Signal switch1.in1" as Connection741
+                    connect Product9.out Product8.in1 as Connection769
+                    connect "Unit Delay7.in" Constant5.out as Connection775
+                    connect "Unit Delay7.out" Delay4.in as Connection776
+                    connect "Sample and Hold4.In2" "Rate Transition1.out" as Connection789
+                    connect "Rate Transition1.in" master_pulse as Connection790
+                    connect Product7.in "Rate Transition2.out" as Connection791
+                    connect "Rate Transition2.in" Q_reference as Connection792
+                    connect Delay4.out "Rate Transition3.in" as Connection793
+                    connect "Rate Transition3.out" "Signal switch1.in2" as Connection794
+                    connect "Sample and Hold4.Out1" "Signal switch1.in" as Connection795
+                    connect "Sample and Hold4.In1" Product7.out as Connection796
+                    connect "Signal switch1.out" Product8.in as Connection797
+                    [
+                        breakpoints = 8616, 7968
+                    ]
+                }
+                [
+                    position = 8520, 8428
+                    size = 272, 144
+                ]
+
+                component Subsystem ActiveCurrentCalc {
+                    layout = dynamic
+                    component "core/Sum" Sum6 {
+                        signs = "+--"
+                    }
+                    [
+                        position = 7940, 8236
+                        hide_name = True
+                    ]
+
+                    component "core/Product" Product6 {
+                        signs = "*/"
+                    }
+                    [
+                        position = 8088, 8248
+                        hide_name = True
+                    ]
+
+                    component "core/RMS value" "RMS value2" {
+                        filter_en = "True"
+                    }
+                    [
+                        position = 7844, 8408
+                        hide_name = True
+                    ]
+
+                    component "core/Limit" Limit2 {
+                        lower_limit = "[1.0]"
+                    }
+                    [
+                        position = 7940, 8408
+                        hide_name = True
+                    ]
+
+                    component "core/Product" Product10 {
+                        signs = "***"
+                    }
+                    [
+                        position = 8544, 8344
+                        hide_name = True
+                    ]
+
+                    component "core/Sample and Hold" "Sample and Hold3" {
+                        execution_rate = "Ts"
+                        init_value = "53.909"
+                        operator = ">"
+                    }
+                    [
+                        position = 8184, 8248
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    component "core/Constant" Constant4 {
+                        execution_rate = "Ts"
+                        value = "np.sqrt(2)"
+                    }
+                    [
+                        position = 8360, 8344
+                        hide_name = True
+                    ]
+
+                    component "core/Constant" Constant7 {
+                        execution_rate = "ex_rate"
+                    }
+                    [
+                        position = 8228, 8132
+                        hide_name = True
+                    ]
+
+                    component "core/Unit Delay" "Unit Delay8" {
+                    }
+                    [
+                        position = 8284, 8132
+                        hide_name = True
+                    ]
+
+                    component "core/Delay" Delay5 {
+                        del_length = "60000"
+                    }
+                    [
+                        position = 8348, 8132
+                        hide_name = True
+                    ]
+
+                    component "core/Signal switch" "Signal switch2" {
+                    }
+                    [
+                        position = 8400, 8264
+                        hide_name = True
+                    ]
+
+                    component "core/Constant" "Initial Ia" {
+                        execution_rate = "Ts"
+                        value = "53.909"
+                    }
+                    [
+                        position = 8280, 8280
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition1" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 7976, 8128
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition2" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 8012, 8236
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    component "core/Rate Transition" "Rate Transition3" {
+                        execution_rate = "Ts"
+                    }
+                    [
+                        position = 8400, 8172
+                        rotation = right
+                        hide_name = True
+                        size = 32, 32
+                    ]
+
+                    port master_pulse {
+                        label = "master_pulse"
+                        position = left:1
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8128
+                    ]
+
+                    port sin_Vout {
+                        label = "sin_Vout"
+                        position = left:6
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8476
+                    ]
+
+                    port P_reference {
+                        label = "P_reference"
+                        position = left:2
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8200
+                    ]
+
+                    port PVpanel_P_reference {
+                        label = "PVpanel_P_reference"
+                        position = left:3
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8268
+                    ]
+
+                    port Battery_P_reference {
+                        label = "Battery_P_reference"
+                        position = left:4
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8332
+                    ]
+
+                    port I_feed {
+                        label = "I_feed"
+                        position = right:2
+                        kind = sp
+                        direction =  in
+                        sp_type {
+                            default = inherit
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 8648, 8344
+                    ]
+
+                    port Vout {
+                        label = "Vout"
+                        position = left:5
+                        kind = sp
+                        direction =  out
+                        sp_type {
+                            default = auto
+                            readonly = True
+                        }
+                    }
+                    [
+                        position = 7736, 8408
+                    ]
+
+                    comment Comment16 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">The block for setting the Signal Switch to output input 2 at<br />the start of the simulation.</span> </p></body></html> ENDCOMMENT 
+                    [
+                        position = 8120, 8040
+                    ]
+
+                    scheme_area Area6 {
+                        title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Active Current Calculation</p></body></html>
+                    }
+                    [
+                        position = 8192, 8264
+                        size = 800, 540
+                    ]
+
+                    connect Product10.in2 sin_Vout as Connection786
+                    connect "RMS value2.in" Vout as Connection792
+                    connect Product10.out I_feed as Connection791
+                    connect Limit2.out Product6.in1 as Connection685
+                    connect Limit2.in "RMS value2.out" as Connection777
+                    connect Constant4.out Product10.in1 as Connection778
+                    connect Constant7.out "Unit Delay8.in" as Connection779
+                    [
+                        hide_name = True
+                    ]
+                    connect "Unit Delay8.out" Delay5.in as Connection780
+                    [
+                        hide_name = True
+                    ]
+                    connect "Initial Ia.out" "Signal switch2.in1" as Connection781
+                    connect "Sample and Hold3.In2" "Rate Transition1.out" as Connection798
+                    connect "Rate Transition1.in" master_pulse as Connection799
+                    connect Sum6.out "Rate Transition2.in" as Connection800
+                    connect "Rate Transition2.out" Product6.in as Connection801
+                    connect Delay5.out "Rate Transition3.in" as Connection802
+                    connect "Rate Transition3.out" "Signal switch2.in2" as Connection803
+                    connect Sum6.in P_reference as Connection805
+                    connect Sum6.in1 PVpanel_P_reference as Connection806
+                    connect Sum6.in2 Battery_P_reference as Connection807
+                    [
+                        breakpoints = 7900, 8332; 7768, 8332
+                    ]
+                    connect Product6.out "Sample and Hold3.In1" as Connection808
+                    connect "Sample and Hold3.Out1" "Signal switch2.in" as Connection809
+                    connect "Signal switch2.out" Product10.in as Connection810
+                    [
+                        breakpoints = 8432, 8264
+                    ]
+                }
+                [
+                    position = 8504, 8192
+                    size = 240, 176
+                ]
+
+                port Vout {
+                    label = "Vout"
+                    position = left:5
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7168, 8608
+                ]
+
+                port Q_reference {
+                    label = "Q_reference"
+                    position = left:2
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7172, 8184
+                ]
+
+                port Battery_P_reference {
+                    label = "Battery_P_reference"
+                    position = left:4
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7172, 8312
+                ]
+
+                port P_reference {
+                    label = "P_reference"
+                    position = left:1
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7172, 8120
+                ]
+
+                port PVpanel_P_reference {
+                    label = "PVpanel_P_reference"
+                    position = left:3
+                    kind = sp
+                    direction =  out
+                    sp_type {
+                        default = auto
+                        readonly = True
+                    }
+                }
+                [
+                    position = 7172, 8248
+                ]
+
+                port current_total {
+                    label = "current_total"
+                    position = auto:auto
+                    kind = sp
+                    direction =  in
+                    sp_type {
+                        default = inherit
+                        readonly = True
+                    }
+                }
+                [
+                    position = 8932, 8316
+                ]
+
+                tag master_pulse {
+                    value = "master_pulse"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7832, 8216
+                    size = 108, 20
+                ]
+
+                tag Goto5 {
+                    value = "P_reference"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7336, 8088
+                    rotation = down
+                    hide_name = True
+                    scale = -1, 1
+                    size = 108, 20
+                ]
+
+                tag From6 {
+                    value = "P_reference"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8216, 8156
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag Goto10 {
+                    value = "Q_reference"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7336, 8160
+                    rotation = down
+                    hide_name = True
+                    scale = -1, 1
+                    size = 108, 20
+                ]
+
+                tag From12 {
+                    value = "Q_reference"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8240, 8428
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag From14 {
+                    value = "master_pulse"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8216, 8132
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag From15 {
+                    value = "master_pulse"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8240, 8380
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag Goto13 {
+                    value = "Battery_P_reference"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7344, 8352
+                    rotation = down
+                    hide_name = True
+                    scale = -1, 1
+                    size = 116, 20
+                ]
+
+                tag From17 {
+                    value = "Battery_P_reference"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8216, 8204
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag From18 {
+                    value = "PVpanel_P_reference"
+                    scope = local
+                    kind = sp
+                    direction = out
+                }
+                [
+                    position = 8216, 8180
+                    hide_name = True
+                    size = 148, 20
+                ]
+
+                tag Goto14 {
+                    value = "PVpanel_P_reference"
+                    scope = local
+                    kind = sp
+                    direction = in
+                }
+                [
+                    position = 7344, 8276
+                    rotation = down
+                    hide_name = True
+                    scale = -1, 1
+                    size = 116, 20
+                ]
+
+                junction Junction104 sp
+                [
+                    position = 7248, 8248
+                ]
+
+                junction Junction105 sp
+                [
+                    position = 7248, 8184
+                ]
+
+                junction Junction106 sp
+                [
+                    position = 7248, 8120
+                ]
+
+                junction Junction107 sp
+                [
+                    position = 7248, 8312
+                ]
+
+                junction Junction109 sp
+                [
+                    position = 8336, 8476
+                ]
+
+                comment Comment1 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Active and reactive power are introduced as SCADA inputs.</p></body></html> ENDCOMMENT 
+                [
+                    position = 7520, 8008
+                ]
+
+                comment Comment7 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:14pt;">The Sample and Hold component takes the calculated values for <br />active and reactive currents and hold them until the trigger becomes 1.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:14pt;">The trigger becomes 1 only when one of the following conditions is met:</span></p><ul style="margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;"><li style=" font-family:'Segoe UI'; font-size:14pt;" style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The simulation has just started</li><li style=" font-family:'Segoe UI'; font-size:14pt;" style=" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The value of Pref, Qref, Battery_Power or PVpanel_power has changed</li></ul><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:14pt;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:14pt;">When the trigger becomes 1, <br />the newest calculated values for both active and reactive currents<br />pass through the block and are summarized. The updated total value is then written to the<br />Signal Controlled Current Source component  </span></p></body></html> ENDCOMMENT 
+                [
+                    position = 8128, 8544
+                ]
+
+                comment Comment10 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">The master pulse is used as a trigger for writing the calculated values of </span><span style=" font-family:'Arial'; font-weight:700;">active</span><span style=" font-family:'Arial';"> and</span><span style=" font-family:'Arial'; font-weight:700;"> reactive current</span><span style=" font-family:'Arial';">.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">When the master pulse is </span><span style=" font-family:'Arial'; font-weight:700;">0</span><span style=" font-family:'Arial';">, the calculations are still being performed, <br />but the new values for </span><span style=" font-family:'Arial'; font-weight:700;">I_active</span><span style=" font-family:'Arial';"> and </span><span style=" font-family:'Arial'; font-weight:700;">I_reactive</span><span style=" font-family:'Arial';"> are </span><span style=" font-family:'Arial'; font-weight:700;">not</span><span style=" font-family:'Arial';"> written to the Signal Cointrolled Current source.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial';">When the master pulse becomes </span><span style=" font-family:'Arial'; font-weight:700;">1</span><span style=" font-family:'Arial';">, during that simulation step, <br />the newest calculated values for both currents are summarized and passed to the <br />Signal Controlled Current Source component, updating its value.</span> </p></body></html> ENDCOMMENT 
+                [
+                    position = 7240, 8404
+                ]
+
+                comment Comment11 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">This is the total calculated current. We are calculating it by summarizing the active and reactive currents.</p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Unlike variable passive components, the Signal Controlled Current Source</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">expects a sinusoidal input signal at all times. Providing a constant value causes </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">the current to lose its sinusoidal shape.</p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">As a result, the logic that updates the load value only at the start of the simulation </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">and when the P and Q reference values change is not currently used.</p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The plan is to reintroduce this logic in the future by using a PLL to decompose the </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">current signal and then reconstruct it. </p></body></html> ENDCOMMENT 
+                [
+                    position = 8120, 7840
+                ]
+
+                comment Comment14 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The power from the PV panel and the battery <br />is provided to the model via SCADA inputs.</p></body></html> ENDCOMMENT 
+                [
+                    position = 7608, 8044
+                ]
+
+                scheme_area Area5 {
+                    title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Total Current Calculation</p></body></html>
+                }
+                [
+                    position = 8864, 8308
+                    size = 324, 464
+                ]
+
+                scheme_area Area8 {
+                    title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Detecting changes in reference signals / Gen Master Pulse</p></body></html>
+                }
+                [
+                    position = 7600, 8260
+                    size = 736, 588
+                ]
+
+                scheme_area Area9 {
+                    title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Current Calculations</p></body></html>
+                }
+                [
+                    position = 8576, 8336
+                    size = 940, 1076
+                    background_color = #0ec0a301
+                ]
+
+                connect Junction105 Q_reference as Connection977
+                connect Junction107 Battery_P_reference as Connection978
+                connect Junction109 Vout as Connection976
+                [
+                    breakpoints = 8064, 8476; 8064, 8608; 7200, 8608
+                ]
+                connect Junction106 P_reference as Connection979
+                connect Junction104 PVpanel_P_reference as Connection980
+                connect ReactiveCurrentCalc.Q_reference From12 as Connection879
+                connect ReactiveCurrentCalc.master_pulse From15 as Connection880
+                connect From14 ActiveCurrentCalc.master_pulse as Connection881
+                connect From18 ActiveCurrentCalc.PVpanel_P_reference as Connection885
+                connect From6 ActiveCurrentCalc.P_reference as Connection883
+                connect From17 ActiveCurrentCalc.Battery_P_reference as Connection886
+                connect ReactiveCurrentCalc.sin_Vout ActiveCurrentCalc.sin_Vout as Connection898
+                [
+                    breakpoints = 8672, 8324; 8368, 8324
+                ]
+                connect Junction104 DetectNGenerate.PV_Pwr_In as Connection946
+                [
+                    breakpoints = 7480, 8248
+                ]
+                connect Goto14 Junction104 as Connection947
+                connect Junction105 DetectNGenerate.Qref_In as Connection952
+                connect Goto10 Junction105 as Connection953
+                connect DetectNGenerate.Pref_In Junction106 as Connection958
+                [
+                    breakpoints = 7472, 8120
+                ]
+                connect Goto5 Junction106 as Connection960
+                connect Junction107 DetectNGenerate.Batt_Pwr_In as Connection963
+                connect Goto13 Junction107 as Connection964
+                connect ReactiveCurrentCalc.Vout Junction109 as Connection973
+                connect ActiveCurrentCalc.Vout Junction109 as Connection975
+                [
+                    breakpoints = 8336, 8228; 8336, 8476
+                ]
+                connect ActiveCurrentCalc.I_feed Sum7.in as Connection984
+                [
+                    breakpoints = 8712, 8260
+                ]
+                connect Sum7.in1 ReactiveCurrentCalc.I_feed_reactive as Connection986
+                [
+                    breakpoints = 8712, 8324
+                ]
+                connect current_total Sum7.out as Connection987
+                connect DetectNGenerate.MasterPulseOut master_pulse as Connection988
+            }
+            [
+                position = 8092, 7248
+                size = 248, 424
+            ]
+
+            component "core/Signal switch" "Signal switch7" {
+            }
+            [
+                position = 7916, 7056
+                hide_name = True
+            ]
+
+            component "core/Signal switch" "Signal switch8" {
+            }
+            [
+                position = 7812, 7152
+                hide_name = True
+            ]
+
+            component "core/Signal switch" "Signal switch9" {
+            }
+            [
+                position = 7720, 7248
+                hide_name = True
+            ]
+
+            component "core/Signal switch" "Signal switch10" {
+            }
+            [
+                position = 7588, 7344
+                hide_name = True
+            ]
+
+            component "core/Gain" Gain1 {
+                gain = "1000"
+            }
+            [
+                position = 7452, 7040
+                hide_name = True
+            ]
+
+            component "core/Gain" Gain2 {
+                gain = "1000"
+            }
+            [
+                position = 7452, 7136
+                hide_name = True
+            ]
+
+            component "core/Gain" Gain3 {
+                gain = "1000"
+            }
+            [
+                position = 7452, 7232
+                hide_name = True
+            ]
+
+            component "core/Gain" Gain4 {
+                gain = "1000"
+            }
+            [
+                position = 7452, 7328
+                hide_name = True
+            ]
+
+            port P1 {
+                position = right:1
+                kind = pe
+            }
+            [
+                position = 8056, 7604
+            ]
+
+            port P2 {
+                position = right:auto
+                kind = pe
+            }
+            [
+                position = 8476, 7600
+                scale = -1, 1
+            ]
+
+            port In1 {
+                label = "P modbus"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7276, 7040
+            ]
+
+            port In2 {
+                label = "Q modbus"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7276, 7136
+            ]
+
+            port In3 {
+                label = "P pv modbus"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7276, 7232
+            ]
+
+            port In4 {
+                label = "P battery modbus"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7276, 7328
+            ]
+
+            port In5 {
+                label = "control mode"
+                position = top:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7276, 6944
+            ]
+
+            port In6 {
+                label = "P SCADA"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7220, 7072
+            ]
+
+            port In7 {
+                label = "Q SCADA"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7220, 7168
+            ]
+
+            port In8 {
+                label = "P pv SCADA"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7220, 7264
+            ]
+
+            port In9 {
+                label = "P battery SCADA"
+                position = left:auto
+                kind = sp
+                direction =  out
+                sp_type {
+                    default = auto
+                    readonly = True
+                }
+            }
+            [
+                position = 7220, 7360
+            ]
+
+            tag Goto1 {
+                value = "Vout_PhA"
+                scope = local
+                kind = sp
+                direction = in
+            }
+            [
+                position = 8424, 7788
+                rotation = down
+                hide_name = True
+                scale = -1, 1
+                size = 60, 20
+            ]
+
+            tag Vout6 {
+                value = "Vout_PhA"
+                scope = local
+                kind = sp
+                direction = out
+            }
+            [
+                position = 7880, 7440
+                hide_name = True
+                size = 100, 20
+            ]
+
+            junction Junction52 pe
+            [
+                position = 8208, 7604
+            ]
+
+            junction Junction103 sp
+            [
+                position = 7812, 6944
+            ]
+
+            junction Junction104 sp
+            [
+                position = 7720, 6944
+            ]
+
+            junction Junction105 sp
+            [
+                position = 7588, 6944
+            ]
+
+            junction Junction106 pe
+            [
+                position = 8388, 7600
+            ]
+
+            junction Junction107 sp
+            [
+                position = 8320, 7788
+            ]
+
+            comment Comment6 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">P, Q, S are measured and are able</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">to be displayed in the SCADA panel.</p></body></html> ENDCOMMENT 
+            [
+                position = 7868, 7644
+            ]
+
+            connect "Single Phase Power Meter PhA.Q" Q_measured.in as Connection317
+            connect "Single Phase Power Meter PhA.S" S_measured.in as Connection318
+            connect "Single Phase Power Meter PhA.P" P_measured.in as Connection319
+            connect Junction52 Ia_PhA.n_node as Connection528
+            [
+                breakpoints = 8208, 7580
+            ]
+            connect Isp_PhA.n_node Junction52 as Connection529
+            connect Junction52 Va_PhA.p_node as Connection855
+            [
+                breakpoints = 8208, 7636
+            ]
+            connect Ia_PhA.out "Single Phase Power Meter PhA.Ia" as Connection924
+            connect Vout6 "GenerateCurrentControl PhA.Vout" as Connection1081
+            connect "Signal switch7.out" "GenerateCurrentControl PhA.P_reference" as Connection1082
+            connect "Signal switch8.out" "GenerateCurrentControl PhA.Q_reference" as Connection1083
+            connect "Signal switch9.out" "GenerateCurrentControl PhA.PVpanel_P_reference" as Connection1086
+            connect "Signal switch10.out" "GenerateCurrentControl PhA.Battery_P_reference" as Connection1095
+            connect "Signal switch7.in" Gain1.out as Connection1143
+            connect Gain2.out "Signal switch8.in" as Connection1146
+            connect Gain3.out "Signal switch9.in" as Connection1148
+            connect Gain4.out "Signal switch10.in" as Connection1150
+            connect Isp_PhA.in "GenerateCurrentControl PhA.current_total" as Connection1175
+            [
+                breakpoints = 8320, 7540
+            ]
+            connect In1 Gain1.in as Connection1176
+            connect In2 Gain2.in as Connection1177
+            connect In3 Gain3.in as Connection1178
+            connect In4 Gain4.in as Connection1179
+            connect Junction103 "Signal switch7.in2" as Connection1181
+            connect "Signal switch8.in2" Junction103 as Connection1182
+            connect Junction104 Junction103 as Connection1184
+            connect "Signal switch9.in2" Junction104 as Connection1185
+            connect "Signal switch10.in2" Junction105 as Connection1190
+            connect Junction105 Junction104 as Connection1191
+            [
+                breakpoints = 7588, 6944
+            ]
+            connect In5 Junction105 as Connection1192
+            connect P1 Ia_PhA.p_node as Connection1194
+            connect Va_PhA.n_node Junction106 as Connection1195
+            connect Junction106 Isp_PhA.p_node as Connection1196
+            [
+                breakpoints = 8388, 7604; 8388, 7564
+            ]
+            connect P2 Junction106 as Connection1197
+            connect In6 "Signal switch7.in1" as Connection1198
+            connect In7 "Signal switch8.in1" as Connection1199
+            connect In8 "Signal switch9.in1" as Connection1200
+            connect In9 "Signal switch10.in1" as Connection1201
+            connect Va_PhA.out Junction107 as Connection1203
+            connect Junction107 Goto1 as Connection1204
+            [
+                breakpoints = 8320, 7788
+            ]
+            connect "Single Phase Power Meter PhA.Va" Junction107 as Connection1205
+        }
+        [
+            position = 4672, 4000
+            size = 184, 304
+        ]
+
+        comment Comment1 START Consider using the Category component to better organize your library items in the tree. ENDCOMMENT 
+        [
+            position = 4192, 4192
+        ]
+    }
+
+    default {
+        "core/Constant" {
+            value = "1"
+            signal_type = "real"
+            execution_rate = "100e-6"
+            _tunable = "False"
+        }
+
+        "core/Delay" {
+            delay_type = "Fixed delay"
+            del_length = "2"
+            max_delay_length = "20"
+            init_value = "0"
+            signal_out_type = "inherit"
+            tml_file = "gen_delay"
+            execution_rate = "inherit"
+        }
+
+        "core/Gain" {
+            gain = "1"
+            multiplication = "Element-wise(K.*u)"
+            force_tml = "True"
+            _tunable = "False"
+            execution_rate = "inherit"
+        }
+
+        "core/Limit" {
+            upper_limit = "[\'inf\']"
+            lower_limit = "[\'-inf\']"
+            execution_rate = "inherit"
+        }
+
+        "core/Logical operator" {
+            operator = "AND"
+            inputs = "2"
+            execution_rate = "inherit"
+        }
+
+        "core/Probe" {
+            signal_access = "inherit"
+            addr = "0"
+            override_signal_name = "False"
+            signal_name = ""
+            signal_type = "generic"
+            streaming_en = "False"
+            streaming_er_idx = "0"
+            execution_rate = "inherit"
+        }
+
+        "core/Product" {
+            signs = "2"
+            execution_rate = "inherit"
+        }
+
+        "core/RMS value" {
+            op_mode = "PLL based"
+            frequency = "50"
+            period_timeout = "0.5"
+            period_deadband = "0"
+            filter_en = "False"
+            lpf_cutoff = "500"
+            frequency_src = "Internal"
+            execution_rate = "inherit"
+        }
+
+        "core/Relational operator" {
+            relational_op = "=="
+            execution_rate = "inherit"
+        }
+
+        "core/Signal switch" {
+            criterion = "ctrl > threshold"
+            threshold = "0.5"
+            execution_rate = "inherit"
+        }
+
+        "core/Sum" {
+            signs = "2"
+            execution_rate = "inherit"
+        }
+
+        "core/Trigonometric function" {
+            trigonometric_fn = "sin"
+            angle = "Radians"
+            execution_rate = "inherit"
+        }
+
+        "core/Unit Delay" {
+            init_value = "0"
+            signal_out_type = "inherit"
+            execution_rate = "inherit"
+        }
+
+        "core/Current Measurement" {
+            signal_access = "inherit"
+            bw_limit = "False"
+            frequency = "10e3"
+            comparator_enable = "False"
+            operator = "greater"
+            threshold = "0"
+            cmp_abs_value = "False"
+            feed_forward = "false"
+            sig_output = "False"
+            sig_output_filt_and_full_bw = "False"
+            execution_rate = "100e-6"
+            addr = "0"
+            nd_msr_estimation = "false"
+            dev_cpl_msr = "false"
+            host_device = "0"
+            output_to_device = "0"
+            dev_cpl_index = "0"
+            dev_cpl_var_nb = "0"
+            visible = "True"
+            override_signal_name = "False"
+            signal_name = ""
+        }
+
+        "core/Edge Detection" {
+            edge = "both"
+            execution_rate = "inherit"
+        }
+
+        "core/Rate Transition" {
+            init_value = "0.0"
+            execution_rate = "100e-6"
+            _supported_platforms = "[\'generic\']"
+        }
+
+        "core/Sample and Hold" {
+            trigger_type = "Both"
+            operator = "≠"
+            threshold = "0"
+            init_value = "0"
+            execution_rate = "100e-6"
+        }
+
+        "core/Signal Controlled Current Source" {
+            execution_rate = "inherit"
+        }
+
+        "core/Single Phase Power Meter" {
+            op_mode = "Fixed frequency"
+            frequency = "50.0"
+            period_timeout = "0.5"
+            zero_crossing_calc_filter = "500.0"
+            execution_rate = "inherit"
+        }
+
+        "core/Single phase PLL" {
+            scheduling_mode = "Enable"
+            offset_Hz = "55"
+            delta_Hz_max = "10"
+            vd_init = "200"
+            angle_init = "0"
+            k_SOGI = "0.4"
+            kp_PLL_LOW = "4.81e3"
+            kp_PLL_HIGH = "527"
+            ki_PLL_LOW = "1.84e4"
+            ki_PLL_HIGH = "2.22e3"
+            kd_PLL_LOW = "-5.19"
+            kd_PLL_HIGH = "-0.519"
+            Tf_kd_PLL = "0.00108"
+            fc_LPF_vd = "20"
+            fc_LPF_wPLL = "100"
+            fc_LPF_fPLL = "10"
+            execution_rate = "inherit"
+        }
+
+        "core/Voltage Measurement" {
+            signal_access = "inherit"
+            bw_limit = "False"
+            frequency = "10e3"
+            comparator_enable = "False"
+            operator = "greater"
+            threshold = "0"
+            cmp_abs_value = "False"
+            feed_forward = "false"
+            sig_output = "False"
+            sig_output_filt_and_full_bw = "False"
+            execution_rate = "100e-6"
+            addr = "0"
+            nd_msr_estimation = "false"
+            dev_cpl_msr = "false"
+            host_device = "0"
+            output_to_device = "0"
+            dev_cpl_index = "0"
+            dev_cpl_var_nb = "0"
+            visible = "True"
+            override_signal_name = "False"
+            signal_name = ""
+        }
+    }
+}
