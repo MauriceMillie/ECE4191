@@ -1,6 +1,6 @@
 83r79fswABXlv+C6ex3pS7o5g3eUuEDQGZBeqpTrt8GkL0OL71b0OWntGlWW2DMErOA137oVwPPiT1jD6+mhfQ==
 {
-  "compilation_timestamp": "2026-09-23 16:56:22",
+  "compilation_timestamp": "2026-09-30 16:15:39",
   "sw_version": "2026.1 SP1",
   "devices": [
     {
@@ -688,5 +688,5 @@
   ]
 }
 -----BEGIN SIGNATURE-----
-CQpqL9ogBY0iTRcNuJB2lHVROyBNpxT0mZ9WvYMz5otzTO472T9GDmRiWEQmJhSNQlgjEigIexrCvaurcCaXFlp8CsdUNkJUdO4X+5nkEh6nAm7lTED2NnJbiuXBv/G7W/yl1DHOA1Uk6KlB2S9Y9Jy9UEWc1gUT0xt/dRxbQ8gtK7GVmJwFNAn1urfyrZpRMNprXbU4hyKpefhJWx8sGssZO8oO+msnfvEVJAKX22vWfEHmjfOmV5QFVo7YXPODzg00IKQMIxPuSszWeh2ATn3b4NT2seYiPeALzLKmYYBKrdvvdGN2fVmrjyMGoB+vp1Cfx905LPlL4lALEP07rw==
+jHwjyDu4LL/iVyUQsXboybXpeRoCVXN9ZWB4djtg60m16QkOK6tu9e6zhT+RZi99t+t7X1ImiHphKOytoRNLaAOu+SPQOXzc9kUDzWsucHwNK+DyNo3Ws+dmGnxjSVel3hRQ0ooiK+Ve1xaJ6hpiCAJYVyIbHoCksLYxODTw3p51FHHR+Ez3/wKV4mZwEc5RcrDGPZUblQ81FuzrIn4kEzqra9Q31tSZjTspE18EN6pgosOJSgOhS8Tglk0+c1Z6dhVaCsVSCEAW0eLYo9eDnpGFyhLZ4NhFeep+tDQLVYGOv4s/iBgGkiUt3cfSpHJYTcNMYk9CcjTckorr/EMkIw==
 -----END SIGNATURE-----

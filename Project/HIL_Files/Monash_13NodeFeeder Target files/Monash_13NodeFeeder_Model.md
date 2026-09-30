@@ -1,4 +1,4 @@
-Model Monash_13NodeFeeder
+Model monash_13nodefeeder
 
 
 REM *****************************************:
