@@ -178,6 +178,7 @@ DEFAULT_EMULATOR_PORT = "/dev/serial/by-id/usb-FTDI_TTL232R_FTEAE3LA-if00-port0"
 EMULATOR_BAUD = 9600
 EMULATOR_SOC_MAX_RAW = 65500
 EMULATOR_READ_WAIT_S = 1.2   # emulator broadcasts approximately once per second
+EMULATOR_COMMAND_DEADBAND_KW = 0.5
 
 
 # ============================================================
@@ -557,6 +558,43 @@ class BatteryEmulatorReader:
                  else max(0.0, time.monotonic() - self.latest_rx_monotonic))
         return raw, pct, age_s, fresh
 
+    def power_to_command(self, p_bat_kw: float, p_max_kw: float) -> str:
+        """Map the MPC battery command to the emulator's Cxxx/Dxxx protocol.
+
+        Existing ECE4191 sign convention:
+          +Pbat = discharge to grid  -> Dxxx
+          -Pbat = charge from grid   -> Cxxx
+
+        The magnitude is linearly mapped so |Pbat| = p_max_kw -> 255.
+        """
+        if p_max_kw <= 0:
+            raise ValueError("p_max_kw must be > 0")
+
+        p = float(p_bat_kw)
+        if abs(p) <= EMULATOR_COMMAND_DEADBAND_KW:
+            return "D000"
+
+        code = int(round(255.0 * min(abs(p), p_max_kw) / p_max_kw))
+        code = max(0, min(255, code))
+        prefix = "D" if p > 0 else "C"
+        return f"{prefix}{code:03d}"
+
+    def send_power_command(self, p_bat_kw: float, p_max_kw: float) -> str:
+        """Send one four-character ASCII Cxxx/Dxxx command and return it."""
+        command = self.power_to_command(p_bat_kw, p_max_kw)
+        self.ser.write(command.encode("ascii"))
+        self.ser.flush()
+        return command
+
+    def stop(self) -> None:
+        """Command zero battery power. Safe to call during cleanup."""
+        try:
+            if self.ser is not None and self.ser.is_open:
+                self.ser.write(b"D000")
+                self.ser.flush()
+        except Exception:
+            pass
+
     def close(self) -> None:
         try:
             if self.ser is not None and self.ser.is_open:
@@ -571,18 +609,19 @@ class BatteryEmulatorReader:
 
 _HDR = (f"{'Step':>5} {'Day':>3} {'k':>3} {'Load646':>8} {'PV646':>7} "
         f"{'Batt646':>8} {'Action':>10} {'Grid646':>9} "
-        f"{'SoC%pred':>9} {'SoC%HIL':>9} {'EMUraw':>7} {'EMU%':>7} {'Fresh':>5}")
+        f"{'SoC%pred':>9} {'SoC%HIL':>9} {'EMUcmd':>6} {'EMUraw':>7} {'EMU%':>7} {'Fresh':>5}")
 
 
 def print_step(step, day, k, load, pv, batt, grid, soc_pred, soc_meas,
-               emu_raw=None, emu_pct=None, emu_fresh=False):
+               emu_cmd=None, emu_raw=None, emu_pct=None, emu_fresh=False):
     meas = f"{soc_meas:9.2f}" if soc_meas is not None else f"{'-':>9}"
+    emu_cmd_s = f"{emu_cmd:>6}" if emu_cmd is not None else f"{'-':>6}"
     emu_raw_s = f"{emu_raw:7d}" if emu_raw is not None else f"{'-':>7}"
     emu_pct_s = f"{emu_pct:7.2f}" if emu_pct is not None else f"{'-':>7}"
     fresh_s = "yes" if emu_fresh else "no"
     print(f"{step:5d} {day:3d} {k:3d} {load:8.1f} {pv:7.1f} "
           f"{batt:8.2f} {_action(batt):>10} {grid:9.2f} "
-          f"{soc_pred:9.2f} {meas} {emu_raw_s} {emu_pct_s} {fresh_s:>5}")
+          f"{soc_pred:9.2f} {meas} {emu_cmd_s} {emu_raw_s} {emu_pct_s} {fresh_s:>5}")
 
 
 # ============================================================
@@ -625,6 +664,9 @@ def main():
                              f"(default {EMULATOR_READ_WAIT_S}).")
     parser.add_argument("--no-emulator", action="store_true",
                         help="Disable physical battery-emulator serial reading.")
+    parser.add_argument("--command-emulator", action="store_true",
+                        help="Also send the Node-646 MPC battery command to the physical emulator "
+                             "as Cxxx/Dxxx. Without this flag the emulator remains read/log only.")
     parser.add_argument("--measurement-delay", type=float, default=0.2,
                         help="Seconds to wait after a write before reading the CIL SoC feedback.")
     parser.add_argument("--progress-every", type=int, default=1)
@@ -706,7 +748,8 @@ def main():
     if args.no_emulator or args.dry_run:
         print("  Physical emulator : DISABLED")
     else:
-        print(f"  Physical emulator : {args.emu_port} (raw SoC 00000..65500, diagnostic only)")
+        mode = "READ + COMMAND" if args.command_emulator else "READ/LOG only"
+        print(f"  Physical emulator : {args.emu_port} (raw SoC 00000..65500, {mode})")
     if args.dry_run:
         print("  *** DRY-RUN MODE -- no Modbus writes will occur ***")
     print("=" * 78)
@@ -720,7 +763,11 @@ def main():
         print("  5. Voltage/active-power Signal Analyzer export ready (see Appendix B).")
         if not args.no_emulator:
             print("  6. Physical battery emulator USB/serial link connected.")
-            print("     Emulator SoC is being READ/LOGGED only; it does not yet drive the MPC.")
+            if args.command_emulator:
+                print("     Emulator receives the same Node-646 MPC power command as Cxxx/Dxxx.")
+                print("     Emulator SoC is still diagnostic only; HIL SoC remains MPC feedback.")
+            else:
+                print("     Emulator SoC is being READ/LOGGED only; no Cxxx/Dxxx commands are sent.")
         input("\nPress Enter to start playback ...\n")
 
     # ── Initial clear ─────────────────────────────────────────────────────────
@@ -795,6 +842,19 @@ def main():
             pbat_nodes = {node: 0.0 for node in NODE_MAP}
             pbat_nodes[CIL_NODE] = p_bat_646
 
+            # Physical emulator command for I/O verification. The same Node-646 MPC
+            # command is mapped from +/-Pmax kW to C000..C255 / D000..D255.
+            # Positive Pbat = discharge -> Dxxx; negative Pbat = charge -> Cxxx.
+            # This does NOT yet replace the HIL SoC feedback used by the MPC.
+            emu_cmd = None
+            if emu is not None and args.command_emulator:
+                try:
+                    emu_cmd = emu.send_power_command(
+                        p_bat_646, args.node646_batt_power
+                    )
+                except (serial.SerialException, OSError) as e:
+                    print(f"  WARNING: emulator command failed at step {step}: {e}")
+
             payload = build_feeder_payload(node_data, i, pbat_nodes)
             modbus_write_feeder(conn, payload, args.dry_run, args.verbose)
 
@@ -840,6 +900,7 @@ def main():
                 "grid_646_forecast_kw": round(grid_forecast_kw, 4),
                 "soc_predicted_pct": round(soc_pred_pct, 4),
                 "soc_measured_pct": "" if measured_soc_pct is None else round(float(measured_soc_pct), 4),
+                "emulator_command": "" if emu_cmd is None else emu_cmd,
                 "emulator_soc_raw": "" if emu_raw is None else int(emu_raw),
                 "emulator_soc_pct": "" if emu_pct is None else round(float(emu_pct), 4),
                 "emulator_sample_age_s": "" if emu_age_s is None else round(float(emu_age_s), 4),
@@ -853,7 +914,7 @@ def main():
                                 (step in (1, total_steps) or step % args.progress_every == 0)):
                 print_step(step, day_num, k, load_act_i, pv_act_i, p_bat_646,
                            grid_646_actual_kw, soc_pred_pct, measured_soc_pct,
-                           emu_raw, emu_pct, emu_fresh)
+                           emu_cmd, emu_raw, emu_pct, emu_fresh)
 
             if not args.no_wait and not args.dry_run:
                 time.sleep(max(0.0, args.step_seconds - (time.time() - t0)))
@@ -869,6 +930,8 @@ def main():
             print("\nClearing all registers ...")
             clear_all_registers(conn, args.dry_run)
         if emu is not None:
+            if args.command_emulator:
+                emu.stop()
             emu.close()
         if conn is not None:
             conn.close()
