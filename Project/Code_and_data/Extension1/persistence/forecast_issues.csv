@@ -1,0 +1,5 @@
+TargetDate,IssuedAt,HistoryStartDate,HistoryEndDate,HistoryDaysUsed,Method
+2013-01-08,2013-01-08T00:00:00,2013-01-07,2013-01-07,1,persistence
+2013-01-09,2013-01-09T00:00:00,2013-01-08,2013-01-08,1,persistence
+2013-01-10,2013-01-10T00:00:00,2013-01-09,2013-01-09,1,persistence
+2013-01-11,2013-01-11T00:00:00,2013-01-10,2013-01-10,1,persistence

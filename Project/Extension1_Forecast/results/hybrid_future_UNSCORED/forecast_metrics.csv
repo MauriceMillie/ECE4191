@@ -1,0 +1,9 @@
+﻿date,profile,method,n,mae_kw,rmse_kw,bias_kw,wape_percent
+2013-07-01,GC_Load_kW,selected,0,,,,
+2013-07-01,GC_Load_kW,persistence,0,,,,
+2013-07-01,PV_Generation_kW,selected,0,,,,
+2013-07-01,PV_Generation_kW,persistence,0,,,,
+ALL,GC_Load_kW,selected,0,,,,
+ALL,GC_Load_kW,persistence,0,,,,
+ALL,PV_Generation_kW,selected,0,,,,
+ALL,PV_Generation_kW,persistence,0,,,,

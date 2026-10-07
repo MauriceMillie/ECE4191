@@ -1,0 +1,25 @@
+test_infeasible_is_rejected (test_modules.ControlTests.test_infeasible_is_rejected) ... ok
+test_invalid_shapes (test_modules.ControlTests.test_invalid_shapes) ... ok
+test_mpc_midnight_target (test_modules.ControlTests.test_mpc_midnight_target) ... ok
+test_sign_balance_terminal (test_modules.ControlTests.test_sign_balance_terminal) ... ok
+test_bundle_windows_energy_and_export (test_modules.ForecastTests.test_bundle_windows_energy_and_export) ... ok
+test_calendar_year (test_modules.ForecastTests.test_calendar_year) ... ok
+test_cohort_not_selected_on_test (test_modules.ForecastTests.test_cohort_not_selected_on_test) ... ok
+test_duplicate_file_rejected (test_modules.ForecastTests.test_duplicate_file_rejected) ... ok
+test_fallback_explicit (test_modules.ForecastTests.test_fallback_explicit) ... ok
+test_hybrid_weights (test_modules.ForecastTests.test_hybrid_weights) ... ok
+test_metrics_zero_pv (test_modules.ForecastTests.test_metrics_zero_pv) ... ok
+test_missing_history_excluded_once (test_modules.ForecastTests.test_missing_history_excluded_once) ... ok
+test_missing_year_is_error (test_modules.ForecastTests.test_missing_year_is_error) ... ok
+test_new_issue_may_use_yesterday (test_modules.ForecastTests.test_new_issue_may_use_yesterday) ... ok
+test_no_future_leakage (test_modules.ForecastTests.test_no_future_leakage) ... ok
+test_quality_exclusion_is_explicit (test_modules.ForecastTests.test_quality_exclusion_is_explicit) ... ok
+test_raw_intro_quality_and_conversion (test_modules.ForecastTests.test_raw_intro_quality_and_conversion) ... ok
+test_slots_midnight_last (test_modules.ForecastTests.test_slots_midnight_last) ... ok
+test_unseen_actual_cannot_export (test_modules.ForecastTests.test_unseen_actual_cannot_export) ... ok
+test_explicit_alignment_units (test_modules.MeasurementTests.test_explicit_alignment_units) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.043s
+
+OK

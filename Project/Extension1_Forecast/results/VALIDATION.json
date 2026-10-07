@@ -1,0 +1,14 @@
+{
+  "tests_passed": 20,
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "numpy": "2.3.5",
+  "scipy": "1.17.0",
+  "validation": "Local automated tests plus 5-day aggregate forecasts and paired NEW-scenario OFFLINE controller runs only.",
+  "hardware_tested": false,
+  "github_modified": false,
+  "notes": [
+    "January prior-year term missing and explicitly disabled in sample run.",
+    "July hybrid example is unscored, not a replacement for January HIL comparison.",
+    "Two quality-flagged rows exist in January selected-cohort actuals."
+  ]
+}
