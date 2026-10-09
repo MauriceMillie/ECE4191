@@ -10133,8 +10133,11 @@ displayValue = data
                     <use_reference_curve>True</use_reference_curve>
                     <reference_curve_code><![CDATA[# reference curve data points 
 # 2401 +- 5%
-upperBound = 2522.0
-lowerBound = 2282.0
+# upperBound = 2522.0
+# lowerBound = 2282.0
+upperBound = 2401*1.05
+lowerBound = 2401*0.95
+
 # Define the first curve (Pref)
 refCurve1 = {
     "data": upperBound,
@@ -10311,8 +10314,11 @@ displayValue = data
                     <use_reference_curve>True</use_reference_curve>
                     <reference_curve_code><![CDATA[# reference curve data points 
 # 2401 +- 5%
-upperBound = 2522.0
-lowerBound = 2282.0
+# upperBound = 2522.0
+# lowerBound = 2282.0
+upperBound = 2401*1.05
+lowerBound = 2401*0.95
+
 # Define the first curve (Pref)
 refCurve1 = {
     "data": upperBound,
@@ -10399,8 +10405,11 @@ displayValue = data
                     <use_reference_curve>True</use_reference_curve>
                     <reference_curve_code><![CDATA[# reference curve data points 
 # 2401 +- 5%
-upperBound = 2522.0
-lowerBound = 2282.0
+# upperBound = 2522.0
+# lowerBound = 2282.0
+upperBound = 2401*1.05
+lowerBound = 2401*0.95
+
 # Define the first curve (Pref)
 refCurve1 = {
     "data": upperBound,
@@ -10488,8 +10497,11 @@ displayValue = data
                     <use_reference_curve>True</use_reference_curve>
                     <reference_curve_code><![CDATA[# reference curve data points 
 # 2401 +- 5%
-upperBound = 2522.0
-lowerBound = 2282.0
+# upperBound = 2522.0
+# lowerBound = 2282.0
+upperBound = 2401*1.05
+lowerBound = 2401*0.95
+
 # Define the first curve (Pref)
 refCurve1 = {
     "data": upperBound,
@@ -10575,9 +10587,12 @@ displayValue = data
                     <y_axis_title_enabled>False</y_axis_title_enabled>
                     <use_reference_curve>True</use_reference_curve>
                     <reference_curve_code><![CDATA[# reference curve data points 
-# 2401 +- 5%
-upperBound = 263.0
-lowerBound = 291.0
+# 277 +- 5%
+#upperBound = 263.0
+#lowerBound = 291.0
+upperBound = 277*1.05
+lowerBound = 277*0.95
+
 # Define the first curve (Pref)
 refCurve1 = {
     "data": upperBound,
@@ -11456,6 +11471,128 @@ referenceCurves = [refCurveData1]
 
 ]]></reference_curve_code>
                 </advance_widget_settings>
+            </component_data>
+        <component_data>
+                <id>f4a491b3c3cb11f19956d8b32f82c6b4</id>
+                <name><![CDATA[Battery type control]]></name>
+                <type>ComboBoxMacro</type>
+                <description><![CDATA[]]></description>
+                <on_use_code active="True"><![CDATA[#------------- MANDATORY IMPORTS ---------------
+# HIL Control Panel API
+
+
+# Function for printing text to console (e.g printf("Hello world"))
+
+#------------------------------------------------
+
+# NOTE: entered value is available through variable 'inputValue'
+
+if inputValue == 'Internal battery emulation':
+    hil.set_scada_input_value('battery type select', 0.0)
+elif inputValue == 'External battery emulation':
+    hil.set_scada_input_value('battery type select', 1.0)
+
+]]></on_use_code>
+                <on_start_code active="True"><![CDATA[#------------- MANDATORY IMPORTS ---------------
+# HIL Control Panel API
+
+
+# Function for printing text to console (e.g printf("Hello world"))
+
+#------------------------------------------------
+
+# NOTE: entered value is available through variable 'inputValue'
+
+if inputValue == 'ON':
+    hil.set_cp_input_value('User defined', 'Example', 'switch state', 1.0)
+elif inputValue == 'OFF':
+    hil.set_cp_input_value('User defined', 'Example', 'switch state', 0.0)
+]]></on_start_code>
+                <on_stop_code active="False"><![CDATA[# NOTE: The code specified in this handler will be executed after simulation is stopped.
+
+
+# Change widget value by setting this variable.
+# NOTE: If you not specify 'widgetValue' variable or assign 'None' to it, widget value won't be changed.
+widgetValue = None
+]]></on_stop_code>
+                <on_timer_code active="False"><![CDATA[# NOTE: The code specified in this handler will be executed periodically each 1000ms.
+# NOTE: Only read functions are available from the HIL API
+# HIL API
+
+
+
+# Change widget value by setting this variable.
+# NOTE: If you not specify 'widgetValue' variable or assign 'None' to it, widget value won't be changed.
+widgetValue = None
+]]></on_timer_code>
+                <on_start_code_source><![CDATA[Macro code]]></on_start_code_source>
+                <inputValue><![CDATA[Internal battery emulation]]></inputValue>
+                <availableValues><![CDATA[['Internal battery emulation', 'External battery emulation']]]></availableValues>
+                <unit><![CDATA[]]></unit>
+                <autocomplete_enabled>False</autocomplete_enabled>
+                <widget_settings>
+                    <x>1008</x>
+                    <y>856</y>
+                    <width>280</width>
+                    <height>40</height>
+                    <appearance><![CDATA[Flat]]></appearance>
+                    <hierarchy_position><![CDATA[1]]></hierarchy_position>
+                    <is_background><![CDATA[False]]></is_background>
+                    <label><![CDATA[]]></label>
+                    <use_label>False</use_label>
+                </widget_settings>
+            </component_data>
+        <component_data>
+                <id>8cea3c64c3cf11f18eaad8b32f82c6b4</id>
+                <name><![CDATA[Text note4]]></name>
+                <type>TextNote</type>
+                <description><![CDATA[]]></description>
+                <text><![CDATA[<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+</style></head><body style=" font-family:'Tahoma'; font-size:8pt; font-weight:400; font-style:normal;">
+<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">I dont know why this plot has the reference curves added with nominal value assumed to be 277V. I suspect it is a mistake and we just have not gotten around to fixing it. We should either change this to have nominal voltage=2401V or we should just get rid of the reference curves for this plot maybe.</p></body></html>]]></text>
+                <widget_settings>
+                    <x>1856</x>
+                    <y>1200</y>
+                    <width>400</width>
+                    <height>80</height>
+                    <background_color><![CDATA[#e7f0b0]]></background_color>
+                    <background_type><![CDATA[Filled]]></background_type>
+                    <appearance><![CDATA[Flat]]></appearance>
+                    <hierarchy_position>1</hierarchy_position>
+                    <label><![CDATA[]]></label>
+                    <use_label>False</use_label>
+                </widget_settings>
+            </component_data>
+        <component_data>
+                <id>e243db71c3cf11f1b62ed8b32f82c6b4</id>
+                <name><![CDATA[Text note5]]></name>
+                <type>TextNote</type>
+                <description><![CDATA[]]></description>
+                <text><![CDATA[<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+</style></head><body style=" font-family:'Tahoma'; font-size:8pt; font-weight:400; font-style:normal;">
+<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">We might want the upper and lower bound lines on this plot? but i doubt it is too serious. Either way it is a quick fix. I believe nominal for the nodes in this plot is 2401V</p></body></html>]]></text>
+                <widget_settings>
+                    <x>1536</x>
+                    <y>2032</y>
+                    <width>400</width>
+                    <height>48</height>
+                    <background_color><![CDATA[#e7f0b0]]></background_color>
+                    <background_type><![CDATA[Filled]]></background_type>
+                    <appearance><![CDATA[Flat]]></appearance>
+                    <hierarchy_position>1</hierarchy_position>
+                    <label><![CDATA[]]></label>
+                    <use_label>False</use_label>
+                </widget_settings>
             </component_data>
         </components>
 </ui_settings>

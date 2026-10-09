@@ -2366,9 +2366,6 @@ static const real _time_varying_load_646_analog_input2__p_ai_gain=1.0;
 static const real _time_varying_load_646_analog_input2__p_ai_offset=0.0;
 
 
-static const real _time_varying_load_646_constant1__p_value=0.0;
-
-
 static const real _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_constant4__p_value=1.414;
 
 
@@ -5073,7 +5070,6 @@ real _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulse
 real _time_varying_load_646_analog_input__out;
 real _time_varying_load_646_analog_input2__out;
 double _time_varying_load_646_battery_power646__out;
-static real _time_varying_load_646_constant1__out;
 double _time_varying_load_646_pvpanel_power646__out;
 double _time_varying_load_646_pref646__out;
 double _time_varying_load_646_qref646__out;
@@ -5115,6 +5111,7 @@ real _time_varying_load_646_single_phase_time_varying_load646_ia2_ia1__out;
 static real _time_varying_load_646_single_phase_time_varying_load646_single_phase_power_meter2_radian__out;
 static real _time_varying_load_646_single_phase_time_varying_load646_single_phase_power_meter2_phi__phase_diff;
 real _time_varying_load_646_single_phase_time_varying_load646_va2_va1__out;
+double _time_varying_load_646_battery_type_select__out;
 double _switch_state__out;
 static real _time_varying_load_611_single_phase_time_varying_load1_gain1__out;
 static real _time_varying_load_611_single_phase_time_varying_load1_gain2__out;
@@ -7495,9 +7492,6 @@ char _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulse
 
 
 
-
-
-
 real _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_delay5__state[1][60000];
 unsigned int _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_delay5__cbi[1];
 unsigned int _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_delay5__write_i[1];
@@ -9786,8 +9780,6 @@ void *tunable_params_dev0_cpu0_ptr = &tunable_params;
 //
 // DMA buffers
 //
-
-
 
 
 
@@ -15843,8 +15835,6 @@ void ReInit_user_sp_cpu0_dev0() {
 
 
 
-
-
     {
         int t_tmp1;
         for(t_tmp1 = 0; t_tmp1 < 1; t_tmp1++) {
@@ -16051,6 +16041,7 @@ void ReInit_user_sp_cpu0_dev0() {
             _time_varying_load_646_single_phase_time_varying_load646_single_phase_power_meter2_phi__zc_flag_in[0]=0;
         }
     }
+
 
 
 
@@ -27727,11 +27718,6 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
     // Generated from the component: Time Varying Load 646.Battery_Power646
     _time_varying_load_646_battery_power646__out = XIo_InFloat(0x2f800084);
 
-    // Generated from the component: Time Varying Load 646.Constant1
-    {
-        _time_varying_load_646_constant1__out=_time_varying_load_646_constant1__p_value;
-    }
-
     // Generated from the component: Time Varying Load 646.PVpanel_power646
     _time_varying_load_646_pvpanel_power646__out = XIo_InFloat(0x2f800088);
 
@@ -27829,8 +27815,11 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
         }
     }
 
+    // Generated from the component: Time Varying Load 646.battery type select
+    _time_varying_load_646_battery_type_select__out = XIo_InFloat(0x2f80009c);
+
     // Generated from the component: switch state
-    _switch_state__out = XIo_InFloat(0x2f80009c);
+    _switch_state__out = XIo_InFloat(0x2f8000a0);
 
     // Generated from the component: Time Varying Load 611.Single phase time-varying load1.Gain1
     {
@@ -29715,7 +29704,7 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
 
 
     // Generated from the component: Time Varying Load 646.Signal switch1
-    _time_varying_load_646_signal_switch1__out = (_time_varying_load_646_constant1__out > 0.5f) ? _time_varying_load_646_batt_power510kw__out : _bussplitmap_modbusmap__out3;
+    _time_varying_load_646_signal_switch1__out = (_time_varying_load_646_battery_type_select__out > 0.5f) ? _time_varying_load_646_batt_power510kw__out : _bussplitmap_modbusmap__out3;
 
     // Generated from the component: Time Varying Load 646.BatteryInt
 
@@ -33987,8 +33976,6 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
     // Generated from the component: Time Varying Load 646.Analog Input
 
     // Generated from the component: Time Varying Load 646.Analog Input2
-
-    // Generated from the component: Time Varying Load 646.Constant1
 
     // Generated from the component: Time Varying Load 646.Single phase time-varying load646.GenerateCurrentControl.ActiveCurrentCalc.Constant7
 

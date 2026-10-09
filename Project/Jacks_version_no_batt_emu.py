@@ -117,7 +117,8 @@ BATTERY_CAPACITY_KWH = 10.0 * TOTAL_CUSTOMERS   # 13300 kWh (aggregate feeder ba
 BATTERY_POWER_KW     = 5.0  * TOTAL_CUSTOMERS   # 6650 kW
 INITIAL_SOC_KWH      = 0.5  * BATTERY_CAPACITY_KWH
 
-NOMINAL_VOLTAGE=2401 #voltage nominal value for load nodes
+NOMINAL_VOLTAGE=2401 #voltage nominal value for most load nodes
+NOMINAL_LOW_VOLTAGE=277 #voltage nominal value for node 634
 
 DEFAULT_WEIGHT = 1   # Default weight val
 
@@ -766,7 +767,10 @@ def main():
     node_voltage = {}
 
     for node in NODE_MAP:
-        node_voltage[node] = NOMINAL_VOLTAGE
+        if "634" in node:
+            node_voltage[node] = NOMINAL_LOW_VOLTAGE
+        else:
+            node_voltage[node] = NOMINAL_VOLTAGE
 
     if args.verbose or args.progress_every > 0:
         print(_HDR)

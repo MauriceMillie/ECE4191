@@ -1247,15 +1247,6 @@ model "Monash_13NodeFeeder" {
                 position = 8324, 7788
             ]
 
-            component "core/Constant" Constant1 {
-                execution_rate = "ex_rate"
-                value = "0"
-            }
-            [
-                position = 8324, 7716
-                rotation = right
-            ]
-
             component "core/Probe" Batt_Power {
             }
             [
@@ -1263,10 +1254,19 @@ model "Monash_13NodeFeeder" {
             ]
 
             component "core/Initial Settings" "Initial Settings1" {
-                analog_outputs = "[\'AO1;....Node 646.V2_rms.value;82.0333333;-27.5;True;0;5\']"
+                analog_outputs = "[\'AO1;....Node 646.V2_rms.value;48.02;-47.5;True;0;5\']"
             }
             [
                 position = 9044, 7844
+            ]
+
+            component "core/SCADA Input" "battery type select" {
+                addr = "1426063424"
+                execution_rate = "ex_rate"
+                unit = ""
+            }
+            [
+                position = 8004, 7716
             ]
 
             port P2 {
@@ -1476,7 +1476,7 @@ model "Monash_13NodeFeeder" {
                 scale = -1, 1
             ]
 
-            comment Comment25 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Settings for analogue output to battery emulator. </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Scale (Scale is division) and then offset</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Offset = NA</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Scale = 2461/2.5</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Assumption Nominal 2461V </p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">More complex solution:</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">((2461*1.05)/x)+y=4</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">((2461*0.95)/x)+y=1</p></body></html> ENDCOMMENT 
+            comment Comment25 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Settings for analogue output to battery emulator. </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Scale (Scale is division) and then offset</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Offset = NA</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Scale = 2461/2.5</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Assumption Nominal 2461V </p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">ASSUMPTION WAS WRONG, NOMINAL IS 2401V</p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">More complex solution 5% limits:</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">((2401*1.05)/x)+y=4</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">((2401*0.95)/x)+y=1 </p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">More complex solution 3% limits:</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">((2401*1.03)/x)+y=4</p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">((2401*0.97)/x)+y=1 </p><p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html> ENDCOMMENT 
             [
                 position = 8996, 7904
             ]
@@ -1539,7 +1539,6 @@ model "Monash_13NodeFeeder" {
             connect Batt_Power510KW.in "Analog Input2.out" as Connection1169
             connect Batt_Power510KW.out "Signal switch1.in" as Connection1170
             connect "Control Breaker From7" "Signal switch1.in1" as Connection1171
-            connect Constant1.out "Signal switch1.in2" as Connection1173
             connect "Signal switch1.out" Junction106 as Connection1174
             [
                 breakpoints = 8356, 7784
@@ -1549,6 +1548,7 @@ model "Monash_13NodeFeeder" {
                 breakpoints = 8516, 7784; 8516, 7732
             ]
             connect Batt_Power.in Junction106 as Connection1176
+            connect "battery type select.out" "Signal switch1.in2" as Connection1177
         }
         [
             position = 6500, 8168

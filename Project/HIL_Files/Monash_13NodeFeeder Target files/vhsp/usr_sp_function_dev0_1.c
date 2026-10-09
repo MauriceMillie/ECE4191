@@ -24041,7 +24041,7 @@ void TimerCounterHandler_1_user_sp_cpu1_dev0() {
     //////////////////////////////////////////////////////////////////////////
     //@cmp.out.block.start
     // Generated from the component: Time Varying Load 652.Battery_Power652
-    _time_varying_load_652_battery_power652__out = XIo_InFloat(0x2f8000a0);
+    _time_varying_load_652_battery_power652__out = XIo_InFloat(0x2f8000a4);
 
     // Generated from the component: Time Varying Load 652.CPU Transition10.Output
     {
@@ -24079,13 +24079,13 @@ void TimerCounterHandler_1_user_sp_cpu1_dev0() {
     }
 
     // Generated from the component: Time Varying Load 652.PVpanel_power652
-    _time_varying_load_652_pvpanel_power652__out = XIo_InFloat(0x2f8000a4);
+    _time_varying_load_652_pvpanel_power652__out = XIo_InFloat(0x2f8000a8);
 
     // Generated from the component: Time Varying Load 652.Pref652
-    _time_varying_load_652_pref652__out = XIo_InFloat(0x2f8000a8);
+    _time_varying_load_652_pref652__out = XIo_InFloat(0x2f8000ac);
 
     // Generated from the component: Time Varying Load 652.Qref652
-    _time_varying_load_652_qref652__out = XIo_InFloat(0x2f8000ac);
+    _time_varying_load_652_qref652__out = XIo_InFloat(0x2f8000b0);
 
     // Generated from the component: Time Varying Load 652.Single phase time-varying load652.GenerateCurrentControl.ActiveCurrentCalc.Constant7
     {
@@ -24170,13 +24170,13 @@ void TimerCounterHandler_1_user_sp_cpu1_dev0() {
     }
 
     // Generated from the component: Time Varying Load 675.Battery_Power675PhA
-    _time_varying_load_675_battery_power675pha__out = XIo_InFloat(0x2f8000b0);
+    _time_varying_load_675_battery_power675pha__out = XIo_InFloat(0x2f8000b4);
 
     // Generated from the component: Time Varying Load 675.Battery_Power675PhB
-    _time_varying_load_675_battery_power675phb__out = XIo_InFloat(0x2f8000b4);
+    _time_varying_load_675_battery_power675phb__out = XIo_InFloat(0x2f8000b8);
 
     // Generated from the component: Time Varying Load 675.Battery_Power675PhC
-    _time_varying_load_675_battery_power675phc__out = XIo_InFloat(0x2f8000b8);
+    _time_varying_load_675_battery_power675phc__out = XIo_InFloat(0x2f8000bc);
 
     // Generated from the component: Time Varying Load 675.CPU Transition16.Output
     {
@@ -24284,31 +24284,31 @@ void TimerCounterHandler_1_user_sp_cpu1_dev0() {
     }
 
     // Generated from the component: Time Varying Load 675.PVpanel_power675PhA
-    _time_varying_load_675_pvpanel_power675pha__out = XIo_InFloat(0x2f8000bc);
+    _time_varying_load_675_pvpanel_power675pha__out = XIo_InFloat(0x2f8000c0);
 
     // Generated from the component: Time Varying Load 675.PVpanel_power675PhB
-    _time_varying_load_675_pvpanel_power675phb__out = XIo_InFloat(0x2f8000c0);
+    _time_varying_load_675_pvpanel_power675phb__out = XIo_InFloat(0x2f8000c4);
 
     // Generated from the component: Time Varying Load 675.PVpanel_power675PhC
-    _time_varying_load_675_pvpanel_power675phc__out = XIo_InFloat(0x2f8000c4);
+    _time_varying_load_675_pvpanel_power675phc__out = XIo_InFloat(0x2f8000c8);
 
     // Generated from the component: Time Varying Load 675.Pref675PhA
-    _time_varying_load_675_pref675pha__out = XIo_InFloat(0x2f8000c8);
+    _time_varying_load_675_pref675pha__out = XIo_InFloat(0x2f8000cc);
 
     // Generated from the component: Time Varying Load 675.Pref675PhB
-    _time_varying_load_675_pref675phb__out = XIo_InFloat(0x2f8000cc);
+    _time_varying_load_675_pref675phb__out = XIo_InFloat(0x2f8000d0);
 
     // Generated from the component: Time Varying Load 675.Pref675PhC
-    _time_varying_load_675_pref675phc__out = XIo_InFloat(0x2f8000d0);
+    _time_varying_load_675_pref675phc__out = XIo_InFloat(0x2f8000d4);
 
     // Generated from the component: Time Varying Load 675.Qref675PhA
-    _time_varying_load_675_qref675pha__out = XIo_InFloat(0x2f8000d4);
+    _time_varying_load_675_qref675pha__out = XIo_InFloat(0x2f8000d8);
 
     // Generated from the component: Time Varying Load 675.Qref675PhB
-    _time_varying_load_675_qref675phb__out = XIo_InFloat(0x2f8000d8);
+    _time_varying_load_675_qref675phb__out = XIo_InFloat(0x2f8000dc);
 
     // Generated from the component: Time Varying Load 675.Qref675PhC
-    _time_varying_load_675_qref675phc__out = XIo_InFloat(0x2f8000dc);
+    _time_varying_load_675_qref675phc__out = XIo_InFloat(0x2f8000e0);
 
     // Generated from the component: Time Varying Load 675.Single phase time-varying loadA.GenerateCurrentControl.ActiveCurrentCalc.Constant7
     {
@@ -24557,13 +24557,13 @@ void TimerCounterHandler_1_user_sp_cpu1_dev0() {
     }
 
     // Generated from the component: Time Varying Load 692.Battery_Power692PhA
-    _time_varying_load_692_battery_power692pha__out = XIo_InFloat(0x2f8000e0);
+    _time_varying_load_692_battery_power692pha__out = XIo_InFloat(0x2f8000e4);
 
     // Generated from the component: Time Varying Load 692.Battery_Power692PhB
-    _time_varying_load_692_battery_power692phb__out = XIo_InFloat(0x2f8000e4);
+    _time_varying_load_692_battery_power692phb__out = XIo_InFloat(0x2f8000e8);
 
     // Generated from the component: Time Varying Load 692.Battery_Power692PhC
-    _time_varying_load_692_battery_power692phc__out = XIo_InFloat(0x2f8000e8);
+    _time_varying_load_692_battery_power692phc__out = XIo_InFloat(0x2f8000ec);
 
     // Generated from the component: Time Varying Load 692.CPU Transition15.Output
     {
@@ -24671,31 +24671,31 @@ void TimerCounterHandler_1_user_sp_cpu1_dev0() {
     }
 
     // Generated from the component: Time Varying Load 692.PVpanel_power692PhA
-    _time_varying_load_692_pvpanel_power692pha__out = XIo_InFloat(0x2f8000ec);
+    _time_varying_load_692_pvpanel_power692pha__out = XIo_InFloat(0x2f8000f0);
 
     // Generated from the component: Time Varying Load 692.PVpanel_power692PhB
-    _time_varying_load_692_pvpanel_power692phb__out = XIo_InFloat(0x2f8000f0);
+    _time_varying_load_692_pvpanel_power692phb__out = XIo_InFloat(0x2f8000f4);
 
     // Generated from the component: Time Varying Load 692.PVpanel_power692PhC
-    _time_varying_load_692_pvpanel_power692phc__out = XIo_InFloat(0x2f8000f4);
+    _time_varying_load_692_pvpanel_power692phc__out = XIo_InFloat(0x2f8000f8);
 
     // Generated from the component: Time Varying Load 692.Pref692PhA
-    _time_varying_load_692_pref692pha__out = XIo_InFloat(0x2f8000f8);
+    _time_varying_load_692_pref692pha__out = XIo_InFloat(0x2f8000fc);
 
     // Generated from the component: Time Varying Load 692.Pref692PhB
-    _time_varying_load_692_pref692phb__out = XIo_InFloat(0x2f8000fc);
+    _time_varying_load_692_pref692phb__out = XIo_InFloat(0x2f800100);
 
     // Generated from the component: Time Varying Load 692.Pref692PhC
-    _time_varying_load_692_pref692phc__out = XIo_InFloat(0x2f800100);
+    _time_varying_load_692_pref692phc__out = XIo_InFloat(0x2f800104);
 
     // Generated from the component: Time Varying Load 692.Qref692PhA
-    _time_varying_load_692_qref692pha__out = XIo_InFloat(0x2f800104);
+    _time_varying_load_692_qref692pha__out = XIo_InFloat(0x2f800108);
 
     // Generated from the component: Time Varying Load 692.Qref692PhB
-    _time_varying_load_692_qref692phb__out = XIo_InFloat(0x2f800108);
+    _time_varying_load_692_qref692phb__out = XIo_InFloat(0x2f80010c);
 
     // Generated from the component: Time Varying Load 692.Qref692PhC
-    _time_varying_load_692_qref692phc__out = XIo_InFloat(0x2f80010c);
+    _time_varying_load_692_qref692phc__out = XIo_InFloat(0x2f800110);
 
     // Generated from the component: Time Varying Load 692.Single phase time-varying loadA.GenerateCurrentControl.ActiveCurrentCalc.Constant7
     {
