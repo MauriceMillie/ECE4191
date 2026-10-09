@@ -687,7 +687,7 @@ def main():
 
     eta_flat = make_eta_array(len(load_fc_flat))
 
-    real_forecast_df = load_real_forecast_data("./average_household_forecasts - Edited.csv")
+    real_forecast_df = load_real_forecast_data("./Code_and_Data/average_household_forecasts.csv")
 
     forecast_load_per_customer = pd.to_numeric(real_forecast_df["Predicted_Average_Load_kW"], errors="raise").to_numpy(dtype=float)
 

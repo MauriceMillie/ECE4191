@@ -12,7 +12,7 @@ import pandas as pd
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 from simple_pid import PID
 
@@ -378,8 +378,8 @@ def main():
     )
     print("Target Holdout Week: Jan 7 - Jan 13, 2013")
     print(f"Aggregate Pool Scaling Factor: {house_multiplier:,} houses\n")
-    print(f"[LOAD MODEL] MAE: {mae_L:,.2f} kW | R² Score: {r2_L:.3f}")
-    print(f"[PV MODEL]   MAE: {mae_P:,.2f} kW | R² Score: {r2_P:.3f}")
+    print(f"[LOAD MODEL] MAE: {mae_L:,.2f} kW | R2 Score: {r2_L:.3f}")
+    print(f"[PV MODEL]   MAE: {mae_P:,.2f} kW | R2 Score: {r2_P:.3f}")
     print(
         "=================================================================\n"
     )
@@ -410,9 +410,9 @@ def main():
         }
     )
 
-    export_filename = "average_household_forecasts.csv"
+    export_filename = "./Code_and_Data/average_household_forecasts.csv"
     export_df.to_csv(export_filename, index=False)
-    print(f"  ↳ Saved successfully as '{export_filename}'.")
+    print(f"  Saved successfully as '{export_filename}'.")
 
     # --- VISUALIZING MODEL OUTPUTS (PLOTTING) ---
     print("Initializing Matplotlib charting canvas...")
