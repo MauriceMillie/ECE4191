@@ -499,10 +499,16 @@ class SocLogger:
         except Exception:
             return None
 
+    def _read_voltages(self):
+        rr = self.conn.client.read_input_registers(address=4001, count=16)
+        if rr is None or rr.isError():
+            raise IOError(f"Failed to read Voltage input registers 4001-4016")
+        return rr.registers
+
     def _read_voltage(self, voltage_reg) -> float:
         rr = self.conn.client.read_input_registers(address=voltage_reg, count=1)
         if rr is None or rr.isError():
-            raise IOError(f"Failed to read SoC input register {voltage_reg}")
+            raise IOError(f"Failed to read Voltage input register {voltage_reg}")
         return rr.registers[0]
 
     def voltage_log_step(self,voltage_reg):
@@ -827,11 +833,12 @@ def main():
 
 
             # TODO: MODIFY SOC LOGGER OR JUST COPY PASTE IT OR SOMETHING AND THEN HAVE IT GRAB VOLTAGES INSTEAD
-            
+            if not args.no_wait and args.measurement_delay > 0 and not args.dry_run:
+                time.sleep(args.measurement_delay)
+
+            temp_voltages = soc_logger._read_voltages()
             for node in NODE_MAP:
-                if not args.no_wait and args.measurement_delay > 0 and not args.dry_run:
-                    time.sleep(args.measurement_delay)
-                node_voltage[node] = soc_logger.voltage_log_step(NODE_MAP[node]["voltage"])
+                node_voltage[node] = temp_voltages[NODE_MAP[node]["voltage"]-4001] # soc_logger.voltage_log_step(NODE_MAP[node]["voltage"])
 
 
             total_load_i = float(total_load_act[i])
