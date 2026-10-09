@@ -242,6 +242,7 @@ def main(argv=None):
     p.add_argument('--approve-new-scenario',action='store_true');p.add_argument('--confirm-soc-source',action='store_true')
     p.add_argument('--step-seconds',type=float,default=2.);p.add_argument('--settle-seconds',type=float,default=12.)
     a=p.parse_args(argv)
+    print(vars(a))
     try:run(a);return 0
     except (Exception,KeyboardInterrupt) as exc:
         print(f'ERROR: {exc}',file=sys.stderr);return 2

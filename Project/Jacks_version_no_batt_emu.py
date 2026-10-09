@@ -41,26 +41,26 @@ STEP_SECONDS = 2.0        # real seconds per 30-min time step
 TIME_COL_RE = re.compile(r"^\d{1,2}:\d{2}$")
 
 NODE_MAP = {
-    "646_B": {"start": 2000, "order": "normal"},
-    "645_B": {"start": 2004, "order": "normal"},
-    "611_C": {"start": 2008, "order": "normal"},
-    "652_A": {"start": 2012, "order": "normal"},
+    "646_B": {"start": 2000, "order": "normal", "voltage": 4001},
+    "645_B": {"start": 2004, "order": "normal", "voltage": 4002},
+    "611_C": {"start": 2008, "order": "normal", "voltage": 4003},
+    "652_A": {"start": 2012, "order": "normal", "voltage": 4004},
 
-    "671_A": {"start": 2016, "order": "normal"},
-    "671_B": {"start": 2020, "order": "normal"},
-    "671_C": {"start": 2024, "order": "normal"},
+    "671_A": {"start": 2016, "order": "normal", "voltage": 4005},
+    "671_B": {"start": 2020, "order": "normal", "voltage": 4006},
+    "671_C": {"start": 2024, "order": "normal", "voltage": 4007},
 
-    "692_C": {"start": 2028, "order": "reversed"},
-    "692_B": {"start": 2032, "order": "reversed"},
-    "692_A": {"start": 2036, "order": "reversed"},
+    "692_C": {"start": 2028, "order": "reversed", "voltage": 4008},
+    "692_B": {"start": 2032, "order": "reversed", "voltage": 4009},
+    "692_A": {"start": 2036, "order": "reversed", "voltage": 4010},
 
-    "675_C": {"start": 2040, "order": "reversed"},
-    "675_B": {"start": 2044, "order": "reversed"},
-    "675_A": {"start": 2048, "order": "reversed"},
+    "675_C": {"start": 2040, "order": "reversed", "voltage": 4011},
+    "675_B": {"start": 2044, "order": "reversed", "voltage": 4012},
+    "675_A": {"start": 2048, "order": "reversed", "voltage": 4013},
 
-    "634_C": {"start": 2052, "order": "reversed"},
-    "634_B": {"start": 2056, "order": "reversed"},
-    "634_A": {"start": 2060, "order": "reversed"},
+    "634_C": {"start": 2052, "order": "reversed", "voltage": 4014},
+    "634_B": {"start": 2056, "order": "reversed", "voltage": 4015},
+    "634_A": {"start": 2060, "order": "reversed", "voltage": 4016},
 }
 
 
@@ -106,6 +106,8 @@ TOTAL_CUSTOMERS = sum(N_CUSTOMERS.values())   # 1330
 BATTERY_CAPACITY_KWH = 10.0 * TOTAL_CUSTOMERS   # 13300 kWh (aggregate feeder battery)
 BATTERY_POWER_KW     = 5.0  * TOTAL_CUSTOMERS   # 6650 kW
 INITIAL_SOC_KWH      = 0.5  * BATTERY_CAPACITY_KWH
+
+NOMINAL_VOLTAGE=2401 #voltage nominal value for load nodes
 
 DEFAULT_WEIGHT = 1   # Default weight val
 
@@ -496,8 +498,25 @@ class SocLogger:
         except Exception:
             return None
 
+    def _read_voltage(self, voltage_reg) -> float:
+        rr = self.conn.client.read_input_registers(address=voltge_reg, count=1)
+        if rr is None or rr.isError():
+            raise IOError(f"Failed to read SoC input register {SOC_INPUT_REGISTER}")
+        return rr.registers[0]
+
+    def voltage_log_step(self,voltage_reg):
+        if not self.enabled:
+            return None
+        try:
+            return self._read_voltage(voltage_reg)
+        except Exception:
+            return None    
+    
+
     def close(self) -> None:
         pass
+
+
 
 
 # ============================================================
@@ -625,7 +644,7 @@ def main():
     print("\nClearing all registers ...")
     clear_all_registers(conn, args.dry_run)
 
-    settle = 12
+    settle = 2 #TODO: CHANGE BACK TO 12
     if args.no_wait or args.dry_run:
         print("Settle delay skipped.")
     else:
@@ -646,7 +665,7 @@ def main():
     sched_rows = []
     aborted = False
     soc_pred = {}
-    for nodes in NODE_MAP:
+    for node in NODE_MAP:
         soc_pred[node] = args.initial_soc
     soc_measured_646_CIL_kwh = (args.initial_soc)*(N_CUSTOMERS["646_B"]/TOTAL_CUSTOMERS)
 
@@ -667,7 +686,10 @@ def main():
     p_load_win = {}
     p_pv_win = {}
     sched_rows_all_nodes = {}
+    node_voltage = {}
 
+    for node in NODE_MAP:
+        node_voltage[node] = NOMINAL_VOLTAGE
 
     if args.verbose or args.progress_every > 0:
         print(_HDR)
@@ -684,9 +706,6 @@ def main():
 
 
 
-
-
-
             for node in NODE_MAP:
 
                 load_fc_flat = node_data[node]["load_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
@@ -697,12 +716,12 @@ def main():
 
                 # 48-step look-ahead window from the forecast CSV
                 window_end = min(i + N_STEPS, len(load_fc_flat))
-                p_load_win[node] = load_fc_flat[node][i:window_end]
-                p_pv_win[node]   = pv_fc_flat[node][i:window_end]
+                p_load_win[node] = load_fc_flat[i:window_end]
+                p_pv_win[node]   = pv_fc_flat[i:window_end]
                 eta_win    = eta_flat[i:window_end]
 
                 batt_traj[node], grid_traj[node], soc_traj[node], status[node], obj_val[node] = solve_daily_qp(
-                    p_load_win, p_pv_win, eta_win,
+                    p_load_win[node], p_pv_win[node], eta_win,
                     weight=args.weight,
                     batt_power_kw=N_CUSTOMERS[node]*5,
                     capacity_kwh=N_CUSTOMERS[node]*10,
@@ -716,7 +735,7 @@ def main():
                         "applying zero battery command for this step.")
                     p_bat_agg[node] = 0.0
                     soc_pred_next[node] = soc_pred[node]
-                    grid_forecast_kw[node] = float(p_load_win[0] - p_pv_win[0])
+                    grid_forecast_kw[node] = float(p_load_win[node][0] - p_pv_win[node][0])
                 else:
                     p_bat_agg[node] = float(batt_traj[node][0])
                     soc_pred_next[node] = float(soc_traj[node][1])
@@ -731,7 +750,7 @@ def main():
                 pv_act_i[node]   = float(node_pv_act[i])
                 grid_act_i[node] = load_act_i[node] - pv_act_i[node] - p_bat_agg[node]
 
-
+                '''
                 if node != CIL_NODE:
                     sched_rows_node[node] = ({
                         f"{node}_p_load_fc_kw": round(float(p_load_win[node][0]), 4),
@@ -746,7 +765,7 @@ def main():
                         f"{node}_soc_predicted_pct": round(soc_pred_pct[node], 4),
                         f"{node}_mpc_status": status[node],
                     })
-
+                '''
 
             ''' OLD COMMENTED CODE FROM BEFORE WE CHANGED TO LOCAL MPC FOR EACH NODE!!!!
 
@@ -780,8 +799,12 @@ def main():
             pbat_nodes = disaggregate_battery(p_bat_agg) # THIS IS WHAT WE NEED TO CHANGE!!
             '''
 
+
+
+
             payload = build_feeder_payload(node_data, i, pbat_nodes)
             modbus_write_feeder(conn, payload, args.dry_run, args.verbose)
+
 
             if not args.no_wait and args.measurement_delay > 0 and not args.dry_run:
                 time.sleep(args.measurement_delay)
@@ -789,6 +812,15 @@ def main():
 
             soc_measured_646_CIL_kwh = (measured_soc_646/100)*args.capacity
 
+            # TODO: ADD IN CODE THAT GETS SOC FROM THE BATTERY EMU LATER.
+
+
+            # TODO: MODIFY SOC LOGGER OR JUST COPY PASTE IT OR SOMETHING AND THEN HAVE IT GRAB VOLTAGES INSTEAD
+            
+            for node in NODE_MAP:
+                if not args.no_wait and args.measurement_delay > 0 and not args.dry_run:
+                    time.sleep(args.measurement_delay)
+                node_voltage[node] = soc_logger.voltage_log_step()
 
 
             total_load_i = float(total_load_act[i])
@@ -796,6 +828,23 @@ def main():
 
             for node in NODE_MAP:
                 p_bat_total += pbat_nodes[node]
+
+            for node in NODE_MAP:
+                if node != CIL_NODE:
+                    sched_rows_node[node] = ({
+                        f"{node}_p_load_fc_kw": round(float(p_load_win[node][0]), 4),
+                        f"{node}_p_pv_fc_kw":   round(float(p_pv_win[node][0]), 4),
+                        f"{node}_p_load_actual_kw": round(load_act_i[node], 4),
+                        f"{node}_p_pv_actual_kw":   round(pv_act_i[node], 4),
+                        f"{node}_baseline_grid_kw": round(load_act_i[node] - pv_act_i[node], 4),
+                        f"{node}_battery_kw": round(p_bat_agg[node], 4),
+                        f"{node}_battery_action": _action(p_bat_agg[node]),
+                        f"{node}_grid_kw": round(grid_act_i[node], 4),
+                        f"{node}_grid_forecast_kw": round(grid_forecast_kw[node], 4),
+                        f"{node}_soc_predicted_pct": round(soc_pred_pct[node], 4),
+                        f"{node}_mpc_status": status[node],
+                        f"{node}_voltage": node_voltage[node],
+                    })
 
 
             sched_rows_node[CIL_NODE] = ({
@@ -811,6 +860,7 @@ def main():
                 f"{CIL_NODE}_soc_predicted_pct": round(soc_pred_pct[CIL_NODE], 4),
                 f"{CIL_NODE}_soc_measured_pct": "" if measured_soc_646 is None else round(float(measured_soc_646), 4),
                 f"{CIL_NODE}_mpc_status": status[CIL_NODE],
+                f"{node}_voltage": node_voltage[node],
             })
 
             sched_rows_all_nodes = {}

@@ -185,7 +185,7 @@ RECONNECT_DELAY_S = 2.0
 DEFAULT_PLAYBACK_DAYS = 4
 
 # --- Physical battery emulator serial interface ------------------------------
-DEFAULT_EMULATOR_PORT = "/dev/serial/by-id/usb-FTDI_TTL232R_FTEAE3LA-if00-port0"
+DEFAULT_EMULATOR_PORT = "/dev/serial/by-id/usb-FTDI_TTL232R_FTEAE5I0-if00-port0"
 EMULATOR_BAUD = 9600
 EMULATOR_SOC_MAX_RAW = 65500
 EMULATOR_READ_WAIT_S = 1.2   # emulator broadcasts approximately once per second
@@ -361,7 +361,7 @@ def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh,
     problem.solve(solver=getattr(cp, solver), verbose=False)
 
     if batt.value is None:
-        raise RuntimeError(f"QP failed: {problem.status}")
+            raise RuntimeError(f"QP failed: {problem.status}")
 
     return (
         np.asarray(batt.value).flatten(),

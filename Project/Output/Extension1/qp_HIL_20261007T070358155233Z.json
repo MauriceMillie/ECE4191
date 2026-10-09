@@ -1,0 +1,37 @@
+{
+  "mode": "qp",
+  "run_type": "HIL",
+  "scenario": "Extension1_Forecast/results/new_hil_scene",
+  "scenario_type": "NEW_proportional_annual_data_scene",
+  "completed": false,
+  "rows": 0,
+  "requested_steps": 48,
+  "errors": [
+    "ValueError: Initial measured Node646 SOC differs from requested initial condition by >2 percentage points."
+  ],
+  "log_csv": "qp_HIL_20261007T070358155233Z.csv",
+  "capacity_kwh": 13300.0,
+  "battery_power_kw": 6650.0,
+  "weight": 1.0,
+  "initial_soc_kwh": 6650.0,
+  "final_soc_model_kwh": 6650.0,
+  "max_solve_seconds": 0.01260251799976686,
+  "solver": "SciPy SLSQP with analytic gradient and residual checks",
+  "grid_net_cost_calculated": 0,
+  "no_battery_net_cost_calculated": 0,
+  "cost_assumption": "same TOU price for signed import/export; calculated from input power balance, NOT actual SCADA power",
+  "calculated_grid_peak_import_kw": null,
+  "calculated_grid_min_kw": null,
+  "actual_balance_steps_outside_forecast_grid_limits": 0,
+  "grid_limits_are_forecast_constraints_not_actual_guarantees": true,
+  "terminal_policy": "both modes: aggregate energy returns to initial target at each DATASET midnight",
+  "forecast_updates": "latest midnight-issued 48-step window; no intraday error correction",
+  "feedback": "model only / QP ignores SoC for re-planning",
+  "not_measured_by_this_script": [
+    "feeder head power",
+    "node voltages",
+    "actual delivered battery power"
+  ],
+  "source_repo_commit": "3bc07f6f346789d763a6b326dead10a12d0e5272",
+  "not_original_mpc_main": true
+}
