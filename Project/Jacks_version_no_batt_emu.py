@@ -774,6 +774,9 @@ def main():
                 load_fc_flat = real_forecast_df["Predicted_Average_Load_kW"]*N_CUSTOMERS[node]
                 pv_fc_flat = real_forecast_df["Predicted_Average_PV_Gen_kW"]*N_CUSTOMERS[node]
 
+                print(load_fc_flat)
+                print(pv_fc_flat)
+
                 node_load_act = node_data[node]["load_kw"] # TODO: MAYBE PROBLEM? WHAT ARE WE USING THESE VALS FOR
                 node_pv_act = node_data[node]["pv_kw"]
 
@@ -783,8 +786,10 @@ def main():
                 p_pv_win[node]   = pv_fc_flat[i:window_end]
                 eta_win    = eta_flat[i:window_end]
 
+                print(p_load_win)
+                print(p_pv_win)
 
-
+                print()
                 
 
                 batt_traj[node], grid_traj[node], soc_traj[node], status[node], obj_val[node] = solve_daily_qp(
