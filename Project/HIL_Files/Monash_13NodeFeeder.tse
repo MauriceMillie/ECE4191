@@ -526,6 +526,24 @@ model "Monash_13NodeFeeder" {
                 position = 10336, 11252
             ]
 
+            component "core/Probe" 634modbusload {
+            }
+            [
+                position = 7848, 11000
+            ]
+
+            component "core/Probe" 634modbuspv {
+            }
+            [
+                position = 7860, 11108
+            ]
+
+            component "core/Probe" 634modbusbatt {
+            }
+            [
+                position = 7840, 11232
+            ]
+
             port P1 {
                 label = "A"
                 position = left:1
@@ -742,6 +760,21 @@ model "Monash_13NodeFeeder" {
                 size = 100, 20
             ]
 
+            junction Junction1 sp
+            [
+                position = 8108, 10808
+            ]
+
+            junction Junction2 sp
+            [
+                position = 8116, 11032
+            ]
+
+            junction Junction3 sp
+            [
+                position = 8120, 11144
+            ]
+
             comment Comment16 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Arial'; font-size:20pt; font-weight:900;">Phase A</span></p></body></html> ENDCOMMENT 
             [
                 position = 8212, 10576
@@ -763,14 +796,11 @@ model "Monash_13NodeFeeder" {
                 font_color = #ff0000
             ]
 
-            connect "Control Breaker From4" "Single phase time-varying load with the Master PulseA.In1" as Connection1176
             connect Pref634PhA.out "Single phase time-varying load with the Master PulseA.In6" as Connection1177
             connect "Control Breaker From5" "Single phase time-varying load with the Master PulseA.In2" as Connection1178
             connect Qref634PhA.out "Single phase time-varying load with the Master PulseA.In7" as Connection1179
             connect PVpanel_power634PhA.out "Single phase time-varying load with the Master PulseA.In8" as Connection1180
-            connect "Control Breaker From6" "Single phase time-varying load with the Master PulseA.In3" as Connection1181
             connect Battery_Power634PhA.out "Single phase time-varying load with the Master PulseA.In9" as Connection1182
-            connect "Control Breaker From7" "Single phase time-varying load with the Master PulseA.In4" as Connection1183
             connect Control5 "Single phase time-varying load with the Master PulseA.In5" as Connection1184
             connect P1 "Single phase time-varying load with the Master PulseA.P1" as Connection1185
             connect "Single phase time-varying load with the Master PulseA.P2" gnd7.node as Connection1187
@@ -796,6 +826,24 @@ model "Monash_13NodeFeeder" {
             connect Battery_Power634PhC.out "Single phase time-varying load with the Master PulseC.In9" as Connection1208
             connect P3 "Single phase time-varying load with the Master PulseC.P1" as Connection1209
             connect gnd9.node "Single phase time-varying load with the Master PulseC.P2" as Connection1211
+            connect "Control Breaker From4" Junction1 as Connection1212
+            connect Junction1 "Single phase time-varying load with the Master PulseA.In1" as Connection1213
+            connect 634modbusload.in Junction1 as Connection1214
+            [
+                breakpoints = 7816, 10768; 8108, 10768
+            ]
+            connect "Control Breaker From6" Junction2 as Connection1215
+            connect Junction2 "Single phase time-varying load with the Master PulseA.In3" as Connection1216
+            connect 634modbuspv.in Junction2 as Connection1217
+            [
+                breakpoints = 7828, 11060; 8116, 11060
+            ]
+            connect "Control Breaker From7" Junction3 as Connection1218
+            connect Junction3 "Single phase time-varying load with the Master PulseA.In4" as Connection1219
+            connect 634modbusbatt.in Junction3 as Connection1220
+            [
+                breakpoints = 7808, 11172; 8120, 11172
+            ]
         }
         [
             position = 9628, 8184
@@ -1201,6 +1249,7 @@ model "Monash_13NodeFeeder" {
 
             component "core/Constant" Constant1 {
                 execution_rate = "ex_rate"
+                value = "0"
             }
             [
                 position = 8324, 7716
@@ -13537,7 +13586,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8292
+            position = 5472, 8312
             size = 32, 32
         ]
 
@@ -13545,7 +13594,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8324
+            position = 5472, 8344
             size = 32, 32
         ]
 
@@ -13553,7 +13602,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8356
+            position = 5472, 8376
             size = 32, 32
         ]
 
@@ -13561,7 +13610,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8388
+            position = 5472, 8408
             size = 32, 32
         ]
 
@@ -13569,7 +13618,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8420
+            position = 5472, 8440
             size = 32, 32
         ]
 
@@ -13577,7 +13626,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8452
+            position = 5472, 8472
             size = 32, 32
         ]
 
@@ -13585,7 +13634,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8484
+            position = 5472, 8504
             size = 32, 32
         ]
 
@@ -13593,7 +13642,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8516
+            position = 5472, 8536
             size = 32, 32
         ]
 
@@ -13601,7 +13650,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8548
+            position = 5472, 8568
             size = 32, 32
         ]
 
@@ -13609,7 +13658,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8580
+            position = 5472, 8600
             size = 32, 32
         ]
 
@@ -13617,7 +13666,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8612
+            position = 5472, 8632
             size = 32, 32
         ]
 
@@ -13625,7 +13674,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8644
+            position = 5472, 8664
             size = 32, 32
         ]
 
@@ -13633,7 +13682,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8676
+            position = 5472, 8696
             size = 32, 32
         ]
 
@@ -13641,7 +13690,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8708
+            position = 5472, 8728
             size = 32, 32
         ]
 
@@ -13649,7 +13698,7 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8740
+            position = 5472, 8760
             size = 32, 32
         ]
 
@@ -13657,7 +13706,151 @@ model "Monash_13NodeFeeder" {
             execution_rate = "ex_rate"
         }
         [
-            position = 6092, 8772
+            position = 5472, 8792
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition1" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8320
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition2" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8356
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition3" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8392
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition4" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8428
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition5" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8464
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition6" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8604
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition7" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8536
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition8" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8568
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition9" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8500
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition10" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8640
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition11" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8672
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition12" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8708
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition13" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8740
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition14" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8776
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition15" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6084, 8808
+            hide_name = True
+            size = 32, 32
+        ]
+
+        component "core/CPU Transition" "CPU Transition16" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6080, 8284
+            hide_name = True
             size = 32, 32
         ]
 
@@ -14443,80 +14636,38 @@ model "Monash_13NodeFeeder" {
         [
             breakpoints = 6588, 8104; 6588, 8104; 6588, 7968
         ]
-        connect From3 "Rate Transition1.in" as Connection1226
-        connect "Rate Transition1.out" "Bus Join2.in1" as Connection1227
-        connect "Rate Transition16.out" "Bus Join2.in16" as Connection1228
-        connect "Rate Transition15.out" "Bus Join2.in15" as Connection1229
-        [
-            breakpoints = 6336, 8740; 6336, 8516
-        ]
-        connect "Rate Transition14.out" "Bus Join2.in14" as Connection1230
-        [
-            breakpoints = 6320, 8708; 6320, 8500
-        ]
-        connect "Rate Transition13.out" "Bus Join2.in13" as Connection1231
-        [
-            breakpoints = 6304, 8676; 6304, 8484
-        ]
-        connect "Rate Transition12.out" "Bus Join2.in12" as Connection1232
-        [
-            breakpoints = 6288, 8644; 6288, 8468
-        ]
-        connect "Rate Transition11.out" "Bus Join2.in11" as Connection1233
-        [
-            breakpoints = 6272, 8612; 6272, 8452
-        ]
-        connect "Rate Transition10.out" "Bus Join2.in10" as Connection1234
-        [
-            breakpoints = 6256, 8580; 6256, 8436
-        ]
-        connect "Rate Transition9.out" "Bus Join2.in9" as Connection1235
-        [
-            breakpoints = 6240, 8548; 6240, 8420
-        ]
-        connect "Rate Transition8.out" "Bus Join2.in8" as Connection1236
-        [
-            breakpoints = 6224, 8516; 6224, 8404
-        ]
-        connect "Rate Transition7.out" "Bus Join2.in7" as Connection1237
-        [
-            breakpoints = 6208, 8484; 6208, 8388
-        ]
-        connect "Rate Transition6.out" "Bus Join2.in6" as Connection1238
-        [
-            breakpoints = 6192, 8452; 6192, 8372
-        ]
-        connect "Rate Transition5.out" "Bus Join2.in5" as Connection1239
-        [
-            breakpoints = 6176, 8420; 6176, 8356
-        ]
-        connect "Rate Transition4.out" "Bus Join2.in4" as Connection1240
-        [
-            breakpoints = 6160, 8388; 6160, 8340
-        ]
-        connect "Rate Transition3.out" "Bus Join2.in3" as Connection1241
-        [
-            breakpoints = 6148, 8356; 6148, 8324
-        ]
-        connect "Rate Transition2.out" "Bus Join2.in2" as Connection1242
-        [
-            breakpoints = 6136, 8324; 6136, 8308; 6352, 8308
-        ]
-        connect From21 "Rate Transition16.in" as Connection1243
-        connect From20 "Rate Transition15.in" as Connection1244
-        connect From19 "Rate Transition14.in" as Connection1245
-        connect From18 "Rate Transition13.in" as Connection1246
-        connect From17 "Rate Transition12.in" as Connection1247
-        connect From16 "Rate Transition11.in" as Connection1248
-        connect From15 "Rate Transition10.in" as Connection1249
-        connect From14 "Rate Transition9.in" as Connection1250
-        connect From13 "Rate Transition8.in" as Connection1251
-        connect From12 "Rate Transition7.in" as Connection1252
-        connect From11 "Rate Transition6.in" as Connection1253
-        connect From10 "Rate Transition5.in" as Connection1254
-        connect From9 "Rate Transition4.in" as Connection1255
-        connect From8 "Rate Transition3.in" as Connection1256
-        connect From4 "Rate Transition2.in" as Connection1257
+        connect From21 "CPU Transition15.In" as Connection1224
+        connect From20 "CPU Transition14.In" as Connection1225
+        connect From19 "CPU Transition13.In" as Connection1226
+        connect From18 "CPU Transition12.In" as Connection1227
+        connect From17 "CPU Transition11.In" as Connection1228
+        connect From16 "CPU Transition10.In" as Connection1229
+        connect From15 "CPU Transition6.In" as Connection1230
+        connect From14 "CPU Transition8.In" as Connection1231
+        connect From13 "CPU Transition7.In" as Connection1232
+        connect From12 "CPU Transition9.In" as Connection1233
+        connect From11 "CPU Transition5.In" as Connection1234
+        connect From10 "CPU Transition4.In" as Connection1235
+        connect From9 "CPU Transition3.In" as Connection1236
+        connect From8 "CPU Transition2.In" as Connection1237
+        connect From4 "CPU Transition1.In" as Connection1238
+        connect From3 "CPU Transition16.In" as Connection1239
+        connect "CPU Transition16.Out" "Bus Join2.in1" as Connection1240
+        connect "CPU Transition1.Out" "Bus Join2.in2" as Connection1241
+        connect "CPU Transition2.Out" "Bus Join2.in3" as Connection1242
+        connect "CPU Transition3.Out" "Bus Join2.in4" as Connection1243
+        connect "CPU Transition4.Out" "Bus Join2.in5" as Connection1244
+        connect "CPU Transition5.Out" "Bus Join2.in6" as Connection1245
+        connect "CPU Transition9.Out" "Bus Join2.in7" as Connection1246
+        connect "CPU Transition7.Out" "Bus Join2.in8" as Connection1247
+        connect "CPU Transition8.Out" "Bus Join2.in9" as Connection1248
+        connect "CPU Transition6.Out" "Bus Join2.in10" as Connection1249
+        connect "CPU Transition10.Out" "Bus Join2.in11" as Connection1250
+        connect "CPU Transition11.Out" "Bus Join2.in12" as Connection1251
+        connect "CPU Transition12.Out" "Bus Join2.in13" as Connection1252
+        connect "CPU Transition13.Out" "Bus Join2.in14" as Connection1253
+        connect "CPU Transition14.Out" "Bus Join2.in15" as Connection1254
+        connect "CPU Transition15.Out" "Bus Join2.in16" as Connection1255
     }
 
     logically_deleted {
@@ -14540,6 +14691,22 @@ model "Monash_13NodeFeeder" {
         "Time Varying Load 671.Comment17"
         "Time Varying Load 671.Comment18"
         "Core Coupling 1"
+        "Rate Transition1"
+        "Rate Transition2"
+        "Rate Transition3"
+        "Rate Transition4"
+        "Rate Transition5"
+        "Rate Transition6"
+        "Rate Transition7"
+        "Rate Transition8"
+        "Rate Transition9"
+        "Rate Transition10"
+        "Rate Transition11"
+        "Rate Transition12"
+        "Rate Transition13"
+        "Rate Transition14"
+        "Rate Transition15"
+        "Rate Transition16"
     }
 
     bypassed {

@@ -15,6 +15,16 @@ import re
 import numpy as np
 import pandas as pd
 
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, mean_squared_error, mean_absolute_error, r2_score
+
+from simple_pid import PID
+
+import joblib
+import matplotlib.pyplot as plt
+
+
 try:
     import cvxpy as cp
 except ImportError:
@@ -498,6 +508,9 @@ def clear_all_registers(conn, dry_run: bool) -> None:
     else:
         print(f"  Registers {HOLDING_START}-{HOLDING_START + HOLDING_COUNT - 1} cleared.")
 
+def load_real_forecast_data(path):
+    df = pd.read_csv(path)
+    return df
 
 # ============================================================
 # 5. SoC measurement logger
@@ -663,6 +676,8 @@ def main():
 
     eta_flat = make_eta_array(len(load_fc_flat))
 
+    real_forecast_df = load_real_forecast_data("./average_household_forecasts - Edited.csv")
+
     # Banner
     print("=" * 78)
     print("ECE4191 Module 3  |  Experiment 2 -- Feeder-wide MPC Playback (Modbus TCP)")
@@ -753,10 +768,13 @@ def main():
 
             for node in NODE_MAP:
 
-                load_fc_flat = node_data[node]["load_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
-                pv_fc_flat   = node_data[node]["pv_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
+                #load_fc_flat = node_data[node]["load_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
+                #pv_fc_flat   = node_data[node]["pv_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
 
-                node_load_act = node_data[node]["load_kw"]
+                load_fc_flat = real_forecast_df["Predicted_Average_Load_kW"]*N_CUSTOMERS[node]
+                pv_fc_flat = real_forecast_df["Predicted_Average_PV_Gen_kW"]*N_CUSTOMERS[node]
+
+                node_load_act = node_data[node]["load_kw"] # TODO: MAYBE PROBLEM? WHAT ARE WE USING THESE VALS FOR
                 node_pv_act = node_data[node]["pv_kw"]
 
                 # 48-step look-ahead window from the forecast CSV
@@ -764,6 +782,10 @@ def main():
                 p_load_win[node] = load_fc_flat[i:window_end]
                 p_pv_win[node]   = pv_fc_flat[i:window_end]
                 eta_win    = eta_flat[i:window_end]
+
+
+
+                
 
                 batt_traj[node], grid_traj[node], soc_traj[node], status[node], obj_val[node] = solve_daily_qp(
                     p_load_win[node], p_pv_win[node], eta_win,

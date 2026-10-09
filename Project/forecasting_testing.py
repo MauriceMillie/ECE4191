@@ -387,6 +387,18 @@ def main():
     # --- EXPORTING RESULTS TO CSV ---
     print("Exporting baseline forecasts to CSV archive...")
 
+
+    ''' 
+    # TODO: WE SHOULD PROBS ADD THIS KINDA AND APPLY IT TO PXTEST STUFF SO THAT THE DATES ARE CORRECT
+    # CURRENTLY THERE IS NO DATE COLUMN I THINK AND SO IT JUST MAKES EVERY DAY DEFAULT TO 7-13-13!!!
+
+    bom_df['date'] = (
+        bom_df['Day'].astype(str).str.zfill(2) + '/' +
+        bom_df['Month'].astype(str).str.zfill(2) + '/' +
+        bom_df['Year'].astype(str)
+    )
+    '''
+
     export_df = pd.DataFrame(
         {
             "Date": p_x_test["date"]

@@ -697,7 +697,7 @@ widgetValue = None
 widgetValue = None
 ]]></on_timer_code>
                 <on_start_code_source><![CDATA[Macro code]]></on_start_code_source>
-                <inputValue><![CDATA[ON]]></inputValue>
+                <inputValue><![CDATA[OFF]]></inputValue>
                 <availableValues><![CDATA[['ON', 'OFF']]]></availableValues>
                 <unit><![CDATA[]]></unit>
                 <autocomplete_enabled>False</autocomplete_enabled>
