@@ -917,7 +917,7 @@ def main():
                 f"{CIL_NODE}_soc_predicted_pct": round(soc_pred_pct[CIL_NODE], 4),
                 f"{CIL_NODE}_soc_measured_pct": "" if measured_soc_646 is None else round(float(measured_soc_646), 4),
                 f"{CIL_NODE}_mpc_status": status[CIL_NODE],
-                f"{node}_voltage": node_voltage[CIL_NODE],
+                f"{CIL_NODE}_voltage": node_voltage[CIL_NODE],
             })
 
             sched_rows_all_nodes = {}
