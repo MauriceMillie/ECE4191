@@ -281,49 +281,87 @@ def make_eta_array(n_steps_total: int) -> np.ndarray:
     return np.tile(pattern, reps)[:n_steps_total]
 
 
-def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh, soc0_kwh, soc0_646_kwh, solver):
+def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh, soc0_kwh, soc0_646_kwh, node, solver):
+    if node == CIL_NODE:
+        n = len(p_load)
 
-    n = len(p_load)
+        #soc0_pred_646_kwh=(soc0_kwh)*(N_CUSTOMERS["646_B"]/TOTAL_CUSTOMERS)
 
-    #soc0_pred_646_kwh=(soc0_kwh)*(N_CUSTOMERS["646_B"]/TOTAL_CUSTOMERS)
+        #soc0_internal_kwh=soc0_kwh-soc0_pred_646_kwh+soc0_646_kwh
 
-    #soc0_internal_kwh=soc0_kwh-soc0_pred_646_kwh+soc0_646_kwh
+        batt = cp.Variable(n)
+        grid = cp.Variable(n)
+        soc = cp.Variable(n + 1)
 
-    batt = cp.Variable(n)
-    grid = cp.Variable(n)
-    soc = cp.Variable(n + 1)
+        objective = cp.Minimize(
+            cp.sum(-DELTA_HOURS * cp.multiply(eta, batt) + weight * cp.multiply(eta, cp.square(grid)))
+        )
 
-    objective = cp.Minimize(
-        cp.sum(-DELTA_HOURS * cp.multiply(eta, batt) + weight * cp.multiply(eta, cp.square(grid)))
-    )
+        constraints = [
+            grid == p_load - p_pv - batt,
+            grid <=3000, 
+            grid >=-1500, # TODO: just commented for testing!!!
+            batt >= -batt_power_kw,
+            batt <=  batt_power_kw,
+            #soc[0] == soc0_internal_kwh, #old
+            soc[0] == soc0_646_kwh,
+            soc[1:] == soc[:-1] - DELTA_HOURS * batt,
+            soc >= 0.0,
+            soc <= capacity_kwh,
+            #soc[-1] == soc0_kwh,   # old, leave commented
+        ]
 
-    constraints = [
-        grid == p_load - p_pv - batt,
-        grid <=3000, 
-        grid >=-1500, # TODO: just commented for testing!!!
-        batt >= -batt_power_kw,
-        batt <=  batt_power_kw,
-        #soc[0] == soc0_internal_kwh, #old
-        soc[0] == soc0_kwh,
-        soc[1:] == soc[:-1] - DELTA_HOURS * batt,
-        soc >= 0.0,
-        soc <= capacity_kwh,
-        #soc[-1] == soc0_kwh,   # old, leave commented
-    ]
+        problem = cp.Problem(objective, constraints)
+        problem.solve(solver=getattr(cp, solver), verbose=False)
 
-    problem = cp.Problem(objective, constraints)
-    problem.solve(solver=getattr(cp, solver), verbose=False)
+        if batt.value is None:
+            raise RuntimeError(f"QP failed: {problem.status}")
 
-    if batt.value is None:
-        raise RuntimeError(f"QP failed: {problem.status}")
+        return (
+            np.asarray(batt.value).flatten(),
+            np.asarray(grid.value).flatten(),
+            np.asarray(soc.value).flatten(),
+            str(problem.status),
+            float(problem.value),
+        )
+    else:
+        n = len(p_load)
 
-    return (
-        np.asarray(batt.value).flatten(),
-        np.asarray(grid.value).flatten(),
-        np.asarray(soc.value).flatten(),
-        str(problem.status),
-        float(problem.value),
-    )
+        batt = cp.Variable(n)
+        grid = cp.Variable(n)
+        soc = cp.Variable(n + 1)
+
+        objective = cp.Minimize(
+            cp.sum(-DELTA_HOURS * cp.multiply(eta, batt) + weight * cp.multiply(eta, cp.square(grid)))
+        )
+
+        constraints = [
+            grid == p_load - p_pv - batt,
+            grid <=3000, 
+            grid >=-1500, # TODO: just commented for testing!!!
+            batt >= -batt_power_kw,
+            batt <=  batt_power_kw,
+            #soc[0] == soc0_internal_kwh, #old
+            soc[0] == soc0_kwh,
+            soc[1:] == soc[:-1] - DELTA_HOURS * batt,
+            soc >= 0.0,
+            soc <= capacity_kwh,
+            #soc[-1] == soc0_kwh,   # old, leave commented
+        ]
+
+        problem = cp.Problem(objective, constraints)
+        problem.solve(solver=getattr(cp, solver), verbose=False)
+
+        if batt.value is None:
+            raise RuntimeError(f"QP failed: {problem.status}")
+
+        return (
+            np.asarray(batt.value).flatten(),
+            np.asarray(grid.value).flatten(),
+            np.asarray(soc.value).flatten(),
+            str(problem.status),
+            float(problem.value),
+        )        
 
 
 def _action(v: float) -> str:
@@ -734,6 +772,7 @@ def main():
                     capacity_kwh=N_CUSTOMERS[node]*10,
                     soc0_kwh=soc_pred[node],
                     soc0_646_kwh=soc_measured_646_CIL_kwh, # probs can go thru and remove i think
+                    node=node,
                     solver=args.solver,
                 ) #THIS NEEDS TO BE CHANGED!!!!
 
@@ -878,7 +917,7 @@ def main():
                 f"{CIL_NODE}_soc_predicted_pct": round(soc_pred_pct[CIL_NODE], 4),
                 f"{CIL_NODE}_soc_measured_pct": "" if measured_soc_646 is None else round(float(measured_soc_646), 4),
                 f"{CIL_NODE}_mpc_status": status[CIL_NODE],
-                f"{node}_voltage": node_voltage[node],
+                f"{node}_voltage": node_voltage[CIL_NODE],
             })
 
             sched_rows_all_nodes = {}
