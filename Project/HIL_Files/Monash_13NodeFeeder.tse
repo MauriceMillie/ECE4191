@@ -4,7 +4,7 @@ version = 4.2
 // Saved by sw version: 2026.1 SP1
 //
 
-model "monash_13nodefeeder" {
+model "Monash_13NodeFeeder" {
     configuration {
         hil_device = "HIL101"
         hil_configuration_id = 1
@@ -5373,6 +5373,17 @@ model "monash_13nodefeeder" {
                 size = 60, 20
             ]
 
+            tag Goto1 {
+                value = "645B"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7864, 7908
+                size = 60, 20
+            ]
+
             junction Junction5 pe
             [
                 position = 7888, 8616
@@ -5396,6 +5407,11 @@ model "monash_13nodefeeder" {
             junction Junction22 sp
             [
                 position = 7728, 8016
+            ]
+
+            junction Junction23 sp
+            [
+                position = 7812, 7960
             ]
 
             comment Comment2 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">Phase Calculation</span></p></body></html> ENDCOMMENT 
@@ -5439,7 +5455,6 @@ model "monash_13nodefeeder" {
             connect V2.n_node Junction5 as Connection95
             connect V2_goto V2.out as Connection182
             connect V2_phase.in ph_diff2.phase_diff as Connection203
-            connect V2_rms.in RMS2.out as Connection155
             connect V3.p_node Junction20 as Connection238
             [
                 breakpoints = 8048, 8512
@@ -5469,6 +5484,9 @@ model "monash_13nodefeeder" {
             connect "CPU Transition1.Out" ph_diff2.signal2 as Connection252
             connect V1_REF_from2 "CPU Transition2.In" as Connection253
             connect "CPU Transition2.Out" ph_diff3.signal2 as Connection254
+            connect V2_rms.in Junction23 as Connection255
+            connect Junction23 RMS2.out as Connection256
+            connect Goto1 Junction23 as Connection257
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -5927,6 +5945,17 @@ model "monash_13nodefeeder" {
                 size = 60, 20
             ]
 
+            tag Goto1 {
+                value = "646B"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7848, 7960
+                size = 60, 20
+            ]
+
             junction Junction5 pe
             [
                 position = 7872, 8664
@@ -5955,6 +5984,11 @@ model "monash_13nodefeeder" {
             junction Junction10 sp
             [
                 position = 7728, 7948
+            ]
+
+            junction Junction11 sp
+            [
+                position = 7784, 8008
             ]
 
             comment Comment2 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">Phase Calculation</span></p></body></html> ENDCOMMENT 
@@ -6012,10 +6046,8 @@ model "monash_13nodefeeder" {
             connect V3_goto V3.out as Connection181
             connect V3_phase.in ph_diff3.phase_diff as Connection207
             connect Sum1.out V646 as Connection241
-            connect V2_rms.in Junction8 as Connection242
             connect Junction8 RMS2.out as Connection243
             connect V3_rms.in Junction9 as Connection245
-            connect Junction9 RMS3.out as Connection246
             connect Sum1.in1 Junction9 as Connection247
             connect V2_from2 "Rate Transition1.in" as Connection248
             connect "Rate Transition1.out" ph_diff2.signal1 as Connection249
@@ -6028,6 +6060,10 @@ model "monash_13nodefeeder" {
             connect "CPU Transition1.Out" ph_diff2.signal2 as Connection256
             connect V1_REF_from2 "CPU Transition2.In" as Connection257
             connect "CPU Transition2.Out" ph_diff3.signal2 as Connection258
+            connect V2_rms.in Junction11 as Connection259
+            connect Junction11 Junction8 as Connection260
+            connect Goto1 Junction11 as Connection261
+            connect Junction9 RMS3.out as Connection265
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -7463,6 +7499,39 @@ model "monash_13nodefeeder" {
                 size = 60, 20
             ]
 
+            tag Goto1 {
+                value = "634A"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7672, 7496
+                size = 60, 20
+            ]
+
+            tag Goto2 {
+                value = "634B"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7672, 7556
+                size = 60, 20
+            ]
+
+            tag Goto3 {
+                value = "634C"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7672, 7600
+                size = 60, 20
+            ]
+
             junction Junction5 pe
             [
                 position = 7872, 8400
@@ -7501,6 +7570,21 @@ model "monash_13nodefeeder" {
             junction Junction25 sp
             [
                 position = 7884, 7648
+            ]
+
+            junction Junction26 sp
+            [
+                position = 7588, 7520
+            ]
+
+            junction Junction27 sp
+            [
+                position = 7584, 7576
+            ]
+
+            junction Junction28 sp
+            [
+                position = 7584, 7632
             ]
 
             comment Comment1 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">RMS Calculation</span></p></body></html> ENDCOMMENT 
@@ -7555,7 +7639,6 @@ model "monash_13nodefeeder" {
             connect V1_from1 RMS1.in as Connection193
             connect V1_goto V1.out as Connection183
             connect V1_phase.in ph_diff1.phase_diff as Connection200
-            connect V1_rms.in RMS1.out as Connection154
             connect V2.n_node Junction5 as Connection95
             connect V2.p_node Junction9 as Connection172
             [
@@ -7564,7 +7647,6 @@ model "monash_13nodefeeder" {
             connect V2_from1 RMS2.in as Connection194
             connect V2_goto V2.out as Connection182
             connect V2_phase.in ph_diff2.phase_diff as Connection203
-            connect V2_rms.in RMS2.out as Connection155
             connect V3.p_node Junction18 as Connection174
             [
                 breakpoints = 8032, 8296
@@ -7576,7 +7658,6 @@ model "monash_13nodefeeder" {
             connect V3_from1 RMS3.in as Connection195
             connect V3_goto V3.out as Connection181
             connect V3_phase.in ph_diff3.phase_diff as Connection207
-            connect V3_rms.in RMS3.out as Connection156
             connect gnd.node Junction22 as Connection177
             connect "Rate Transition1.out" ph_diff1.signal1 as Connection232
             connect "Rate Transition2.out" ph_diff2.signal1 as Connection234
@@ -7599,6 +7680,15 @@ model "monash_13nodefeeder" {
                 breakpoints = 8008, 7648
             ]
             connect "CPU Marker3.node" Junction25 as Connection251
+            connect V1_rms.in Junction26 as Connection252
+            connect Junction26 RMS1.out as Connection253
+            connect Goto1 Junction26 as Connection254
+            connect V2_rms.in Junction27 as Connection255
+            connect Junction27 RMS2.out as Connection256
+            connect Goto2 Junction27 as Connection257
+            connect V3_rms.in Junction28 as Connection258
+            connect Junction28 RMS3.out as Connection259
+            connect Goto3 Junction28 as Connection260
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -7837,6 +7927,17 @@ model "monash_13nodefeeder" {
                 size = 60, 20
             ]
 
+            tag Goto1 {
+                value = "611C"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7684, 7856
+                size = 60, 20
+            ]
+
             junction Junction1 pe
             [
                 position = 7816, 8192
@@ -7845,6 +7946,11 @@ model "monash_13nodefeeder" {
             junction Junction2 sp
             [
                 position = 7904, 7956
+            ]
+
+            junction Junction3 sp
+            [
+                position = 7636, 7904
             ]
 
             comment Comment2 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">Phase Calculation</span></p></body></html> ENDCOMMENT 
@@ -7874,13 +7980,15 @@ model "monash_13nodefeeder" {
             connect V3_from1 RMS3.in as Connection195
             connect V3_goto V3.out as Connection181
             connect V3_phase.in ph_diff3.phase_diff as Connection207
-            connect V3_rms.in RMS3.out as Connection156
             connect "Rate Transition1.out" ph_diff3.signal1 as Connection237
             connect V1_REF_from2 "CPU Transition1.In" as Connection238
             connect "CPU Transition1.Out" ph_diff3.signal2 as Connection239
             connect V3_from2 Junction2 as Connection240
             connect Junction2 "Rate Transition1.in" as Connection241
             connect "CPU Marker1.node" Junction2 as Connection242
+            connect V3_rms.in Junction3 as Connection243
+            connect Junction3 RMS3.out as Connection244
+            connect Goto1 Junction3 as Connection245
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -9071,6 +9179,39 @@ model "monash_13nodefeeder" {
                 size = 60, 20
             ]
 
+            tag Goto1 {
+                value = "671A"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7668, 7476
+                size = 60, 20
+            ]
+
+            tag Goto2 {
+                value = "671B"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7680, 7552
+                size = 60, 20
+            ]
+
+            tag Goto3 {
+                value = "671C"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7680, 7608
+                size = 60, 20
+            ]
+
             junction Junction5 pe
             [
                 position = 7872, 8400
@@ -9109,6 +9250,21 @@ model "monash_13nodefeeder" {
             junction Junction25 sp
             [
                 position = 7848, 7648
+            ]
+
+            junction Junction26 sp
+            [
+                position = 7584, 7520
+            ]
+
+            junction Junction27 sp
+            [
+                position = 7588, 7632
+            ]
+
+            junction Junction28 sp
+            [
+                position = 7588, 7576
             ]
 
             comment Comment1 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">RMS Calculation</span></p></body></html> ENDCOMMENT 
@@ -9163,7 +9319,6 @@ model "monash_13nodefeeder" {
             connect V1_from1 RMS1.in as Connection193
             connect V1_goto V1.out as Connection183
             connect V1_phase.in ph_diff1.phase_diff as Connection200
-            connect V1_rms.in RMS1.out as Connection154
             connect V2.n_node Junction5 as Connection95
             connect V2.p_node Junction9 as Connection172
             [
@@ -9172,7 +9327,6 @@ model "monash_13nodefeeder" {
             connect V2_from1 RMS2.in as Connection194
             connect V2_goto V2.out as Connection182
             connect V2_phase.in ph_diff2.phase_diff as Connection203
-            connect V2_rms.in RMS2.out as Connection155
             connect V3.p_node Junction18 as Connection174
             [
                 breakpoints = 8032, 8296
@@ -9184,7 +9338,6 @@ model "monash_13nodefeeder" {
             connect V3_from1 RMS3.in as Connection195
             connect V3_goto V3.out as Connection181
             connect V3_phase.in ph_diff3.phase_diff as Connection207
-            connect V3_rms.in RMS3.out as Connection156
             connect gnd.node Junction22 as Connection177
             connect "Rate Transition3.out" ph_diff3.signal1 as Connection232
             connect "Rate Transition2.out" ph_diff2.signal1 as Connection234
@@ -9204,6 +9357,15 @@ model "monash_13nodefeeder" {
             connect V3_from2 Junction25 as Connection249
             connect Junction25 "Rate Transition3.in" as Connection250
             connect "CPU Marker3.node" Junction25 as Connection251
+            connect V1_rms.in Junction26 as Connection252
+            connect Junction26 RMS1.out as Connection253
+            connect Goto1 Junction26 as Connection254
+            connect V3_rms.in Junction27 as Connection255
+            connect Junction27 RMS3.out as Connection256
+            connect Goto3 Junction27 as Connection257
+            connect V2_rms.in Junction28 as Connection258
+            connect Junction28 RMS2.out as Connection259
+            connect Goto2 Junction28 as Connection260
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -9442,6 +9604,17 @@ model "monash_13nodefeeder" {
                 size = 60, 20
             ]
 
+            tag Goto1 {
+                value = "652A"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7560, 7872
+                size = 60, 20
+            ]
+
             junction Junction1 pe
             [
                 position = 7448, 8168
@@ -9450,6 +9623,11 @@ model "monash_13nodefeeder" {
             junction Junction2 sp
             [
                 position = 7800, 7944
+            ]
+
+            junction Junction3 sp
+            [
+                position = 7512, 7920
             ]
 
             comment Comment1 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">RMS Calculation</span></p></body></html> ENDCOMMENT 
@@ -9479,13 +9657,15 @@ model "monash_13nodefeeder" {
             connect V1_from1 RMS1.in as Connection193
             connect V1_goto V1.out as Connection183
             connect V1_phase.in ph_diff1.phase_diff as Connection200
-            connect V1_rms.in RMS1.out as Connection154
             connect "Rate Transition1.out" ph_diff1.signal1 as Connection249
             connect V1_from2 Junction2 as Connection250
             connect Junction2 "Rate Transition1.in" as Connection251
             connect "CPU Marker1.node" Junction2 as Connection252
             connect V1_REF_from "CPU Transition1.In" as Connection253
             connect "CPU Transition1.Out" ph_diff1.signal2 as Connection254
+            connect V1_rms.in Junction3 as Connection255
+            connect Junction3 RMS1.out as Connection256
+            connect Goto1 Junction3 as Connection257
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -10869,6 +11049,39 @@ model "monash_13nodefeeder" {
                 size = 60, 20
             ]
 
+            tag Goto1 {
+                value = "692A"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7672, 7472
+                size = 60, 20
+            ]
+
+            tag Goto2 {
+                value = "692B"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7672, 7544
+                size = 60, 20
+            ]
+
+            tag Goto3 {
+                value = "692C"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7672, 7600
+                size = 60, 20
+            ]
+
             junction Junction5 pe
             [
                 position = 7872, 8392
@@ -10907,6 +11120,21 @@ model "monash_13nodefeeder" {
             junction Junction25 sp
             [
                 position = 7868, 7656
+            ]
+
+            junction Junction26 sp
+            [
+                position = 7588, 7512
+            ]
+
+            junction Junction27 sp
+            [
+                position = 7588, 7568
+            ]
+
+            junction Junction28 sp
+            [
+                position = 7588, 7624
             ]
 
             comment Comment1 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">RMS Calculation</span></p></body></html> ENDCOMMENT 
@@ -10961,7 +11189,6 @@ model "monash_13nodefeeder" {
             connect V1_from1 RMS1.in as Connection193
             connect V1_goto V1.out as Connection183
             connect V1_phase.in ph_diff1.phase_diff as Connection200
-            connect V1_rms.in RMS1.out as Connection154
             connect V2.n_node Junction5 as Connection95
             connect V2.p_node Junction9 as Connection172
             [
@@ -10970,7 +11197,6 @@ model "monash_13nodefeeder" {
             connect V2_from1 RMS2.in as Connection194
             connect V2_goto V2.out as Connection182
             connect V2_phase.in ph_diff2.phase_diff as Connection203
-            connect V2_rms.in RMS2.out as Connection155
             connect V3.p_node Junction18 as Connection174
             [
                 breakpoints = 8032, 8288
@@ -10982,7 +11208,6 @@ model "monash_13nodefeeder" {
             connect V3_from1 RMS3.in as Connection195
             connect V3_goto V3.out as Connection181
             connect V3_phase.in ph_diff3.phase_diff as Connection207
-            connect V3_rms.in RMS3.out as Connection156
             connect gnd.node Junction22 as Connection177
             connect "Rate Transition3.out" ph_diff3.signal1 as Connection232
             connect "Rate Transition2.out" ph_diff2.signal1 as Connection234
@@ -11002,6 +11227,15 @@ model "monash_13nodefeeder" {
             connect V3_from2 Junction25 as Connection249
             connect Junction25 "Rate Transition3.in" as Connection250
             connect "CPU Marker3.node" Junction25 as Connection251
+            connect V1_rms.in Junction26 as Connection252
+            connect Junction26 RMS1.out as Connection253
+            connect Goto1 Junction26 as Connection254
+            connect V2_rms.in Junction27 as Connection255
+            connect Junction27 RMS2.out as Connection256
+            connect Goto2 Junction27 as Connection257
+            connect V3_rms.in Junction28 as Connection258
+            connect Junction28 RMS3.out as Connection259
+            connect Goto3 Junction28 as Connection260
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -11653,6 +11887,39 @@ model "monash_13nodefeeder" {
                 size = 60, 20
             ]
 
+            tag Goto1 {
+                value = "675A"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7680, 7488
+                size = 60, 20
+            ]
+
+            tag Goto2 {
+                value = "675B"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7680, 7556
+                size = 60, 20
+            ]
+
+            tag Goto3 {
+                value = "675C"
+                scope = global
+                kind = sp
+                direction = in
+            }
+            [
+                position = 7680, 7608
+                size = 60, 20
+            ]
+
             junction Junction5 pe
             [
                 position = 7872, 8400
@@ -11691,6 +11958,21 @@ model "monash_13nodefeeder" {
             junction Junction25 sp
             [
                 position = 7896, 7656
+            ]
+
+            junction Junction26 sp
+            [
+                position = 7588, 7520
+            ]
+
+            junction Junction27 sp
+            [
+                position = 7584, 7576
+            ]
+
+            junction Junction28 sp
+            [
+                position = 7588, 7632
             ]
 
             comment Comment1 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:'Arial'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:14pt;">RMS Calculation</span></p></body></html> ENDCOMMENT 
@@ -11745,7 +12027,6 @@ model "monash_13nodefeeder" {
             connect V1_from1 RMS1.in as Connection193
             connect V1_goto V1.out as Connection183
             connect V1_phase.in ph_diff1.phase_diff as Connection200
-            connect V1_rms.in RMS1.out as Connection154
             connect V2.n_node Junction5 as Connection95
             connect V2.p_node Junction9 as Connection172
             [
@@ -11754,7 +12035,6 @@ model "monash_13nodefeeder" {
             connect V2_from1 RMS2.in as Connection194
             connect V2_goto V2.out as Connection182
             connect V2_phase.in ph_diff2.phase_diff as Connection203
-            connect V2_rms.in RMS2.out as Connection155
             connect V3.p_node Junction18 as Connection174
             [
                 breakpoints = 8032, 8296
@@ -11766,7 +12046,6 @@ model "monash_13nodefeeder" {
             connect V3_from1 RMS3.in as Connection195
             connect V3_goto V3.out as Connection181
             connect V3_phase.in ph_diff3.phase_diff as Connection207
-            connect V3_rms.in RMS3.out as Connection156
             connect gnd.node Junction22 as Connection177
             connect "Rate Transition1.out" ph_diff1.signal1 as Connection232
             connect "Rate Transition2.out" ph_diff2.signal1 as Connection234
@@ -11786,6 +12065,15 @@ model "monash_13nodefeeder" {
             connect V3_from2 Junction25 as Connection249
             connect Junction25 "Rate Transition3.in" as Connection250
             connect "CPU Marker3.node" Junction25 as Connection251
+            connect V1_rms.in Junction26 as Connection252
+            connect Junction26 RMS1.out as Connection253
+            connect Goto1 Junction26 as Connection254
+            connect V2_rms.in Junction27 as Connection255
+            connect Junction27 RMS2.out as Connection256
+            connect Goto2 Junction27 as Connection257
+            connect V3_rms.in Junction28 as Connection258
+            connect Junction28 RMS3.out as Connection259
+            connect Goto3 Junction28 as Connection260
 
             mask {
                 icon = "image(\'images/msr_unit.png\')"
@@ -13237,6 +13525,142 @@ model "monash_13nodefeeder" {
             position = 6516, 7940
         ]
 
+        component "core/Bus Join" "Bus Join2" {
+            execution_rate = "ex_rate"
+            inputs = "17"
+        }
+        [
+            position = 6392, 8404
+        ]
+
+        component "core/Rate Transition" "Rate Transition1" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8292
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition2" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8324
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition3" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8356
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition4" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8388
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition5" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8420
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition6" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8452
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition7" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8484
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition8" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8516
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition9" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8548
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition10" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8580
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition11" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8612
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition12" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8644
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition13" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8676
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition14" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8708
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition15" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8740
+            size = 32, 32
+        ]
+
+        component "core/Rate Transition" "Rate Transition16" {
+            execution_rate = "ex_rate"
+        }
+        [
+            position = 6092, 8772
+            size = 32, 32
+        ]
+
         tag Control {
             value = "ModeSelect"
             scope = global
@@ -13280,6 +13704,182 @@ model "monash_13nodefeeder" {
         }
         [
             position = 6288, 8000
+            size = 60, 20
+        ]
+
+        tag From3 {
+            value = "646B"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8292
+            size = 60, 20
+        ]
+
+        tag From4 {
+            value = "645B"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8324
+            size = 60, 20
+        ]
+
+        tag From8 {
+            value = "611C"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8356
+            size = 60, 20
+        ]
+
+        tag From9 {
+            value = "652A"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8388
+            size = 60, 20
+        ]
+
+        tag From10 {
+            value = "671A"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8420
+            size = 60, 20
+        ]
+
+        tag From11 {
+            value = "671B"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8452
+            size = 60, 20
+        ]
+
+        tag From12 {
+            value = "671C"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8484
+            size = 60, 20
+        ]
+
+        tag From13 {
+            value = "692C"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8516
+            size = 60, 20
+        ]
+
+        tag From14 {
+            value = "692B"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8548
+            size = 60, 20
+        ]
+
+        tag From15 {
+            value = "692A"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8580
+            size = 60, 20
+        ]
+
+        tag From16 {
+            value = "675C"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8612
+            size = 60, 20
+        ]
+
+        tag From17 {
+            value = "675B"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8644
+            size = 60, 20
+        ]
+
+        tag From18 {
+            value = "675A"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8676
+            size = 60, 20
+        ]
+
+        tag From19 {
+            value = "634C"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8708
+            size = 60, 20
+        ]
+
+        tag From20 {
+            value = "634B"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8740
+            size = 60, 20
+        ]
+
+        tag From21 {
+            value = "634A"
+            scope = global
+            kind = sp
+            direction = out
+        }
+        [
+            position = 5792, 8772
             size = 60, 20
         ]
 
@@ -13825,7 +14425,6 @@ model "monash_13nodefeeder" {
             breakpoints = 6476, 7968
         ]
         connect Gain1.in Junction1515 as Connection1216
-        connect Gain1.out "ModBus Device1.reg_in" as Connection1217
         connect "Node 675.B2" "Time Varying Load 675.P2" as Connection1219
         connect "Node 675.A2" "Time Varying Load 675.P1" as Connection1220
         [
@@ -13836,6 +14435,88 @@ model "monash_13nodefeeder" {
             breakpoints = 9664, 9192; 9664, 9192
         ]
         connect "Node 611.C1" "Time Varying Load 611.P1" as Connection1221
+        connect Gain1.out "Bus Join2.in" as Connection1222
+        [
+            breakpoints = 6552, 8060; 6344, 8060
+        ]
+        connect "Bus Join2.out" "ModBus Device1.reg_in" as Connection1223
+        [
+            breakpoints = 6588, 8104; 6588, 8104; 6588, 7968
+        ]
+        connect From3 "Rate Transition1.in" as Connection1226
+        connect "Rate Transition1.out" "Bus Join2.in1" as Connection1227
+        connect "Rate Transition16.out" "Bus Join2.in16" as Connection1228
+        connect "Rate Transition15.out" "Bus Join2.in15" as Connection1229
+        [
+            breakpoints = 6336, 8740; 6336, 8516
+        ]
+        connect "Rate Transition14.out" "Bus Join2.in14" as Connection1230
+        [
+            breakpoints = 6320, 8708; 6320, 8500
+        ]
+        connect "Rate Transition13.out" "Bus Join2.in13" as Connection1231
+        [
+            breakpoints = 6304, 8676; 6304, 8484
+        ]
+        connect "Rate Transition12.out" "Bus Join2.in12" as Connection1232
+        [
+            breakpoints = 6288, 8644; 6288, 8468
+        ]
+        connect "Rate Transition11.out" "Bus Join2.in11" as Connection1233
+        [
+            breakpoints = 6272, 8612; 6272, 8452
+        ]
+        connect "Rate Transition10.out" "Bus Join2.in10" as Connection1234
+        [
+            breakpoints = 6256, 8580; 6256, 8436
+        ]
+        connect "Rate Transition9.out" "Bus Join2.in9" as Connection1235
+        [
+            breakpoints = 6240, 8548; 6240, 8420
+        ]
+        connect "Rate Transition8.out" "Bus Join2.in8" as Connection1236
+        [
+            breakpoints = 6224, 8516; 6224, 8404
+        ]
+        connect "Rate Transition7.out" "Bus Join2.in7" as Connection1237
+        [
+            breakpoints = 6208, 8484; 6208, 8388
+        ]
+        connect "Rate Transition6.out" "Bus Join2.in6" as Connection1238
+        [
+            breakpoints = 6192, 8452; 6192, 8372
+        ]
+        connect "Rate Transition5.out" "Bus Join2.in5" as Connection1239
+        [
+            breakpoints = 6176, 8420; 6176, 8356
+        ]
+        connect "Rate Transition4.out" "Bus Join2.in4" as Connection1240
+        [
+            breakpoints = 6160, 8388; 6160, 8340
+        ]
+        connect "Rate Transition3.out" "Bus Join2.in3" as Connection1241
+        [
+            breakpoints = 6148, 8356; 6148, 8324
+        ]
+        connect "Rate Transition2.out" "Bus Join2.in2" as Connection1242
+        [
+            breakpoints = 6136, 8324; 6136, 8308; 6352, 8308
+        ]
+        connect From21 "Rate Transition16.in" as Connection1243
+        connect From20 "Rate Transition15.in" as Connection1244
+        connect From19 "Rate Transition14.in" as Connection1245
+        connect From18 "Rate Transition13.in" as Connection1246
+        connect From17 "Rate Transition12.in" as Connection1247
+        connect From16 "Rate Transition11.in" as Connection1248
+        connect From15 "Rate Transition10.in" as Connection1249
+        connect From14 "Rate Transition9.in" as Connection1250
+        connect From13 "Rate Transition8.in" as Connection1251
+        connect From12 "Rate Transition7.in" as Connection1252
+        connect From11 "Rate Transition6.in" as Connection1253
+        connect From10 "Rate Transition5.in" as Connection1254
+        connect From9 "Rate Transition4.in" as Connection1255
+        connect From8 "Rate Transition3.in" as Connection1256
+        connect From4 "Rate Transition2.in" as Connection1257
     }
 
     logically_deleted {
@@ -14363,7 +15044,7 @@ model "monash_13nodefeeder" {
             "discrete_input_addresses": '0',
             "holding_register_input_addresses": '0',
             "holding_register_output_addresses":gen_holding_addresses, 
-            "input_register_addresses": '3000, 3001'
+            "input_register_addresses": '3000, 3001, 4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008, 4009, 4010, 4011, 4012, 4013, 4014, 4015, 4016'
         }
         
         freq=60.0
