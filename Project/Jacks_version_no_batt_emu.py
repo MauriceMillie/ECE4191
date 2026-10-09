@@ -299,6 +299,16 @@ def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh, soc0_
 
         #soc0_internal_kwh=soc0_kwh-soc0_pred_646_kwh+soc0_646_kwh
 
+        p_load = np.asarray(p_load, dtype=float).reshape(-1)
+        p_pv = np.asarray(p_pv, dtype=float).reshape(-1)
+        eta = np.asarray(eta, dtype=float).reshape(-1)
+
+        if not (len(p_load) == len(p_pv) == len(eta)):
+            raise ValueError(
+                f"MPC input length mismatch: "
+                f"load={len(p_load)}, pv={len(p_pv)}, eta={len(eta)}"
+            )
+
         batt = cp.Variable(n)
         grid = cp.Variable(n)
         soc = cp.Variable(n + 1)
@@ -678,6 +688,13 @@ def main():
 
     real_forecast_df = load_real_forecast_data("./average_household_forecasts - Edited.csv")
 
+    forecast_load_per_customer = pd.to_numeric(real_forecast_df["Predicted_Average_Load_kW"], errors="raise").to_numpy(dtype=float)
+
+    forecast_pv_per_customer = pd.to_numeric(real_forecast_df["Predicted_Average_PV_Gen_kW"], errors="raise").to_numpy(dtype=float)
+
+    
+
+
     # Banner
     print("=" * 78)
     print("ECE4191 Module 3  |  Experiment 2 -- Feeder-wide MPC Playback (Modbus TCP)")
@@ -771,11 +788,11 @@ def main():
                 #load_fc_flat = node_data[node]["load_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
                 #pv_fc_flat   = node_data[node]["pv_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
 
-                load_fc_flat = real_forecast_df["Predicted_Average_Load_kW"]*N_CUSTOMERS[node]
-                pv_fc_flat = real_forecast_df["Predicted_Average_PV_Gen_kW"]*N_CUSTOMERS[node]
+                load_fc_flat = forecast_load_per_customer * N_CUSTOMERS[node]
+                pv_fc_flat = forecast_pv_per_customer * N_CUSTOMERS[node]
 
-                print(load_fc_flat)
-                print(pv_fc_flat)
+                # print(load_fc_flat)
+                # print(pv_fc_flat)
 
                 node_load_act = node_data[node]["load_kw"] # TODO: MAYBE PROBLEM? WHAT ARE WE USING THESE VALS FOR
                 node_pv_act = node_data[node]["pv_kw"]
@@ -786,10 +803,10 @@ def main():
                 p_pv_win[node]   = pv_fc_flat[i:window_end]
                 eta_win    = eta_flat[i:window_end]
 
-                print(p_load_win)
-                print(p_pv_win)
+                # print(p_load_win)
+                # print(p_pv_win)
 
-                print()
+                # print()
                 
 
                 batt_traj[node], grid_traj[node], soc_traj[node], status[node], obj_val[node] = solve_daily_qp(
