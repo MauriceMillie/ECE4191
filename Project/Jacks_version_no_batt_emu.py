@@ -285,9 +285,9 @@ def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh, soc0_
 
     n = len(p_load)
 
-    soc0_pred_646_kwh=(soc0_kwh)*(N_CUSTOMERS["646_B"]/TOTAL_CUSTOMERS)
+    #soc0_pred_646_kwh=(soc0_kwh)*(N_CUSTOMERS["646_B"]/TOTAL_CUSTOMERS)
 
-    soc0_internal_kwh=soc0_kwh-soc0_pred_646_kwh+soc0_646_kwh
+    #soc0_internal_kwh=soc0_kwh-soc0_pred_646_kwh+soc0_646_kwh
 
     batt = cp.Variable(n)
     grid = cp.Variable(n)
@@ -300,10 +300,11 @@ def solve_daily_qp(p_load, p_pv, eta, weight, batt_power_kw, capacity_kwh, soc0_
     constraints = [
         grid == p_load - p_pv - batt,
         grid <=3000, 
-        grid >=-1500,
+        grid >=-1500, # TODO: just commented for testing!!!
         batt >= -batt_power_kw,
         batt <=  batt_power_kw,
-        soc[0] == soc0_internal_kwh,
+        #soc[0] == soc0_internal_kwh, #old
+        soc[0] == soc0_kwh,
         soc[1:] == soc[:-1] - DELTA_HOURS * batt,
         soc >= 0.0,
         soc <= capacity_kwh,
@@ -499,9 +500,9 @@ class SocLogger:
             return None
 
     def _read_voltage(self, voltage_reg) -> float:
-        rr = self.conn.client.read_input_registers(address=voltge_reg, count=1)
+        rr = self.conn.client.read_input_registers(address=voltage_reg, count=1)
         if rr is None or rr.isError():
-            raise IOError(f"Failed to read SoC input register {SOC_INPUT_REGISTER}")
+            raise IOError(f"Failed to read SoC input register {voltage_reg}")
         return rr.registers[0]
 
     def voltage_log_step(self,voltage_reg):
@@ -666,7 +667,7 @@ def main():
     aborted = False
     soc_pred = {}
     for node in NODE_MAP:
-        soc_pred[node] = args.initial_soc
+        soc_pred[node] = (args.initial_soc)*(N_CUSTOMERS[node]/TOTAL_CUSTOMERS)
     soc_measured_646_CIL_kwh = (args.initial_soc)*(N_CUSTOMERS["646_B"]/TOTAL_CUSTOMERS)
 
     pbat_nodes = {}
@@ -730,7 +731,7 @@ def main():
                     solver=args.solver,
                 ) #THIS NEEDS TO BE CHANGED!!!!
 
-                if status not in ("optimal", "optimal_inaccurate"):
+                if status[node] not in ("optimal", "optimal_inaccurate"):
                     print(f"  WARNING: MPC status = {status[node]} at step {step}; "
                         "applying zero battery command for this step.")
                     p_bat_agg[node] = 0.0
@@ -744,7 +745,12 @@ def main():
                 pbat_nodes[node] = p_bat_agg[node] # THIS IS WHAT WE NEED TO CHANGE!!
 
                 soc_pred[node] = soc_pred_next[node]
-                soc_pred_pct[node] = 100.0 * soc_pred[node] / (N_CUSTOMERS[node]*10)
+                
+                try:
+                    soc_pred_pct[node] = 100.0 * soc_pred[node] / (N_CUSTOMERS[node]*10)
+                except:
+                    soc_pred_pct[node] = -1
+                
 
                 load_act_i[node] = float(node_load_act[i])
                 pv_act_i[node]   = float(node_pv_act[i])
@@ -764,7 +770,12 @@ def main():
                         f"{node}_grid_forecast_kw": round(grid_forecast_kw[node], 4),
                         f"{node}_soc_predicted_pct": round(soc_pred_pct[node], 4),
                         f"{node}_mpc_status": status[node],
-                    })
+                    })raceback (most recent call last):
+  File "/home/team-bo9/toy/ECE4191/Project/Jacks_version_no_batt_emu.py", line 921, in <module>
+    main()
+    ~~~~^^
+  File "/home/team-bo9/toy/ECE4191/Project/Jacks_version_no_batt_emu.py", line 887, in main
+    print_step(step, da
                 '''
 
             ''' OLD COMMENTED CODE FROM BEFORE WE CHANGED TO LOCAL MPC FOR EACH NODE!!!!
@@ -810,7 +821,7 @@ def main():
                 time.sleep(args.measurement_delay)
             measured_soc_646 = soc_logger.log_step()
 
-            soc_measured_646_CIL_kwh = (measured_soc_646/100)*args.capacity
+            soc_measured_646_CIL_kwh = (measured_soc_646/100)*(args.capacity*(N_CUSTOMERS["646_B"]/TOTAL_CUSTOMERS))
 
             # TODO: ADD IN CODE THAT GETS SOC FROM THE BATTERY EMU LATER.
 
@@ -820,7 +831,7 @@ def main():
             for node in NODE_MAP:
                 if not args.no_wait and args.measurement_delay > 0 and not args.dry_run:
                     time.sleep(args.measurement_delay)
-                node_voltage[node] = soc_logger.voltage_log_step()
+                node_voltage[node] = soc_logger.voltage_log_step(NODE_MAP[node]["voltage"])
 
 
             total_load_i = float(total_load_act[i])
@@ -878,8 +889,8 @@ def main():
 
             if args.verbose or (args.progress_every > 0 and
                                 (step in (1, total_steps) or step % args.progress_every == 0)):
-                print_step(step, day_num, k, load_act_i, pv_act_i, p_bat_agg,
-                           grid_act_i, soc_pred_pct, measured_soc_646)
+                print_step(step, day_num, k, sum(load_act_i.values()), sum(pv_act_i.values()), p_bat_agg[CIL_NODE],
+                           sum(grid_act_i.values()), soc_pred_pct[CIL_NODE], measured_soc_646)
 
             if not args.no_wait and not args.dry_run:
                 time.sleep(max(0.0, args.step_seconds - (time.time() - t0)))
