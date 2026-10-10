@@ -52,7 +52,23 @@ Checklist:
 
 
 
+**- CLEAN UP ALL CODE AND MAKE SURE THAT IT LOOKS GOOD ENOUGH TO SUBMIT/SHOW OFF!!!**
 
+
+
+**- GATHER LOTS OF DATA SHOWING THE PERFORMANCE OF ALL THE DIFFERENT PARTS OF THE SYSTEM STUFF LIKE:**
+
+&#x09;**- SHOW THAT THE NODE 632 ACTIVE POWER = THE GRID ACTIVE POWER OF ALL OTHER NODES**
+
+&#x09;**- SHOW THAT VOLTAGES DONT VIOLATE LIMITS**
+
+&#x09;**- SHOW THAT THE FORECAST IS SOMEWHAT ACCURATE. WHETHER OR NOT IT SATISFIES OUR REQUIREMENTS DEPENDS A LITTLE ON HOW WE CAN BEND THE RULES. IF YOU LOOK AT THE 	  MODEL EVALUATION RESULTS OR THE TXT/MD FILE THAT HAS SOME PERFORMANCE RESULTS WHEN CREATED. YOU COULD POSSIBLY MAKE AN ARGUMENT THAT OUR MODEL WORKS GREAT 	  ON THE AVERAGE DATA BUT PERFORMS WORSE ON THIS EXACT TEST WEEK BECAUSE IT HAS A BIG OUTLIER IN IT**
+
+&#x09;**- truthfully im not super sure wat to do about the pv model. it doesn't rlly satisfy the requirements we set of it in the proposal doc i dont thinkkkk. we set 	  some pretty tough to hit limits in there. I assume that when averaged over a long time, the pv model is pretty accurate but the data i am giving it is not 	  really enough for it to predict stuff like cloud cover.**
+
+
+
+**- FINISH THE PRESENTATION!!!!!!!**
 
 
 

@@ -12,7 +12,16 @@ import pandas as pd
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import (
+    mean_squared_error, 
+    mean_absolute_error, r2_score, 
+    root_mean_squared_error, 
+    mean_absolute_percentage_error,
+    )
+
+
+from sklearn.base import clone
+
 
 from simple_pid import PID
 
@@ -130,7 +139,117 @@ def format_bom_data(bom_data_path, data_col):
 
     return clean_bom_df
 
-def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
+
+NSW_PUBLIC_HOLIDAYS = pd.to_datetime([
+    "2011-10-03", "2011-12-25", "2011-12-26", "2011-12-27",
+    "2012-01-01", "2012-01-02", "2012-01-26",
+    "2012-04-06", "2012-04-07", "2012-04-08", "2012-04-09", "2012-04-25",
+    "2012-06-11", "2012-10-01", "2012-12-25", "2012-12-26",
+    "2013-01-01", "2013-01-26", "2013-01-28",
+    "2013-03-29", "2013-03-30", "2013-03-31", "2013-04-01", "2013-04-25",
+    "2013-06-10",
+])
+
+MIN_TEMP_COL = "Minimum temperature (Degree C)"
+
+
+def add_temp_history_features(temp_df, data_col):
+    """Adds Prev_Day_Max and Max_3d_Mean (heat build-up) to the daily max-temp table.
+    Built on the full continuous BOM series, so the test week's first day still sees its
+    real previous day. Date-based (not row-based), so missing days can't shift values."""
+    temp_df = temp_df.sort_values("date").reset_index(drop=True)
+    s = temp_df.set_index("date")[data_col]
+    temp_df["Prev_Day_Max"] = s.reindex(s.index - pd.Timedelta(days=1)).to_numpy()
+    temp_df["Prev_Day_Max"] = temp_df["Prev_Day_Max"].fillna(temp_df[data_col])
+    temp_df["Max_3d_Mean"] = s.rolling("3D").mean().to_numpy()   # today + previous 2 days
+    return temp_df
+
+
+def add_min_temp(temp_df, min_temp_data_path):
+    """Merges the BOM daily minimum temperature onto the daily table (by date)."""
+    min_df = format_bom_data(min_temp_data_path, MIN_TEMP_COL)
+    min_df["date"] = pd.to_datetime(min_df["date"], format="%d/%m/%Y")
+    temp_df = temp_df.merge(min_df, on="date", how="left")
+    temp_df[MIN_TEMP_COL] = temp_df[MIN_TEMP_COL].ffill().bfill()
+    return temp_df
+
+
+def add_prev_day_load(df, source_df, value_col="Load_kW"):
+    """Adds Load_Prev_Day = load at the same half-hour on the previous calendar day,
+    looked up by date from source_df (so the removed test week can't misalign it)."""
+    lag = source_df[["date", "Hour", value_col]].copy()
+    lag["date"] = lag["date"] + pd.Timedelta(days=1)
+    lag = lag.rename(columns={value_col: "Load_Prev_Day"})
+    return df.merge(lag, on=["date", "Hour"], how="left")
+
+
+def wape(y_true, y_pred):
+    """Weighted absolute percentage error = total |error| / total actual. Safe with zeros."""
+    y_true, y_pred = np.asarray(y_true, dtype=float), np.asarray(y_pred, dtype=float)
+    return float(np.abs(y_true - y_pred).sum() / np.abs(y_true).sum())
+
+
+def masked_mape(y_true, y_pred, min_actual=0.01):
+    """MAPE over only the slots where actual > min_actual (skips night-time PV zeros)."""
+    y_true, y_pred = np.asarray(y_true, dtype=float), np.asarray(y_pred, dtype=float)
+    m = y_true > min_actual
+    if not m.any():
+        return float("nan")
+    return float(np.mean(np.abs(y_true[m] - y_pred[m]) / y_true[m]))
+
+
+def report_metrics(label, y_true, y_pred, dates, exclude_date=None, min_actual=0.01):
+    """Prints whole-week metrics, optionally the week without one day, and a per-day table."""
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    dates = pd.Series(pd.to_datetime(dates)).reset_index(drop=True)
+
+    def summary(mask):
+        yt, yp = y_true[mask], y_pred[mask]
+        return (
+            f"MAE {mean_absolute_error(yt, yp):.3f} kW | RMSE {np.sqrt(mean_squared_error(yt, yp)):.3f} | "
+            f"WAPE {wape(yt, yp):.1%} | MAPE(actual>{min_actual}) {masked_mape(yt, yp, min_actual):.1%} | "
+            f"R2 {r2_score(yt, yp):.3f}"
+        )
+
+    print(f"\n--- {label}: detailed metrics ---")
+    print(f"  Whole week        : {summary(np.ones(len(dates), dtype=bool))}")
+    if exclude_date is not None:
+        ex = pd.Timestamp(exclude_date)
+        print(f"  Excluding {ex:%a %d %b}: {summary((dates != ex).to_numpy())}")
+    print("  Per day:")
+    for d in sorted(dates.unique()):
+        m = (dates == d).to_numpy()
+        yt, yp = y_true[m], y_pred[m]
+        print(
+            f"    {pd.Timestamp(d):%a %d %b}: MAE {mean_absolute_error(yt, yp):.3f} kW | "
+            f"WAPE {wape(yt, yp):.1%} | MAPE {masked_mape(yt, yp, min_actual):.1%}"
+        )
+
+
+def compare_feature_sets(model, x_train, y_train, train_dates, feature_sets, weeks):
+    """Holds out each validation week from the TRAINING data, fits a copy of `model` on the rest,
+    and scores each feature set on that week. The real test week is never used here.
+    The day after each validation week is also left out of fitting, because its
+    Load_Prev_Day feature would contain the validation week's actual load."""
+    train_dates = pd.Series(pd.to_datetime(train_dates)).reset_index(drop=True)
+    for start, end in weeks:
+        start, end = pd.Timestamp(start), pd.Timestamp(end)
+        in_val = train_dates.between(start, end)
+        leave_out = train_dates.between(start, end + pd.Timedelta(days=1))
+        print(f"\n  Validation week {start:%d %b %Y} - {end:%d %b %Y}")
+        for name, cols in feature_sets.items():
+            m = clone(model).fit(x_train.loc[~leave_out, cols], y_train[~leave_out])
+            pred = m.predict(x_train.loc[in_val, cols])
+            y = y_train[in_val]
+            print(
+                f"    {name:<16} MAE {mean_absolute_error(y, pred):.3f} | WAPE {wape(y, pred):.1%} | "
+                f"MAPE {masked_mape(y, pred):.1%} | R2 {r2_score(y, pred):.3f}"
+            )
+
+
+
+def p_initialize_model(p_data_path1, p_data_path2, temp_data_path, min_temp_data_path=None):
 
     df_p_2011_2012 = format_provided_p_data(p_data_path1, "load")
     df_p_2012_2013 = format_provided_p_data(p_data_path2, "load")
@@ -145,6 +264,14 @@ def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
 
     full_power_df["date"] = pd.to_datetime(full_power_df["date"], format="%d/%m/%Y")
     temp_df["date"] = pd.to_datetime(temp_df["date"], format="%d/%m/%Y")
+
+
+    temp_df = add_temp_history_features(temp_df, data_col)
+    extra_temp_cols = ["Prev_Day_Max", "Max_3d_Mean"]
+    if min_temp_data_path:
+        temp_df = add_min_temp(temp_df, min_temp_data_path)
+        extra_temp_cols.append(MIN_TEMP_COL)
+
 
     final_test_power_df = full_power_df[
         (full_power_df["date"] >= start_test_date)
@@ -174,10 +301,23 @@ def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
     final_train_dataset = pd.merge(training_power_df, training_temp_df, on="date", how="left")
     final_test_dataset = pd.merge(final_test_power_df, test_bom_df, on="date", how="left")
 
-    time_group_cols = ["date", "Hour", "Month", "Day_of_Week", "Season", data_col]
+    time_group_cols = ["date", "Hour", "Month", "Day_of_Week", "Season", data_col] + extra_temp_cols  # CHANGE 3b (+ extra_temp_cols)
     
     final_train_dataset = final_train_dataset.groupby(time_group_cols)[["Load_kW"]].mean().reset_index()
     final_test_dataset  = final_test_dataset.groupby(time_group_cols)[["Load_kW"]].mean().reset_index()
+
+
+    for _df in (final_train_dataset, final_test_dataset):
+        _df["Is_Holiday"] = _df["date"].isin(NSW_PUBLIC_HOLIDAYS).astype(int)
+
+    _train_only = final_train_dataset[['date', 'Hour', 'Load_kW']]
+    _train_plus_test = pd.concat([_train_only, final_test_dataset[['date', 'Hour', 'Load_kW']]])
+    final_train_dataset = add_prev_day_load(final_train_dataset, _train_only)
+    final_test_dataset = add_prev_day_load(final_test_dataset, _train_plus_test)
+    final_train_dataset = final_train_dataset.dropna(subset=["Load_Prev_Day"]).reset_index(drop=True)
+    if final_test_dataset["Load_Prev_Day"].isna().any():
+        print("WARNING: some test rows have no previous-day load (missing day in the data).")
+
 
     features = [
         "Hour",
@@ -187,6 +327,10 @@ def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
         data_col,
     ]
 
+
+    features = features + extra_temp_cols + ["Is_Holiday", "Load_Prev_Day"]
+
+
     p_x_train = final_train_dataset[features]
     p_y_train = final_train_dataset["Load_kW"]
 
@@ -194,7 +338,10 @@ def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
     p_y_final_test = final_test_dataset["Load_kW"]
 
 
-    return p_x_train, p_y_train, p_x_final_test, p_y_final_test
+    date_info = {"train": final_train_dataset["date"].reset_index(drop=True),
+                 "test": final_test_dataset["date"].reset_index(drop=True)}
+    return p_x_train, p_y_train, p_x_final_test, p_y_final_test, date_info
+
 
 
 def pv_initialize_model(pv_data_path1, pv_data_path2, sol_exp_data_path):
@@ -264,8 +411,37 @@ def pv_initialize_model(pv_data_path1, pv_data_path2, sol_exp_data_path):
     p_y_final_test = final_test_dataset["PV_Gen_kW"]
 
 
-    return p_x_train, p_y_train, p_x_final_test, p_y_final_test
+    date_info = {"train": final_train_dataset["date"].reset_index(drop=True),
+                 "test": final_test_dataset["date"].reset_index(drop=True)}
+    return p_x_train, p_y_train, p_x_final_test, p_y_final_test, date_info
 
+
+
+
+
+def plot_predicted_vs_actual(dates, actual, predicted, title, ylabel, actual_color, pred_color):
+    """One figure: actual vs predicted over the continuous half-hourly test week.
+    Day boundaries and their date labels come from the real `dates` column."""
+    x = np.arange(len(actual))
+    dates = pd.Series(pd.to_datetime(dates)).reset_index(drop=True)
+
+    fig, ax = plt.subplots(figsize=(14, 6))
+    ax.plot(x, actual, color=actual_color, linewidth=2, label="Actual")
+    ax.plot(x, predicted, color=pred_color, linewidth=2, linestyle="--", label="Predicted")
+
+    day_starts = np.where(dates.ne(dates.shift()).to_numpy())[0]   # first slot of each new date
+    ax.set_xticks(day_starts)
+    ax.set_xticklabels([f"{dates[i]:%a %d %b}" for i in day_starts])
+    for d in day_starts[1:]:
+        ax.axvline(d, color="gray", linewidth=0.8, alpha=0.4)
+
+    ax.set_xlabel("Half-hourly intervals (day boundaries marked)", fontsize=12)
+    ax.set_ylabel(ylabel, fontsize=12)
+    ax.set_title(title, fontsize=14, fontweight="bold")
+    ax.grid(True, linestyle=":", alpha=0.5)
+    ax.legend(loc="upper right", fontsize=11)
+    fig.tight_layout()
+    return fig
 
 
 def main():
@@ -319,13 +495,21 @@ def main():
 
     print("\nFetching and formatting data arrays...")
 
-    p_x_train, p_y_train, p_x_test, p_y_test = p_initialize_model(
+
+    MIN_TEMP_PATH = "BOM_Data/IDCJAC0011_066137_1800_daily_min_temp/IDCJAC0011_066137_1800_Data.csv" 
+    if not Path(MIN_TEMP_PATH).exists():
+        print(f"  (min temp file not found at {MIN_TEMP_PATH} - continuing without it)")
+        MIN_TEMP_PATH = None
+    # <<< CHANGE 5a END
+
+    p_x_train, p_y_train, p_x_test, p_y_test, p_dates = p_initialize_model(  # CHANGE 5b (+ p_dates)
         "Provided_Data/2011-2012Solarhomeelectricitydatav2.csv",
         "Provided_Data/2012-2013 Solar home electricity data v2.csv",
         "BOM_Data/IDCJAC0010_066137_1800_daily_max_temp/IDCJAC0010_066137_1800_Data.csv",
+        min_temp_data_path=MIN_TEMP_PATH,  # CHANGE 5b
     )
 
-    pv_x_train, pv_y_train, pv_x_test, pv_y_test = pv_initialize_model(
+    pv_x_train, pv_y_train, pv_x_test, pv_y_test, pv_dates = pv_initialize_model(  # CHANGE 5c (+ pv_dates)
         "Provided_Data/2011-2012Solarhomeelectricitydatav2.csv",
         "Provided_Data/2012-2013 Solar home electricity data v2.csv",
         "BOM_Data/IDCJAC0016_066137_1800_daily_solar_exposure/IDCJAC0016_066137_1800_Data.csv",
@@ -335,29 +519,46 @@ def main():
         n_estimators=100, max_depth=15, random_state=42, n_jobs=-1
     )
     '''
-    # current load model settings (V2)
-    load_model = RandomForestRegressor(
-        n_estimators=250, max_depth=22, min_samples_split=5, random_state=42, n_jobs=-1
-    )
+    # # current load model settings (V2)
+    # load_model = RandomForestRegressor(
+    #     n_estimators=250, max_depth=22, min_samples_split=5, random_state=42, n_jobs=-1
+    # )
 
-    pv_model = RandomForestRegressor(
-        n_estimators=100, max_depth=10, random_state=42, n_jobs=-1
-    )
+    # pv_model = RandomForestRegressor(
+    #     n_estimators=100, max_depth=10, random_state=42, n_jobs=-1
+    # )
 
-    print("Training Random Forest Regressors (using all CPU cores)...")
-    load_model.fit(p_x_train, p_y_train)
-    print("  Load Model training completed successfully.")
+    # print("Training Random Forest Regressors (using all CPU cores)...")
+    # load_model.fit(p_x_train, p_y_train)
+    # print("  Load Model training completed successfully.")
 
-    pv_model.fit(pv_x_train, pv_y_train)
-    print("  PV Model training completed successfully.")
+    # pv_model.fit(pv_x_train, pv_y_train)
+    # print("  PV Model training completed successfully.")
+
+
+    print("Loading models from files...")
+    load_model = joblib.load("finalized_load_rf_model_v3.pkl")
+    pv_model = joblib.load("finalized_pv_rf_model_v3.pkl")
+
+    # stop early if the data prep and the saved model disagree on features
+    expected_cols = list(getattr(load_model, "feature_names_in_", p_x_test.columns))
+    if list(p_x_test.columns) != expected_cols:
+        raise SystemExit(
+            "Feature mismatch between the data prep and the saved load model.\n"
+            f"  model expects: {expected_cols}\n"
+            f"  data prep gave: {list(p_x_test.columns)}\n"
+            "Most likely the minimum-temperature file is present in one script but not the other."
+        )
+
+
 
     print("Executing forecasts across the evaluation timeline...")
     pred_single_L = load_model.predict(p_x_test)
     pred_single_P = pv_model.predict(pv_x_test)
 
-    print("Freezing models and writing compressed .pkl binaries...")
-    joblib.dump(load_model, "finalized_load_rf_model.pkl", compress=3)
-    joblib.dump(pv_model, "finalized_pv_rf_model.pkl", compress=3)
+    # print("Freezing models and writing compressed .pkl binaries...")
+    # joblib.dump(load_model, "finalized_load_rf_model.pkl", compress=3)
+    # joblib.dump(pv_model, "finalized_pv_rf_model.pkl", compress=3)
 
 
     house_multiplier = 1
@@ -368,21 +569,43 @@ def main():
     y_test_agg_P = pv_y_test * house_multiplier
 
     mae_L = mean_absolute_error(y_test_agg_L, scaled_pred_load)
+    mse_L = mean_squared_error(y_test_agg_L, scaled_pred_load)
+    rmse_L = root_mean_squared_error(y_test_agg_L, scaled_pred_load)
+    mape_L = mean_absolute_percentage_error(y_test_agg_L, scaled_pred_load)
+    wape_L = wape(y_test_agg_L, scaled_pred_load)
     r2_L = r2_score(y_test_agg_L, scaled_pred_load)
 
     mae_P = mean_absolute_error(y_test_agg_P, scaled_pred_pv)
+    mse_P = mean_squared_error(y_test_agg_P, scaled_pred_pv)
+    rmse_P = root_mean_squared_error(y_test_agg_P, scaled_pred_pv)
+    #mape_P = mean_absolute_percentage_error(y_test_agg_P, scaled_pred_pv) # mape bad for pv because lots of 0 vals
+    wape_P = wape(y_test_agg_P, scaled_pred_pv)
+    mmape_P = masked_mape(y_test_agg_P, scaled_pred_pv)
     r2_P = r2_score(y_test_agg_P, scaled_pred_pv)
+
 
     print(
         "\n=================== FINAL EVALUATION RESULTS ==================="
     )
     print("Target Holdout Week: Jan 7 - Jan 13, 2013")
     print(f"Aggregate Pool Scaling Factor: {house_multiplier:,} houses\n")
-    print(f"[LOAD MODEL] MAE: {mae_L:,.2f} kW | R2 Score: {r2_L:.3f}")
-    print(f"[PV MODEL]   MAE: {mae_P:,.2f} kW | R2 Score: {r2_P:.3f}")
+    print(f"[LOAD MODEL] MAE: {mae_L:,.2f} kW | MSE: {mse_L:.3f} | RMSE: {rmse_L:.3f} | WAPE: {wape_L:.3f} | MAPE: {mape_L:.3f} | R2 Score: {r2_L:.3f}")
+    print(f"[PV MODEL]   MAE: {mae_P:,.2f} kW | MSE: {mse_P:.3f} | RMSE: {rmse_P:.3f} | WAPE: {wape_P:.3f} | MMAPE: {mmape_P:.3f} | R2 Score: {r2_P:.3f}")
     print(
         "=================================================================\n"
     )
+
+
+    report_metrics(
+        "LOAD", y_test_agg_L, scaled_pred_load, p_dates["test"],
+        exclude_date="2013-01-08",   # the super hot day, day 2
+        min_actual=0.01,
+    )
+    report_metrics(
+        "PV", y_test_agg_P, scaled_pred_pv, pv_dates["test"],
+        min_actual=0.05,
+    )
+
 
     # --- EXPORTING RESULTS TO CSV ---
     print("Exporting baseline forecasts to CSV archive...")
@@ -401,20 +624,19 @@ def main():
 
     export_df = pd.DataFrame(
         {
-            "Date": p_x_test["date"]
-            if "date" in p_x_test.columns
-            else "Jan 7-13 2013",
+            "Date": p_dates["test"].to_numpy(),
             "Hour": p_x_test["Hour"],
             "Predicted_Average_Load_kW": scaled_pred_load,
             "Predicted_Average_PV_Gen_kW": scaled_pred_pv,
         }
     )
 
-    export_filename = "./Code_and_Data/average_household_forecasts.csv"
-    export_df.to_csv(export_filename, index=False)
-    print(f"  Saved successfully as '{export_filename}'.")
+    # export_filename = "./Code_and_Data/average_household_forecasts.csv"
+    # export_df.to_csv(export_filename, index=False)
+    # print(f"  Saved successfully as '{export_filename}'.")
 
     # --- VISUALIZING MODEL OUTPUTS (PLOTTING) ---
+    '''
     print("Initializing Matplotlib charting canvas...")
     fig, ax1 = plt.subplots(figsize=(14, 6))
 
@@ -461,7 +683,36 @@ def main():
 
     print("  Rendering plot box window...")
     plt.show()
+    '''
 
+    print("Plotting predicted vs actual (load and PV)...")
+ 
+    plot_predicted_vs_actual(
+        dates=p_dates["test"],
+        actual=np.asarray(y_test_agg_L),
+        predicted=np.asarray(scaled_pred_load),
+        title="Predicted vs Actual Household Load: Jan 7 - Jan 13, 2013",
+        ylabel="Load Power Demand (kW)",
+        actual_color="tab:blue",
+        pred_color="tab:red",
+    )
+ 
+    plot_predicted_vs_actual(
+        dates=pv_dates["test"],
+        actual=np.asarray(y_test_agg_P),
+        predicted=np.asarray(scaled_pred_pv),
+        title="Predicted vs Actual PV Generation: Jan 7 - Jan 13, 2013",
+        ylabel="PV Solar Generation (kW)",
+        actual_color="tab:orange",
+        pred_color="tab:green",
+    )
+
+    print("  Rendering plot window, close plot to end code execution :)")
+    plt.show()
+
+    # --- USED IN TESTING --- 
+    # print(p_x_train["Maximum temperature (Degree C)"].describe())
+    # print((p_x_train["Maximum temperature (Degree C)"] > 38).sum())
 
 
 if __name__ == "__main__":

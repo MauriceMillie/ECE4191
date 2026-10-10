@@ -19,6 +19,11 @@ from sklearn.metrics import (
     mean_absolute_percentage_error,
     )
 
+
+from sklearn.base import clone
+from sklearn.ensemble import HistGradientBoostingRegressor   # used by the boosting option
+
+
 from simple_pid import PID
 
 import joblib
@@ -135,7 +140,185 @@ def format_bom_data(bom_data_path, data_col):
 
     return clean_bom_df
 
-def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
+
+NSW_PUBLIC_HOLIDAYS = pd.to_datetime([
+    "2011-10-03", "2011-12-25", "2011-12-26", "2011-12-27",
+    "2012-01-01", "2012-01-02", "2012-01-26",
+    "2012-04-06", "2012-04-07", "2012-04-08", "2012-04-09", "2012-04-25",
+    "2012-06-11", "2012-10-01", "2012-12-25", "2012-12-26",
+    "2013-01-01", "2013-01-26", "2013-01-28",
+    "2013-03-29", "2013-03-30", "2013-03-31", "2013-04-01", "2013-04-25",
+    "2013-06-10",
+])
+
+MIN_TEMP_COL = "Minimum temperature (Degree C)"
+
+
+def add_temp_history_features(temp_df, data_col):
+    """Adds Prev_Day_Max and Max_3d_Mean (heat build-up) to the daily max-temp table.
+    Built on the full continuous BOM series, so the test week's first day still sees its
+    real previous day. Date-based (not row-based), so missing days can't shift values."""
+    temp_df = temp_df.sort_values("date").reset_index(drop=True)
+    s = temp_df.set_index("date")[data_col]
+    temp_df["Prev_Day_Max"] = s.reindex(s.index - pd.Timedelta(days=1)).to_numpy()
+    temp_df["Prev_Day_Max"] = temp_df["Prev_Day_Max"].fillna(temp_df[data_col])
+    temp_df["Max_3d_Mean"] = s.rolling("3D").mean().to_numpy()   # today + previous 2 days
+    return temp_df
+
+
+def add_min_temp(temp_df, min_temp_data_path):
+    """Merges the BOM daily minimum temperature onto the daily table (by date)."""
+    min_df = format_bom_data(min_temp_data_path, MIN_TEMP_COL)
+    min_df["date"] = pd.to_datetime(min_df["date"], format="%d/%m/%Y")
+    temp_df = temp_df.merge(min_df, on="date", how="left")
+    temp_df[MIN_TEMP_COL] = temp_df[MIN_TEMP_COL].ffill().bfill()
+    return temp_df
+
+
+def add_prev_day_load(df, source_df, value_col="Load_kW"):
+    """Adds Load_Prev_Day = load at the same half-hour on the previous calendar day,
+    looked up by date from source_df (so the removed test week can't misalign it)."""
+    lag = source_df[["date", "Hour", value_col]].copy()
+    lag["date"] = lag["date"] + pd.Timedelta(days=1)
+    lag = lag.rename(columns={value_col: "Load_Prev_Day"})
+    return df.merge(lag, on=["date", "Hour"], how="left")
+
+
+def wape(y_true, y_pred):
+    """Weighted absolute percentage error = total |error| / total actual. Safe with zeros."""
+    y_true, y_pred = np.asarray(y_true, dtype=float), np.asarray(y_pred, dtype=float)
+    return float(np.abs(y_true - y_pred).sum() / np.abs(y_true).sum())
+
+
+def masked_mape(y_true, y_pred, min_actual=0.01):
+    """MAPE over only the slots where actual > min_actual (skips night-time PV zeros)."""
+    y_true, y_pred = np.asarray(y_true, dtype=float), np.asarray(y_pred, dtype=float)
+    m = y_true > min_actual
+    if not m.any():
+        return float("nan")
+    return float(np.mean(np.abs(y_true[m] - y_pred[m]) / y_true[m]))
+
+
+def report_metrics(label, y_true, y_pred, dates, exclude_date=None, min_actual=0.01):
+    """Prints whole-week metrics, optionally the week without one day, and a per-day table."""
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    dates = pd.Series(pd.to_datetime(dates)).reset_index(drop=True)
+
+    def summary(mask):
+        yt, yp = y_true[mask], y_pred[mask]
+        return (
+            f"MAE {mean_absolute_error(yt, yp):.3f} kW | RMSE {np.sqrt(mean_squared_error(yt, yp)):.3f} | "
+            f"WAPE {wape(yt, yp):.1%} | MAPE(actual>{min_actual}) {masked_mape(yt, yp, min_actual):.1%} | "
+            f"R2 {r2_score(yt, yp):.3f}"
+        )
+
+    print(f"\n--- {label}: detailed metrics ---")
+    print(f"  Whole week        : {summary(np.ones(len(dates), dtype=bool))}")
+    if exclude_date is not None:
+        ex = pd.Timestamp(exclude_date)
+        print(f"  Excluding {ex:%a %d %b}: {summary((dates != ex).to_numpy())}")
+    print("  Per day:")
+    for d in sorted(dates.unique()):
+        m = (dates == d).to_numpy()
+        yt, yp = y_true[m], y_pred[m]
+        print(
+            f"    {pd.Timestamp(d):%a %d %b}: MAE {mean_absolute_error(yt, yp):.3f} kW | "
+            f"WAPE {wape(yt, yp):.1%} | MAPE {masked_mape(yt, yp, min_actual):.1%}"
+        )
+
+
+TEMP_COL = "Maximum temperature (Degree C)"
+HOT_WEIGHT_START_C = 30.0    # hot-day weighting starts above this temperature... (default 30)
+HOT_WEIGHT_PER_DEG = 5    # ...and adds this much weight per degree (30C=1x, 38C=3x, 46C=5x) (default 0.25)
+
+HOT_WEIGHT_START_C2 = 35.0    # hot-day weighting starts above this temperature... (default 30)
+HOT_WEIGHT_PER_DEG2 = 10
+
+HOT_WEIGHT_START_C3 = 20.0    # hot-day weighting starts above this temperature... (default 30)
+HOT_WEIGHT_PER_DEG3 = 1
+
+def hot_day_weights(x, temp_col=TEMP_COL):
+    """Sample weights that make hotter days count more during training."""
+    over = np.clip(x[temp_col].to_numpy(dtype=float) - HOT_WEIGHT_START_C, 0, None)
+    over2 = np.clip(x[temp_col].to_numpy(dtype=float) - HOT_WEIGHT_START_C2, 0, None)
+    over3 = np.clip(x[temp_col].to_numpy(dtype=float) - HOT_WEIGHT_START_C3, 0, None)
+    return 1.0 + (HOT_WEIGHT_PER_DEG * over)+(HOT_WEIGHT_PER_DEG2*over2)+(HOT_WEIGHT_PER_DEG3*over3)
+
+
+def make_hgb():
+    """Gradient boosting alternative to the random forest. early_stopping=False so it uses ALL the training rows."""
+    return HistGradientBoostingRegressor(
+        max_iter=400, learning_rate=0.05, min_samples_leaf=40, early_stopping=False, random_state=42
+    )
+
+
+def find_hot_windows(dates, temps, threshold=38.0, max_windows=2):
+    """Finds clusters of hot days (> threshold) in the training data and returns one 7+ day window around each."""
+    daily = pd.DataFrame({"date": pd.to_datetime(pd.Series(dates)).to_numpy(), "t": np.asarray(temps, dtype=float)})
+    daily = daily.groupby("date")["t"].max()
+    hot = list(daily[daily > threshold].index)
+    clusters = []
+    for d in hot:
+        if clusters and (d - clusters[-1][-1]).days <= 6:
+            clusters[-1].append(d)
+        else:
+            clusters.append([d])
+    windows = []
+    for c in clusters[:max_windows]:
+        start = c[0] - pd.Timedelta(days=2)
+        end = max(c[-1] + pd.Timedelta(days=2), start + pd.Timedelta(days=6))
+        windows.append((start, end))
+    return windows
+
+
+def run_recipe_comparison(base_model, x_train, y_train, train_dates, recipes, windows, label,
+                          hot_threshold=38.0, n_trees=100):
+    """For each held-out window: fit every recipe on the REST of the training data, score it on the window.
+    A recipe is {"cols": [...features...], "model": "rf"|"hgb", "hot_weights": True|False}.
+    The real test week is never touched. The day after each window is also left out of fitting,
+    because its Load_Prev_Day feature would contain the window's actual load.
+    peak bias = average (predicted - actual) over the window's top-10% load slots (negative = peaks under-predicted)."""
+    train_dates = pd.Series(pd.to_datetime(train_dates)).reset_index(drop=True)
+    daily_t = pd.DataFrame({"date": train_dates, "t": x_train[TEMP_COL].to_numpy()}).groupby("date")["t"].max()
+    hot_days = list(daily_t[daily_t > hot_threshold].index)
+    scores = {name: [] for name in recipes}
+    for start, end in windows:
+        in_val = train_dates.between(start, end)
+        leave_out = train_dates.between(start, end + pd.Timedelta(days=1))
+        if in_val.sum() == 0:
+            print(f"\n  [{label}] {start:%d %b %Y} - {end:%d %b %Y}: no data in this window, skipped")
+            continue
+        n_out = sum(start <= d <= end for d in hot_days)
+        n_left = sum(not (start <= d <= end + pd.Timedelta(days=1)) for d in hot_days)
+        print(f"\n  [{label}] {start:%d %b %Y} - {end:%d %b %Y}   (days > {hot_threshold:.0f}C held out: {n_out}, left in training: {n_left})")
+        y = np.asarray(y_train[in_val], dtype=float)
+        peak = y >= np.quantile(y, 0.9)
+        fit_rows = ~leave_out
+        for name, spec in recipes.items():
+            cols = spec["cols"]
+            if spec.get("model") == "hgb":
+                model = make_hgb()
+            else:
+                model = clone(base_model).set_params(n_estimators=n_trees)
+            kw = {"sample_weight": hot_day_weights(x_train.loc[fit_rows])} if spec.get("hot_weights") else {}
+            model.fit(x_train.loc[fit_rows, cols], y_train[fit_rows], **kw)
+            pred = np.asarray(model.predict(x_train.loc[in_val, cols]), dtype=float)
+            w = wape(y, pred)
+            scores[name].append(w)
+            print(
+                f"    {name:<36} WAPE {w:6.1%} | MAE {mean_absolute_error(y, pred):.3f} | "
+                f"R2 {r2_score(y, pred):6.3f} | peak bias {np.mean(pred[peak] - y[peak]):+.3f} kW"
+            )
+    if any(scores.values()):
+        print(f"\n  Average WAPE over the {label} windows (lower is better):")
+        for name, v in sorted(scores.items(), key=lambda kv: np.mean(kv[1]) if kv[1] else 9.0):
+            if v:
+                print(f"    {name:<36} {np.mean(v):6.1%}")
+    return scores
+
+
+def p_initialize_model(p_data_path1, p_data_path2, temp_data_path, min_temp_data_path=None):
 
     df_p_2011_2012 = format_provided_p_data(p_data_path1, "load")
     df_p_2012_2013 = format_provided_p_data(p_data_path2, "load")
@@ -150,6 +333,14 @@ def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
 
     full_power_df["date"] = pd.to_datetime(full_power_df["date"], format="%d/%m/%Y")
     temp_df["date"] = pd.to_datetime(temp_df["date"], format="%d/%m/%Y")
+
+
+    temp_df = add_temp_history_features(temp_df, data_col)
+    extra_temp_cols = ["Prev_Day_Max", "Max_3d_Mean"]
+    if min_temp_data_path:
+        temp_df = add_min_temp(temp_df, min_temp_data_path)
+        extra_temp_cols.append(MIN_TEMP_COL)
+
 
     final_test_power_df = full_power_df[
         (full_power_df["date"] >= start_test_date)
@@ -179,10 +370,23 @@ def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
     final_train_dataset = pd.merge(training_power_df, training_temp_df, on="date", how="left")
     final_test_dataset = pd.merge(final_test_power_df, test_bom_df, on="date", how="left")
 
-    time_group_cols = ["date", "Hour", "Month", "Day_of_Week", "Season", data_col]
+    time_group_cols = ["date", "Hour", "Month", "Day_of_Week", "Season", data_col] + extra_temp_cols  # CHANGE 3b (+ extra_temp_cols)
     
     final_train_dataset = final_train_dataset.groupby(time_group_cols)[["Load_kW"]].mean().reset_index()
     final_test_dataset  = final_test_dataset.groupby(time_group_cols)[["Load_kW"]].mean().reset_index()
+
+
+    for _df in (final_train_dataset, final_test_dataset):
+        _df["Is_Holiday"] = _df["date"].isin(NSW_PUBLIC_HOLIDAYS).astype(int)
+
+    _train_only = final_train_dataset[['date', 'Hour', 'Load_kW']]
+    _train_plus_test = pd.concat([_train_only, final_test_dataset[['date', 'Hour', 'Load_kW']]])
+    final_train_dataset = add_prev_day_load(final_train_dataset, _train_only)
+    final_test_dataset = add_prev_day_load(final_test_dataset, _train_plus_test)
+    final_train_dataset = final_train_dataset.dropna(subset=["Load_Prev_Day"]).reset_index(drop=True)
+    if final_test_dataset["Load_Prev_Day"].isna().any():
+        print("WARNING: some test rows have no previous-day load (missing day in the data).")
+
 
     features = [
         "Hour",
@@ -192,6 +396,10 @@ def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
         data_col,
     ]
 
+
+    features = features + extra_temp_cols + ["Is_Holiday", "Load_Prev_Day"]
+
+
     p_x_train = final_train_dataset[features]
     p_y_train = final_train_dataset["Load_kW"]
 
@@ -199,7 +407,10 @@ def p_initialize_model(p_data_path1, p_data_path2, temp_data_path):
     p_y_final_test = final_test_dataset["Load_kW"]
 
 
-    return p_x_train, p_y_train, p_x_final_test, p_y_final_test
+    date_info = {"train": final_train_dataset["date"].reset_index(drop=True),
+                 "test": final_test_dataset["date"].reset_index(drop=True)}
+    return p_x_train, p_y_train, p_x_final_test, p_y_final_test, date_info
+
 
 
 def pv_initialize_model(pv_data_path1, pv_data_path2, sol_exp_data_path):
@@ -269,47 +480,37 @@ def pv_initialize_model(pv_data_path1, pv_data_path2, sol_exp_data_path):
     p_y_final_test = final_test_dataset["PV_Gen_kW"]
 
 
-    return p_x_train, p_y_train, p_x_final_test, p_y_final_test
+    date_info = {"train": final_train_dataset["date"].reset_index(drop=True),
+                 "test": final_test_dataset["date"].reset_index(drop=True)}
+    return p_x_train, p_y_train, p_x_final_test, p_y_final_test, date_info
 
-def plot_predicted_vs_actual(hours, actual, predicted, title, ylabel,
-                             actual_color, pred_color, start_date="2013-01-07"):
-    """Draw one predicted-vs-actual figure over the continuous half-hourly test week."""
+
+
+
+
+def plot_predicted_vs_actual(dates, actual, predicted, title, ylabel, actual_color, pred_color):
+    """One figure: actual vs predicted over the continuous half-hourly test week.
+    Day boundaries and their date labels come from the real `dates` column."""
     x = np.arange(len(actual))
- 
+    dates = pd.Series(pd.to_datetime(dates)).reset_index(drop=True)
+
     fig, ax = plt.subplots(figsize=(14, 6))
     ax.plot(x, actual, color=actual_color, linewidth=2, label="Actual")
     ax.plot(x, predicted, color=pred_color, linewidth=2, linestyle="--", label="Predicted")
- 
-    # Label each day boundary (slots where Hour resets to 0) with its date
-    day_starts = np.where(np.asarray(hours) == 0)[0]
-    if len(day_starts) > 0:
-        base = pd.Timestamp(start_date)
-        labels = [(base + pd.Timedelta(days=i)).strftime("%a %d %b") for i in range(len(day_starts))]
-        ax.set_xticks(day_starts)
-        ax.set_xticklabels(labels)
-        for d in day_starts[1:]:
-            ax.axvline(d, color="gray", linewidth=0.8, alpha=0.4)
-        ax.set_xlabel("Half-hourly intervals (day boundaries marked)", fontsize=12)
-    else:
-        ax.set_xlabel("Half-hourly intervals", fontsize=12)
- 
+
+    day_starts = np.where(dates.ne(dates.shift()).to_numpy())[0]   # first slot of each new date
+    ax.set_xticks(day_starts)
+    ax.set_xticklabels([f"{dates[i]:%a %d %b}" for i in day_starts])
+    for d in day_starts[1:]:
+        ax.axvline(d, color="gray", linewidth=0.8, alpha=0.4)
+
+    ax.set_xlabel("Half-hourly intervals (day boundaries marked)", fontsize=12)
     ax.set_ylabel(ylabel, fontsize=12)
     ax.set_title(title, fontsize=14, fontweight="bold")
     ax.grid(True, linestyle=":", alpha=0.5)
     ax.legend(loc="upper right", fontsize=11)
     fig.tight_layout()
     return fig
-
-def wape(y_true, y_pred):
-    # Weighted absolute percentage error: total error / total actual.
-    y_true, y_pred = np.asarray(y_true), np.asarray(y_pred)
-    return np.abs(y_true - y_pred).sum() / np.abs(y_true).sum()
-
-def masked_mape(y_true, y_pred, min_actual=0.01):
-    # MAPE over daylight slots only (actual above a small threshold) # the normal mape didnt work because solar has lots of 0s
-    y_true, y_pred = np.asarray(y_true), np.asarray(y_pred)
-    mask = y_true > min_actual
-    return np.mean(np.abs(y_true[mask] - y_pred[mask]) / y_true[mask])
 
 
 def main():
@@ -363,13 +564,21 @@ def main():
 
     print("\nFetching and formatting data arrays...")
 
-    p_x_train, p_y_train, p_x_test, p_y_test = p_initialize_model(
+
+    MIN_TEMP_PATH = "BOM_Data/IDCJAC0011_066137_1800_daily_min_temp/IDCJAC0011_066137_1800_Data.csv" 
+    if not Path(MIN_TEMP_PATH).exists():
+        print(f"  (min temp file not found at {MIN_TEMP_PATH} - continuing without it)")
+        MIN_TEMP_PATH = None
+    # <<< CHANGE 5a END
+
+    p_x_train, p_y_train, p_x_test, p_y_test, p_dates = p_initialize_model(  # CHANGE 5b (+ p_dates)
         "Provided_Data/2011-2012Solarhomeelectricitydatav2.csv",
         "Provided_Data/2012-2013 Solar home electricity data v2.csv",
         "BOM_Data/IDCJAC0010_066137_1800_daily_max_temp/IDCJAC0010_066137_1800_Data.csv",
+        min_temp_data_path=MIN_TEMP_PATH,  # CHANGE 5b
     )
 
-    pv_x_train, pv_y_train, pv_x_test, pv_y_test = pv_initialize_model(
+    pv_x_train, pv_y_train, pv_x_test, pv_y_test, pv_dates = pv_initialize_model(  # CHANGE 5c (+ pv_dates)
         "Provided_Data/2011-2012Solarhomeelectricitydatav2.csv",
         "Provided_Data/2012-2013 Solar home electricity data v2.csv",
         "BOM_Data/IDCJAC0016_066137_1800_daily_solar_exposure/IDCJAC0016_066137_1800_Data.csv",
@@ -397,8 +606,20 @@ def main():
 
 
     print("Loading models from files...")
-    load_model = joblib.load("finalized_load_rf_model.pkl")
-    pv_model = joblib.load("finalized_pv_rf_model.pkl")
+    load_model = joblib.load("finalized_load_rf_model_v3.pkl")
+    pv_model = joblib.load("finalized_pv_rf_model_v3.pkl")
+
+    # stop early if the data prep and the saved model disagree on features
+    expected_cols = list(getattr(load_model, "feature_names_in_", p_x_test.columns))
+    missing = [c for c in expected_cols if c not in p_x_test.columns]
+    if missing:
+        raise SystemExit(
+            f"The saved load model needs features the data prep did not build: {missing}\n"
+            "Most likely the minimum-temperature file is present in one script but not the other."
+        )
+    # keeps only the model's columns, in its order (so a model trained without Load_Prev_Day still works)
+    p_x_test = p_x_test[expected_cols]
+
 
 
     print("Executing forecasts across the evaluation timeline...")
@@ -444,6 +665,18 @@ def main():
         "=================================================================\n"
     )
 
+
+    report_metrics(
+        "LOAD", y_test_agg_L, scaled_pred_load, p_dates["test"],
+        exclude_date="2013-01-08",   # the super hot day, day 2
+        min_actual=0.01,
+    )
+    report_metrics(
+        "PV", y_test_agg_P, scaled_pred_pv, pv_dates["test"],
+        min_actual=0.05,
+    )
+
+
     # --- EXPORTING RESULTS TO CSV ---
     print("Exporting baseline forecasts to CSV archive...")
 
@@ -461,9 +694,7 @@ def main():
 
     export_df = pd.DataFrame(
         {
-            "Date": p_x_test["date"]
-            if "date" in p_x_test.columns
-            else "Jan 7-13 2013",
+            "Date": p_dates["test"].to_numpy(),
             "Hour": p_x_test["Hour"],
             "Predicted_Average_Load_kW": scaled_pred_load,
             "Predicted_Average_PV_Gen_kW": scaled_pred_pv,
@@ -527,7 +758,7 @@ def main():
     print("Plotting predicted vs actual (load and PV)...")
  
     plot_predicted_vs_actual(
-        hours=p_x_test["Hour"].to_numpy(),
+        dates=p_dates["test"],
         actual=np.asarray(y_test_agg_L),
         predicted=np.asarray(scaled_pred_load),
         title="Predicted vs Actual Household Load: Jan 7 - Jan 13, 2013",
@@ -537,7 +768,7 @@ def main():
     )
  
     plot_predicted_vs_actual(
-        hours=pv_x_test["Hour"].to_numpy(),
+        dates=pv_dates["test"],
         actual=np.asarray(y_test_agg_P),
         predicted=np.asarray(scaled_pred_pv),
         title="Predicted vs Actual PV Generation: Jan 7 - Jan 13, 2013",
@@ -549,7 +780,7 @@ def main():
     print("  Rendering plot window, close plot to end code execution :)")
     plt.show()
 
-    # --- USED FOR TROUBLESHOOTING ---
+    # --- USED IN TESTING --- 
     # print(p_x_train["Maximum temperature (Degree C)"].describe())
     # print((p_x_train["Maximum temperature (Degree C)"] > 38).sum())
 
