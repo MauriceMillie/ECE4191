@@ -1044,7 +1044,7 @@ def main():
     print("\nClearing all registers ...")
     clear_all_registers(conn, args.dry_run)
 
-    settle = 2 #TODO: CHANGE BACK TO 12
+    settle = 12 #TODO: CHANGE BACK TO 12
     if args.no_wait or args.dry_run:
         print("Settle delay skipped.")
     else:
