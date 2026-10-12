@@ -816,7 +816,7 @@ SOC_MAX_PCT_DEFAULT = 98.0
 def get_hardware_limits(node: str, soc_min_pct: float, soc_max_pct: float) -> dict:
     """Hard limits for one node's battery (kW, kWh). Positive power = discharging."""
     lo_w, hi_w = API_LIMITS[API_INPUTS[node]["bat"]]          # SCADA Input range in W
-    cap_kwh = N_CUSTOMERS[node] * 10.0
+    cap_kwh = N_CUSTOMERS[node] * 10 #TODO: CHANGE BACK TO 10
     return {
         "p_lo_kw":    lo_w / API_POWER_SCALE,                 # most negative = max charge
         "p_hi_kw":    hi_w / API_POWER_SCALE,                 # most positive = max discharge
@@ -1298,7 +1298,7 @@ def main():
     if args.backend == "api":
         soc_logger = ApiSocLogger(conn, log_enabled,
                                   init_soc_pct=100.0 * args.initial_soc / args.capacity,
-                                  cil_capacity_kwh=N_CUSTOMERS[CIL_NODE] * 10)
+                                  cil_capacity_kwh=N_CUSTOMERS[CIL_NODE] * 10) #TODO: CHANGE BACK TO 10
     else:
         soc_logger = SocLogger(conn, log_enabled)
     # <<< VHIL CHANGE 5 END
@@ -1383,14 +1383,15 @@ def main():
 
             for node in NODE_MAP:
 
-                #load_fc_flat = node_data[node]["load_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
-                #pv_fc_flat   = node_data[node]["pv_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
-
                 # >>> LIVE FORECAST CHANGE 4b START: live window (static CSV only if --static-forecast) <<<
                 if forecast_cache is None:
                     load_fc_flat = forecast_load_per_customer * N_CUSTOMERS[node]
                     pv_fc_flat = forecast_pv_per_customer * N_CUSTOMERS[node]
                 # <<< LIVE FORECAST CHANGE 4b END
+
+
+                #load_fc_flat = node_data[node]["load_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
+                #pv_fc_flat   = node_data[node]["pv_kw"] # THIS WILL NEED TO BE CHANGED LATER WHEN DOING FORECASTING!!!!!!!!! AND FORECAST WILL HAVE TO BE IN WHATEVER FORMAT THIS FORMATTING IS. This forces a perfect forecast no matter what currently
 
                 # print(load_fc_flat)
                 # print(pv_fc_flat)
@@ -1462,7 +1463,7 @@ def main():
                 soc_pred[node] = soc_pred_next[node]
                 
                 try:
-                    soc_pred_pct[node] = 100.0 * soc_pred[node] / (N_CUSTOMERS[node]*10)
+                    soc_pred_pct[node] = 100.0 * soc_pred[node] / (N_CUSTOMERS[node]*10) #TODO: CHANGE BACK TO 10
                 except:
                     soc_pred_pct[node] = -1
                 
