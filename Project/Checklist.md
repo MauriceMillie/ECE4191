@@ -8,7 +8,7 @@ Checklist:
 
 
 
-\- **add voltage feedback to both the hil model and the code (make it so that voltage changes how discharging or charging is weighted)**
+\- <b>~~add voltage feedback to both the hil model and the code (make it so that voltage changes how discharging or charging is weighted)~~</b>
 
 
 
@@ -20,7 +20,7 @@ Checklist:
 
 
 
-\- ADD IN THE THING THAT LOOKS AT THE VOLTAGES AFTER THE MPC OUTPUTS THEM AND THEN APPLIES THE GRID LIMIT THING ONTO PBAT SO THAT THE CONTROLLER STATE REFLECTS WHAT IS HAPPENING ON HARDWARE. (make it consider bat limits as +/-3% not +/-5%)
+\- ~~ADD IN THE THING THAT LOOKS AT THE VOLTAGES AFTER THE MPC OUTPUTS THEM AND THEN APPLIES THE GRID LIMIT THING ONTO PBAT SO THAT THE CONTROLLER STATE REFLECTS WHAT IS HAPPENING ON HARDWARE. (make it consider bat limits as +/-3% not +/-5%)~~
 
 
 
@@ -89,6 +89,4 @@ NOMINAL VOLTAGES AND THEIR BOUNDS:
 MOST NODES: LOWER=, NOMINAL=, UPPER=
 
 NODE 634: LOWER=, NOMINAL=, UPPER=
-
-
 
