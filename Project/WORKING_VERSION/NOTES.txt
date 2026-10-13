@@ -1,0 +1,3 @@
+1. It seems this system works with 14kWh of battery per customer, but since we are doing software vhil testing, I don't want to take any risks with how it works on the hardware system. I don't think there is a huge amount of difference in trying to justify 14kWh vs 15kWh per customer anyway.
+2. Currently, this system does not have the hardware battery emu stuff in it.
+3. Both V1 and V2 seem to work! But we should use V2 for better looking results (since it actually uses the SoC feedback)

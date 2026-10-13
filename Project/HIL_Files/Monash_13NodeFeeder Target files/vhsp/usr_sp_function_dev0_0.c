@@ -493,9 +493,13 @@ typedef double real;
 
 
 
+
+
+
 #define SQRT_2OVER3 0.8164965809277260327324280249019f
 #define SQRT3_OVER_2 0.8660254037844386467637231707529f
 #define ONE_DIV_BY_SQRT_3 0.57735026918962576450914878f
+
 
 
 
@@ -2351,6 +2355,9 @@ static const int _time_varying_load_634_single_phase_time_varying_load_with_the_
 static const unsigned int _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_va_pha_va1__p_addr=45;
 static const char* _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_va_pha_va1__p_sig_output="True";
 
+
+static const real _time_varying_load_646_646_num_of_customers__p_value=102.0;
+
 static const int _time_varying_load_646_analog_input__n_addr_prop_val=1;
 static const int _time_varying_load_646_analog_input__n_out_mem_size=512;
 static const int _time_varying_load_646_analog_input__n_rd_as=13107200;
@@ -2364,6 +2371,9 @@ static const int _time_varying_load_646_analog_input2__n_rd_as=13107200;
 static const int _time_varying_load_646_analog_input2__n_rd_as_ai=68;
 static const real _time_varying_load_646_analog_input2__p_ai_gain=1.0;
 static const real _time_varying_load_646_analog_input2__p_ai_offset=0.0;
+
+
+static const real _time_varying_load_646_constant1__p_value=100.0;
 
 
 static const real _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_constant4__p_value=1.414;
@@ -3297,6 +3307,11 @@ static const real _time_varying_load_646_socpercent2kwh1__p_gain=20.0;
 static const char* _time_varying_load_646_batt_power510kw__n_multiplication="Element-wise(K.*u)";
 static const real _time_varying_load_646_batt_power510kw__p_gain=102.0;
 
+static const int _time_varying_load_646_product2__n_in_size=1;
+static const int _time_varying_load_646_product2__n_num_of_terminals=2;
+static const char _time_varying_load_646_product2__n_signs_bool[2]= {1, 1};
+
+
 static const char* _time_varying_load_646_socpercent2kwh__n_multiplication="Element-wise(K.*u)";
 static const real _time_varying_load_646_socpercent2kwh__p_gain=10.2;
 
@@ -4019,8 +4034,10 @@ static const unsigned int _time_varying_load_646_batt_power__p_addr=16601;
 static const char* _time_varying_load_646_single_phase_time_varying_load646_gain3__n_multiplication="Element-wise(K.*u)";
 static const real _time_varying_load_646_single_phase_time_varying_load646_gain3__p_gain=1000.0;
 
-static const char* _time_varying_load_646_kwh____percent__n_multiplication="Element-wise(K.*u)";
-static const real _time_varying_load_646_kwh____percent__p_gain=0.09803921568627451;
+static const int _time_varying_load_646_product1__n_in_size=1;
+static const int _time_varying_load_646_product1__n_num_of_terminals=3;
+static const char _time_varying_load_646_product1__n_signs_bool[3]= {1, 1, 0};
+
 
 static const char* _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_reactivecurrentcalc_single_phase_pll3_gain9__n_multiplication="Element-wise(K.*u)";
 static const real _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_reactivecurrentcalc_single_phase_pll3_gain9__p_gain=62.83185307179586;
@@ -5067,9 +5084,12 @@ real _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulse
 static real _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_single_phase_power_meter_pha_radian__out;
 static real _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_single_phase_power_meter_pha_phi__phase_diff;
 real _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_va_pha_va1__out;
+static real _time_varying_load_646_646_num_of_customers__out;
 real _time_varying_load_646_analog_input__out;
 real _time_varying_load_646_analog_input2__out;
+double _time_varying_load_646_battery_capacity_per_customer_kwh__out;
 double _time_varying_load_646_battery_power646__out;
+static real _time_varying_load_646_constant1__out;
 double _time_varying_load_646_pvpanel_power646__out;
 double _time_varying_load_646_pref646__out;
 double _time_varying_load_646_qref646__out;
@@ -5524,6 +5544,7 @@ static real _time_varying_load_634_single_phase_time_varying_load_with_the_maste
 double _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_single_phase_power_meter_pha_va_rms__out;
 static real _time_varying_load_646_socpercent2kwh1__out;
 static real _time_varying_load_646_batt_power510kw__out;
+static real _time_varying_load_646_product2__out;
 static real _time_varying_load_646_socpercent2kwh__out;
 
 
@@ -5829,7 +5850,7 @@ static real _time_varying_load_634_single_phase_time_varying_load_with_the_maste
 
 
 static real _time_varying_load_646_single_phase_time_varying_load646_gain3__out;
-static real _time_varying_load_646_kwh____percent__out;
+static real _time_varying_load_646_product1__out;
 static real _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_reactivecurrentcalc_single_phase_pll3_gain9__out;
 static real _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_reactivecurrentcalc_single_phase_pll3_sum7__out;
 static real _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_reactivecurrentcalc_single_phase_pll3_sum6__out;
@@ -7492,6 +7513,12 @@ char _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulse
 
 
 
+
+
+
+
+
+
 real _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_delay5__state[1][60000];
 unsigned int _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_delay5__cbi[1];
 unsigned int _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_delay5__write_i[1];
@@ -8711,6 +8738,9 @@ double _time_varying_load_634_single_phase_time_varying_load_with_the_master_pul
 
 
 
+
+
+
 double _time_varying_load_646_single_phase_time_varying_load646_single_phase_power_meter2_ia_rms__square_sum;
 double _time_varying_load_646_single_phase_time_varying_load646_single_phase_power_meter2_ia_rms__sample_cnt;
 double _time_varying_load_646_single_phase_time_varying_load646_single_phase_power_meter2_ia_rms__period_cnt;
@@ -9780,6 +9810,20 @@ void *tunable_params_dev0_cpu0_ptr = &tunable_params;
 //
 // DMA buffers
 //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -15835,6 +15879,11 @@ void ReInit_user_sp_cpu0_dev0() {
 
 
 
+
+
+
+
+
     {
         int t_tmp1;
         for(t_tmp1 = 0; t_tmp1 < 1; t_tmp1++) {
@@ -17501,6 +17550,8 @@ void ReInit_user_sp_cpu0_dev0() {
     _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_single_phase_power_meter_pha_va_rms__correction = 0x0;
     _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_single_phase_power_meter_pha_va_rms__previous_value = 0x0;
     _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_single_phase_power_meter_pha_va_rms__out_state = 0x0;
+
+
 
 
 
@@ -27695,6 +27746,11 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
         }
     }
 
+    // Generated from the component: Time Varying Load 646.646 num of customers
+    {
+        _time_varying_load_646_646_num_of_customers__out=_time_varying_load_646_646_num_of_customers__p_value;
+    }
+
     // Generated from the component: Time Varying Load 646.Analog Input
     {
         real tac_tmp1;
@@ -27715,23 +27771,31 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
         _time_varying_load_646_analog_input2__out=(offset * _time_varying_load_646_analog_input2__p_ai_gain);
     }
 
+    // Generated from the component: Time Varying Load 646.BATTERY_CAPACITY_PER_CUSTOMER_kWh
+    _time_varying_load_646_battery_capacity_per_customer_kwh__out = XIo_InFloat(0x2f800084);
+
     // Generated from the component: Time Varying Load 646.Battery_Power646
-    _time_varying_load_646_battery_power646__out = XIo_InFloat(0x2f800084);
+    _time_varying_load_646_battery_power646__out = XIo_InFloat(0x2f800088);
+
+    // Generated from the component: Time Varying Load 646.Constant1
+    {
+        _time_varying_load_646_constant1__out=_time_varying_load_646_constant1__p_value;
+    }
 
     // Generated from the component: Time Varying Load 646.PVpanel_power646
-    _time_varying_load_646_pvpanel_power646__out = XIo_InFloat(0x2f800088);
+    _time_varying_load_646_pvpanel_power646__out = XIo_InFloat(0x2f80008c);
 
     // Generated from the component: Time Varying Load 646.Pref646
-    _time_varying_load_646_pref646__out = XIo_InFloat(0x2f80008c);
+    _time_varying_load_646_pref646__out = XIo_InFloat(0x2f800090);
 
     // Generated from the component: Time Varying Load 646.Qref646
-    _time_varying_load_646_qref646__out = XIo_InFloat(0x2f800090);
+    _time_varying_load_646_qref646__out = XIo_InFloat(0x2f800094);
 
     // Generated from the component: Time Varying Load 646.SOC Setpoint
-    _time_varying_load_646_soc_setpoint__out = XIo_InFloat(0x2f800094);
+    _time_varying_load_646_soc_setpoint__out = XIo_InFloat(0x2f800098);
 
     // Generated from the component: Time Varying Load 646.SOCResetEnable
-    _time_varying_load_646_socresetenable__out = XIo_InFloat(0x2f800098);
+    _time_varying_load_646_socresetenable__out = XIo_InFloat(0x2f80009c);
 
     // Generated from the component: Time Varying Load 646.Single phase time-varying load646.GenerateCurrentControl.ActiveCurrentCalc.Constant7
     {
@@ -27816,10 +27880,10 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
     }
 
     // Generated from the component: Time Varying Load 646.battery type select
-    _time_varying_load_646_battery_type_select__out = XIo_InFloat(0x2f80009c);
+    _time_varying_load_646_battery_type_select__out = XIo_InFloat(0x2f8000a0);
 
     // Generated from the component: switch state
-    _switch_state__out = XIo_InFloat(0x2f8000a0);
+    _switch_state__out = XIo_InFloat(0x2f8000a4);
 
     // Generated from the component: Time Varying Load 611.Single phase time-varying load1.Gain1
     {
@@ -29365,6 +29429,13 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
         _time_varying_load_646_batt_power510kw__out=((real) (_time_varying_load_646_batt_power510kw__p_gain * _time_varying_load_646_analog_input2__out));
     }
 
+    // Generated from the component: Time Varying Load 646.Product2
+    {
+        _time_varying_load_646_product2__out=1;
+        _time_varying_load_646_product2__out*=((real) _time_varying_load_646_battery_capacity_per_customer_kwh__out);
+        _time_varying_load_646_product2__out*=((real) _time_varying_load_646_646_num_of_customers__out);
+    }
+
     // Generated from the component: Time Varying Load 646.SOCPercent2KWh
     {
         _time_varying_load_646_socpercent2kwh__out=((real) (_time_varying_load_646_socpercent2kwh__p_gain * _time_varying_load_646_soc_setpoint__out));
@@ -30249,9 +30320,12 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
         _time_varying_load_646_single_phase_time_varying_load646_gain3__out=((real) (_time_varying_load_646_single_phase_time_varying_load646_gain3__p_gain * _time_varying_load_646_signal_switch1__out));
     }
 
-    // Generated from the component: Time Varying Load 646.KWh -> Percent
+    // Generated from the component: Time Varying Load 646.Product1
     {
-        _time_varying_load_646_kwh____percent__out=((real) (_time_varying_load_646_kwh____percent__p_gain * _time_varying_load_646_batteryint__out));
+        _time_varying_load_646_product1__out=1;
+        _time_varying_load_646_product1__out*=((real) _time_varying_load_646_batteryint__out);
+        _time_varying_load_646_product1__out*=((real) _time_varying_load_646_constant1__out);
+        _time_varying_load_646_product1__out/=((real) _time_varying_load_646_product2__out);
     }
 
     // Generated from the component: Time Varying Load 611.Single phase time-varying load1.GenerateCurrentControl.ActiveCurrentCalc.Rate Transition1.Input
@@ -30702,7 +30776,7 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
         int out_idx=0;
         int tmp1;
         for(tmp1 = 0; tmp1 < 1; tmp1 += 1) {
-            _bus_join1__out[out_idx]=((real) _time_varying_load_646_kwh____percent__out);
+            _bus_join1__out[out_idx]=((real) _time_varying_load_646_product1__out);
             out_idx+=1;
         }
         int tmp2;
@@ -30714,7 +30788,7 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
 
     // Generated from the component: Time Varying Load 646.SoC646
     {
-        HIL_OutAO(0x40de, _time_varying_load_646_kwh____percent__out);
+        HIL_OutAO(0x40de, _time_varying_load_646_product1__out);
     }
 
 
@@ -33973,9 +34047,13 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
             _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_generatecurrentcontrol_pha_reactivecurrentcalc_unit_delay7__state[0]=((real) _time_varying_load_634_single_phase_time_varying_load_with_the_master_pulsec_generatecurrentcontrol_pha_reactivecurrentcalc_constant5__out);
         }
     }
+    // Generated from the component: Time Varying Load 646.646 num of customers
+
     // Generated from the component: Time Varying Load 646.Analog Input
 
     // Generated from the component: Time Varying Load 646.Analog Input2
+
+    // Generated from the component: Time Varying Load 646.Constant1
 
     // Generated from the component: Time Varying Load 646.Single phase time-varying load646.GenerateCurrentControl.ActiveCurrentCalc.Constant7
 
@@ -35253,6 +35331,8 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
 
     // Generated from the component: Time Varying Load 646.Batt_Power510KW
 
+    // Generated from the component: Time Varying Load 646.Product2
+
     // Generated from the component: Time Varying Load 646.SOCPercent2KWh
 
     // Generated from the component: Time Varying Load 646.Single phase time-varying load646.GenerateCurrentControl.ActiveCurrentCalc.Rate Transition2.Input
@@ -35434,7 +35514,7 @@ void TimerCounterHandler_1_user_sp_cpu0_dev0() {
 
     // Generated from the component: Time Varying Load 646.Single phase time-varying load646.Gain3
 
-    // Generated from the component: Time Varying Load 646.KWh -> Percent
+    // Generated from the component: Time Varying Load 646.Product1
 
     // Generated from the component: Time Varying Load 611.Single phase time-varying load1.GenerateCurrentControl.ActiveCurrentCalc.Rate Transition1.Input
 

@@ -1172,15 +1172,6 @@ model "Monash_13NodeFeeder" {
                 scale = -1, 1
             ]
 
-            component "core/Gain" "KWh -> Percent" {
-                gain = "100/1020"
-            }
-            [
-                position = 9420, 7416
-                rotation = down
-                scale = -1, 1
-            ]
-
             component "core/SCADA Input" SOCResetEnable {
                 execution_rate = "ex_rate"
                 unit = ""
@@ -1267,6 +1258,53 @@ model "Monash_13NodeFeeder" {
             }
             [
                 position = 8004, 7716
+            ]
+
+            component "core/Gain" "KWh -> Percent1" {
+                gain = "100/1020"
+            }
+            [
+                position = 9408, 7328
+                rotation = down
+                scale = -1, 1
+            ]
+
+            component "core/Product" Product1 {
+                signs = "**/"
+            }
+            [
+                position = 9408, 7432
+            ]
+
+            component "core/Constant" Constant1 {
+                execution_rate = "ex_rate"
+                value = "100"
+            }
+            [
+                position = 9284, 7476
+            ]
+
+            component "core/SCADA Input" BATTERY_CAPACITY_PER_CUSTOMER_kWh {
+                def_value = "15"
+                execution_rate = "ex_rate"
+                unit = ""
+            }
+            [
+                position = 9144, 7600
+            ]
+
+            component "core/Product" Product2 {
+            }
+            [
+                position = 9328, 7608
+            ]
+
+            component "core/Constant" "646 num of customers" {
+                execution_rate = "ex_rate"
+                value = "102"
+            }
+            [
+                position = 9256, 7664
             ]
 
             port P2 {
@@ -1380,14 +1418,14 @@ model "Monash_13NodeFeeder" {
                 position = 8712, 7304
             ]
 
-            junction Junction105 sp
-            [
-                position = 9492, 7416
-            ]
-
             junction Junction106 sp
             [
                 position = 8364, 7784
+            ]
+
+            junction Junction107 sp
+            [
+                position = 9492, 7416
             ]
 
             comment Comment9 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Analog Input A01 reading from External Battery Emulator </p></body></html> ENDCOMMENT 
@@ -1397,19 +1435,19 @@ model "Monash_13NodeFeeder" {
 
             comment Comment10 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:7pt;">Integrating 1 kW for 1 hour gives 3600 kWs. We want kWh.</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:7pt;">Add a Gain block with value: -1/3600</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:7pt;">Convention: </span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:7pt;">Positive Battery Power = Discharge (SoC goes down). </span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:7pt;">Negative Battery Power = Charge (SoC goes up).</span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:7pt;">Then Integrator sets the battery at inital SOC level. </span></p><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:7pt;">Example here is 1020 kWh battery (102 customers). <br />Initial SOC = 50% (510 kWh). Limits 0 (0%) to 1020 (100%).</span>  </p></body></html> ENDCOMMENT 
             [
-                position = 9424, 7576
+                position = 9564, 7596
                 scale = -1, 1
             ]
 
-            comment Comment11 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:10pt;">Convert KWhr to percentage<br />Read SOC as percent<br />1 kWh of 1020 kWh = 0.098% approximately</span></p></body></html> ENDCOMMENT 
+            comment Comment11 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:10pt;">Convert KWhr to percentage<br />Read SOC as percent<br />1 kWh of 1020 kWh = 0.098% approximately</span> </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">THIS WAS THE OLD METHOD. WE NOW </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">HAVE A BIT OF AN ADJUSTABLE THING </p><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">GOING ON WITH ALL THE PRODUCT BLOCKS</p></body></html> ENDCOMMENT 
             [
-                position = 9368, 7444
+                position = 9492, 7444
                 scale = -1, 1
             ]
 
             comment Comment12 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The battery value of 1020 kWh <br />is assuming Node 646 has 102 <br />customers. Each customer has <br />a 10 kWh battery.</p></body></html> ENDCOMMENT 
             [
-                position = 8980, 7604
+                position = 8940, 7648
                 scale = -1, 1
             ]
 
@@ -1472,7 +1510,7 @@ model "Monash_13NodeFeeder" {
 
             comment Comment24 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:10pt;">Converts power from W to kW (×0.001) <br />and scales it for integration <br />to energy in kWh (÷3600).</span></p></body></html> ENDCOMMENT 
             [
-                position = 9104, 7504
+                position = 9104, 7516
                 scale = -1, 1
             ]
 
@@ -1485,8 +1523,8 @@ model "Monash_13NodeFeeder" {
                 title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Battery Emulator</p></body></html>
             }
             [
-                position = 9296, 7508
-                size = 808, 544
+                position = 9372, 7516
+                size = 960, 560
             ]
 
             scheme_area Area14 {
@@ -1506,7 +1544,6 @@ model "Monash_13NodeFeeder" {
             connect SOCPercent2KWh1.out Junction104 as Connection1132
             connect "SOC Setpoint.out" SOCPercent2KWh.in as Connection1145
             connect W_to_KWHr.out BatteryInt.in as Connection1146
-            connect "KWh -> Percent.in" BatteryInt.out as Connection1147
             connect BatteryInt.reset SOCResetEnable.out as Connection1148
             [
                 breakpoints = 9224, 7416; 9224, 7396; 9224, 7396; 9224, 7344
@@ -1515,12 +1552,6 @@ model "Monash_13NodeFeeder" {
             [
                 breakpoints = 9076, 7400; 9236, 7400
             ]
-            connect Goto4 Junction105 as Connection1150
-            connect Junction105 "KWh -> Percent.out" as Connection1151
-            [
-                breakpoints = 9464, 7416; 9456, 7416
-            ]
-            connect SoC646.in Junction105 as Connection1152
             connect "30min->2s.out" W_to_KWHr.in as Connection1156
             connect "Single phase time-varying load646.P1" P1 as Connection1157
             connect "Single phase time-varying load646.P2" P2 as Connection1158
@@ -1549,6 +1580,20 @@ model "Monash_13NodeFeeder" {
             ]
             connect Batt_Power.in Junction106 as Connection1176
             connect "battery type select.out" "Signal switch1.in2" as Connection1177
+            connect BatteryInt.out Product1.in as Connection1179
+            connect SoC646.in Junction107 as Connection1180
+            connect Junction107 Goto4 as Connection1181
+            [
+                breakpoints = 9492, 7416
+            ]
+            connect Product1.out Junction107 as Connection1182
+            connect Constant1.out Product1.in1 as Connection1183
+            [
+                breakpoints = 9336, 7476; 9336, 7432
+            ]
+            connect BATTERY_CAPACITY_PER_CUSTOMER_kWh.out Product2.in as Connection1184
+            connect "646 num of customers.out" Product2.in1 as Connection1185
+            connect Product2.out Product1.in2 as Connection1186
         }
         [
             position = 6500, 8168
@@ -14675,6 +14720,7 @@ model "Monash_13NodeFeeder" {
         "Time Varying Load 634.Comment17"
         "Time Varying Load 634.Comment18"
         "Time Varying Load 634.Comment19"
+        "Time Varying Load 646.KWh -> Percent1"
         "Time Varying Load 675.Comment16"
         "Time Varying Load 675.Comment17"
         "Time Varying Load 675.Comment18"
@@ -14813,6 +14859,11 @@ model "Monash_13NodeFeeder" {
             signal_type = "generic"
             streaming_en = "False"
             streaming_er_idx = "0"
+            execution_rate = "inherit"
+        }
+
+        "core/Product" {
+            signs = "2"
             execution_rate = "inherit"
         }
 
