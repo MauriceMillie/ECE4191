@@ -1153,7 +1153,7 @@ model "Monash_13NodeFeeder" {
                 init_value = "510"
                 limit_lower = "0"
                 limit_output = "True"
-                limit_upper = "1020"
+                limit_upper = "1530"
                 show_init_condition = "external"
                 show_reset = "rising"
             }
@@ -1182,7 +1182,7 @@ model "Monash_13NodeFeeder" {
             ]
 
             component "core/Gain" SOCPercent2KWh {
-                gain = "10.2"
+                gain = "15.3"
             }
             [
                 position = 9040, 7400
@@ -1305,6 +1305,15 @@ model "Monash_13NodeFeeder" {
             }
             [
                 position = 9256, 7664
+            ]
+
+            component "core/Gain" SOCPercent2KWh2 {
+                gain = "10.2"
+            }
+            [
+                position = 9152, 7376
+                rotation = down
+                scale = -1, 1
             ]
 
             port P2 {
@@ -1447,13 +1456,13 @@ model "Monash_13NodeFeeder" {
 
             comment Comment12 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The battery value of 1020 kWh <br />is assuming Node 646 has 102 <br />customers. Each customer has <br />a 10 kWh battery.</p></body></html> ENDCOMMENT 
             [
-                position = 8940, 7648
+                position = 8928, 7672
                 scale = -1, 1
             ]
 
             comment Comment13 START <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Sans'; font-size:12pt; font-weight:400; font-style:normal;"><p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:'Segoe UI'; font-size:9pt;">At SOC setpoint of 50%, this conversion is<br /> multiplied by 10.2 to set the initial battery energy <br />to 510 kWh.</span></p></body></html> ENDCOMMENT 
             [
-                position = 8908, 7288
+                position = 8900, 7276
                 scale = -1, 1
             ]
 
@@ -1523,8 +1532,8 @@ model "Monash_13NodeFeeder" {
                 title = <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">p, li { white-space: pre-wrap; }hr { height: 1px; border-width: 0; }li.unchecked::marker { content: "\2610"; }li.checked::marker { content: "\2612"; }</style></head><body style=" font-family:'Tahoma'; font-size:14pt; font-weight:100; font-style:normal;"><p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Battery Emulator</p></body></html>
             }
             [
-                position = 9372, 7516
-                size = 960, 560
+                position = 9396, 7508
+                size = 1008, 576
             ]
 
             scheme_area Area14 {
@@ -14721,6 +14730,7 @@ model "Monash_13NodeFeeder" {
         "Time Varying Load 634.Comment18"
         "Time Varying Load 634.Comment19"
         "Time Varying Load 646.KWh -> Percent1"
+        "Time Varying Load 646.SOCPercent2KWh2"
         "Time Varying Load 675.Comment16"
         "Time Varying Load 675.Comment17"
         "Time Varying Load 675.Comment18"

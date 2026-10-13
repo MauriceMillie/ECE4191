@@ -3313,7 +3313,7 @@ static const char _time_varying_load_646_product2__n_signs_bool[2]= {1, 1};
 
 
 static const char* _time_varying_load_646_socpercent2kwh__n_multiplication="Element-wise(K.*u)";
-static const real _time_varying_load_646_socpercent2kwh__p_gain=10.2;
+static const real _time_varying_load_646_socpercent2kwh__p_gain=15.3;
 
 
 static const unsigned int _time_varying_load_646_single_phase_time_varying_load646_generatecurrentcontrol_activecurrentcalc_rate_transition2_input__p_addr=792724140;
@@ -3724,7 +3724,7 @@ static const unsigned int _time_varying_load_646_extsoc646__p_addr=16602;
 
 static const int _time_varying_load_646_batteryint__n_initial_value[1]= {0};
 static const real _time_varying_load_646_batteryint__n_lower_limit[1]= {0.0};
-static const real _time_varying_load_646_batteryint__n_upper_limit[1]= {1020.0};
+static const real _time_varying_load_646_batteryint__n_upper_limit[1]= {1530.0};
 static const real _time_varying_load_646_batteryint__p_execution_rate=0.00018;
 static const char _time_varying_load_646_batteryint__p_limit_output=1;
 static const char* _time_varying_load_646_batteryint__p_mode="integrator";

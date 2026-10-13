@@ -10838,11 +10838,11 @@ data = {
     }
 displayValue = data
 ]]></code>
-                <analog_signals><![CDATA[['Node 632.Probe1']]]></analog_signals>
+                <analog_signals><![CDATA[['Node 632.Probe1', 'DL 632.La', 'DL 632.Lb', 'DL 632.Lc']]]></analog_signals>
                 <digital_signals><![CDATA[[]]]></digital_signals>
                 <streaming_analog_signals><![CDATA[[]]]></streaming_analog_signals>
                 <streaming_digital_signals><![CDATA[[]]]></streaming_digital_signals>
-                <analog_signals_scaling_factors><![CDATA[{'Node 632.Probe1': 1.0}]]></analog_signals_scaling_factors>
+                <analog_signals_scaling_factors><![CDATA[{'Node 632.Probe1': 1.0, 'DL 632.La': 1.0, 'DL 632.Lb': 1.0, 'DL 632.Lc': 1.0}]]></analog_signals_scaling_factors>
                 <streaming_analog_signals_scaling_factors><![CDATA[{}]]></streaming_analog_signals_scaling_factors>
                 <update_rate>1000</update_rate>
                 <execution_rate>None</execution_rate>
@@ -11658,6 +11658,32 @@ widgetValue = hil.model_read('Time Varying Load 646.BATTERY_CAPACITY_PER_CUSTOME
                     <appearance><![CDATA[Flat]]></appearance>
                     <hierarchy_position><![CDATA[1]]></hierarchy_position>
                     <is_background><![CDATA[False]]></is_background>
+                    <label><![CDATA[]]></label>
+                    <use_label>False</use_label>
+                </widget_settings>
+            </component_data>
+        <component_data>
+                <id>c9b74ae2c6d111f181dcd8b32f82c6b4</id>
+                <name><![CDATA[Text note6]]></name>
+                <type>TextNote</type>
+                <description><![CDATA[]]></description>
+                <text><![CDATA[<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /><style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+</style></head><body style=" font-family:'Tahoma'; font-size:8pt; font-weight:400; font-style:normal;">
+<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:10pt;">Slider thing only half works unfortunately</span></p></body></html>]]></text>
+                <widget_settings>
+                    <x>488</x>
+                    <y>816</y>
+                    <width>360</width>
+                    <height>40</height>
+                    <background_color><![CDATA[#e7f0b0]]></background_color>
+                    <background_type><![CDATA[Filled]]></background_type>
+                    <appearance><![CDATA[Flat]]></appearance>
+                    <hierarchy_position>1</hierarchy_position>
                     <label><![CDATA[]]></label>
                     <use_label>False</use_label>
                 </widget_settings>
