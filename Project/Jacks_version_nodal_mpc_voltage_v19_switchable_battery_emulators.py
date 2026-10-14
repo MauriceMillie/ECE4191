@@ -196,7 +196,7 @@ DEFAULT_PLAYBACK_DAYS = 4   # Experiment 2 has a 4-day playback period
 
 # >>> V19 BATTERY EMULATOR CHANGE 2 START: laboratory physical battery emulator
 # These settings are carried over from the validated Experiment-3 hardware-sync implementation.
-DEFAULT_EMULATOR_PORT = "/dev/serial/by-id/usb-FTDI_TTL232R_FTEAE3LA-if00-port0"
+DEFAULT_EMULATOR_PORT = "/dev/serial/by-id/usb-FTDI_TTL232R_FTEAE5HE-if00-port0"
 EMULATOR_BAUD = 9600
 EMULATOR_SOC_MAX_RAW = 65500
 EMULATOR_READ_WAIT_S = 1.2
